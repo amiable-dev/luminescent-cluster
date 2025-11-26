@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: session-memory
+  namespace: context-aware-ai
+  labels:
+    app.kubernetes.io/name: session-memory
+    app.kubernetes.io/component: mcp-server
+    app.kubernetes.io/version: "1.0.0"
+spec:
+  replicas: 1  # MCP servers are typically single-instance
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: session-memory
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: session-memory
+        app.kubernetes.io/component: mcp-server
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      
+      containers:
+      - name: session-memory
+        image: context-aware-ai/session-memory:latest
+        imagePullPolicy: Always
+        
+        envFrom:
+        - configMapRef:
+            name: session-memory-config
+        
+        volumeMounts:
+        - name: git-repos
+          mountPath: /repos
+          readOnly: true
+        
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import git; import sys; sys.exit(0)"
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import git; import sys; sys.exit(0)"
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        stdin: true
+        tty: true
+      
+      volumes:
+      - name: git-repos
+        persistentVolumeClaim:
+          claimName: git-repos
+      
+      restartPolicy: Always

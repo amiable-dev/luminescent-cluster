@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: session-memory
+  namespace: context-aware-ai
+  labels:
+    app.kubernetes.io/name: session-memory
+    app.kubernetes.io/component: mcp-server
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: session-memory
+  ports:
+  - name: stdio
+    port: 8080  # Not actually used for MCP stdio, but required by K8s
+    targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pixeltable-memory
+  namespace: context-aware-ai
+  labels:
+    app.kubernetes.io/name: pixeltable-memory
+    app.kubernetes.io/component: mcp-server
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: pixeltable-memory
+  ports:
+  - name: stdio
+    port: 8080  # Not actually used for MCP stdio, but required by K8s
+    targetPort: 8080

@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pixeltable-data
+  namespace: context-aware-ai
+  labels:
+    app.kubernetes.io/name: pixeltable-memory
+    app.kubernetes.io/component: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  # Optional: specify storage class
+  # storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: git-repos
+  namespace: context-aware-ai
+  labels:
+    app.kubernetes.io/name: session-memory
+    app.kubernetes.io/component: storage
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 10Gi
+  # Optional: specify storage class
+  # storageClassName: standard

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: context-aware-ai
+  labels:
+    app.kubernetes.io/name: context-aware-ai
+    app.kubernetes.io/component: mcp-servers

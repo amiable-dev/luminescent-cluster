@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pixeltable-memory
+  namespace: context-aware-ai
+  labels:
+    app.kubernetes.io/name: pixeltable-memory
+    app.kubernetes.io/component: mcp-server
+    app.kubernetes.io/version: "1.0.0"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pixeltable-memory
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pixeltable-memory
+        app.kubernetes.io/component: mcp-server
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      
+      containers:
+      - name: pixeltable-memory
+        image: context-aware-ai/pixeltable-memory:latest
+        imagePullPolicy: Always
+        
+        envFrom:
+        - configMapRef:
+            name: pixeltable-config
+        
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-api-key
+              key: OPENAI_API_KEY
+        
+        volumeMounts:
+        - name: pixeltable-data
+          mountPath: /data
+        
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import pixeltable; import sys; sys.exit(0)"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import pixeltable; import sys; sys.exit(0)"
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        stdin: true
+        tty: true
+      
+      volumes:
+      - name: pixeltable-data
+        persistentVolumeClaim:
+          claimName: pixeltable-data
+      
+      restartPolicy: Always

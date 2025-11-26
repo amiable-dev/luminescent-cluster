@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # Session Memory MCP Server
+  session-memory:
+    build:
+      context: .
+      dockerfile: Dockerfile.session-memory
+    container_name: session-memory-mcp
+    volumes:
+      # Mount your git repository (read-only for safety)
+      - ${REPO_PATH:-.}:/repos:ro
+      # Optional: Mount multiple repos
+      # - ~/projects/repo1:/repos/repo1:ro
+      # - ~/projects/repo2:/repos/repo2:ro
+    environment:
+      - REPO_PATH=/repos
+    restart: unless-stopped
+    networks:
+      - mcp-network
+    # MCP servers use stdio, not network ports
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import git; import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Pixeltable Long-term Memory MCP Server
+  pixeltable-memory:
+    build:
+      context: .
+      dockerfile: Dockerfile.pixeltable
+    container_name: pixeltable-memory-mcp
+    volumes:
+      # Persistent storage for Pixeltable data
+      - pixeltable-data:/data
+    environment:
+      - PIXELTABLE_HOME=/data
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    restart: unless-stopped
+    networks:
+      - mcp-network
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import pixeltable; import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    # Resource limits (adjust based on your needs)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+volumes:
+  # Named volume for Pixeltable persistent data
+  pixeltable-data:
+    driver: local
+
+networks:
+  mcp-network:
+    driver: bridge
