@@ -66,7 +66,7 @@ python pixeltable_mcp_server.py
 
 ### 2. Configure Claude Code
 
-Use the configuration in `claude_config.json` to connect Claude Code to both MCP servers.
+Use the `.mcp.json` file or Claude Code CLI to connect to both MCP servers.
 
 ### 3. Ingest Your Codebase
 
@@ -138,7 +138,7 @@ This last query would use Programmatic Tool Calling to:
 
 ### Tool Search Tool
 
-Configured in `claude_config.json`:
+Available via  Claude Code's MCP integration:
 - Session memory: Always loaded (defer_loading: false)
 - Pixeltable memory: Loaded on-demand (defer_loading: true)
 - Additional MCP servers: Defer by default
@@ -159,7 +159,7 @@ Allows Claude to write Python orchestration code that:
 luminescent-cluster/
 ├── context-aware-ai-system.md    # Architecture article
 ├── README.md                      # This file
-├── claude_config.json             # Claude Code configuration
+├── .mcp.json                      # Claude Code MCP server configuration
 ├── session_memory_server.py       # Tier 1: Session memory MCP server
 ├── pixeltable_setup.py            # Tier 2: Knowledge base setup
 ├── pixeltable_mcp_server.py       # Tier 2: Long-term memory MCP server
@@ -240,7 +240,7 @@ Session memory server needs to run in a git repository directory.
 Run `python pixeltable_setup.py` first to initialize the knowledge base.
 
 ### Tools not appearing in Claude
-Check `claude_config.json` paths are absolute and servers are running.
+Check `.mcp.json` exists and MCP servers are configured correctly.
 
 ## Contributing
 
@@ -268,7 +268,7 @@ MIT License - see LICENSE file
 ### Enabling Advanced Tool Use (Claude Code)
 To leverage Anthropic's **Advanced Tool Use** features (Tool Search and Programmatic Tool Calling) with this system, you must configure your client (Claude Code).
 
-**Configuration (`claude_config.json`):**
+**Configuration (`.mcp.json`):**
 ```json
 {
     "toolConfiguration": {

@@ -279,10 +279,55 @@ Restart Antigravity. You can now ask:
 
 ### Claude Code
 
-Use the provided `claude_config.json` with:
-- Tool Search enabled for on-demand discovery
-- Programmatic Tool Calling for efficient multi-step workflows
-- Deferred loading for Pixeltable (larger tool set)
+Claude Code uses the `.mcp.json` file in your project root for MCP server configuration.
+
+**Method 1: Use CLI** (recommended):
+```bash
+# Add session-memory MCP server (project scope)
+claude mcp add --transport stdio session-memory \
+  --scope project \
+  -- python ${PWD}/session_memory_server.py
+
+# Add pixeltable-memory MCP server (project scope)
+claude mcp add --transport stdio pixeltable-memory \
+  --scope project \
+  -- python ${PWD}/pixeltable_mcp_server.py
+
+# Verify servers are added
+claude mcp list
+```
+
+**Method 2: Manual `.mcp.json`**:
+
+The project includes a `.mcp.json` file with the servers pre-configured:
+```json
+{
+  "mcpServers": {
+    "session-memory": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["${PWD}/session_memory_server.py"],
+      "env": {"REPO_PATH": "${PWD}"}
+    },
+    "pixeltable-memory": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["${PWD}/pixeltable_mcp_server.py"],
+      "env": {}
+    }
+  }
+}
+```
+
+**Features automatically enabled**:
+- **Tool Search**: Claude dynamically discovers relevant tools on-demand
+- **Programmatic Tool Calling**: Claude can orchestrate multi-step workflows efficiently
+
+No additional configuration needed - these features work automatically in Claude Code.
+
+You can now ask:
+- "What are recent changes in this repo?"
+- "Search for architectural decisions about authentication"
 
 ## Usage Examples
 

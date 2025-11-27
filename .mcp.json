@@ -1,0 +1,22 @@
+{
+    "mcpServers": {
+        "session-memory": {
+            "type": "stdio",
+            "command": "python",
+            "args": [
+                "${PWD}/session_memory_server.py"
+            ],
+            "env": {
+                "REPO_PATH": "${PWD}"
+            }
+        },
+        "pixeltable-memory": {
+            "type": "stdio",
+            "command": "python",
+            "args": [
+                "${PWD}/pixeltable_mcp_server.py"
+            ],
+            "env": {}
+        }
+    }
+}
