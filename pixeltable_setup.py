@@ -294,6 +294,82 @@ def snapshot_knowledge_base(name: str, tags: List[str] = None):
     print(f"✓ Created snapshot: {name}")
 
 
+def list_snapshots():
+    """List all knowledge base snapshots"""
+    try:
+        snapshots = pxt.list_snapshots('org_knowledge')
+        return [{'name': s.name, 'created_at': s.created_at, 'tags': s.tags} for s in snapshots]
+    except Exception:
+        return []
+
+
+def get_knowledge_stats(kb):
+    """Get statistics about the knowledge base"""
+    
+    # Total counts
+    total_items = kb.count()
+    
+    # Count by type
+    type_counts = {}
+    for type_val in ['code', 'decision', 'incident', 'documentation', 'meeting']:
+        count = kb.where(kb.type == type_val).count()
+        if count > 0:
+            type_counts[type_val] = count
+    
+    # Count by service
+    services = kb.select(kb.metadata['service']).collect()
+    unique_services = set(s['service'] for s in services if s.get('service'))
+    
+    return {
+        'total_items': total_items,
+        'by_type': type_counts,
+        'services_count': len(unique_services),
+        'services': list(unique_services)
+    }
+
+
+def list_services(kb):
+    """List all unique service names in the knowledge base"""
+    services = kb.select(kb.metadata['service']).collect()
+    unique_services = sorted(set(s['service'] for s in services if s.get('service')))
+    return unique_services
+
+
+def delete_service_data(kb, service_name: str):
+    """Delete all data for a specific service"""
+    
+    # Count items to be deleted
+    items = kb.where(kb.metadata['service'] == service_name)
+    count = items.count()
+    
+    if count == 0:
+        return {'deleted': 0, 'service': service_name, 'message': 'No data found'}
+    
+    # Delete the items
+    kb.delete(kb.metadata['service'] == service_name)
+    
+    return {'deleted': count, 'service': service_name, 'message': f'Deleted {count} items'}
+
+
+def prune_old_data(kb, days_old: int):
+    """Delete data older than specified days"""
+    from datetime import datetime, timedelta
+    
+    cutoff_date = datetime.now() - timedelta(days=days_old)
+    
+    # Count items to be deleted
+    old_items = kb.where(kb.created_at < cutoff_date)
+    count = old_items.count()
+    
+    if count == 0:
+        return {'deleted': 0, 'message': f'No data older than {days_old} days'}
+    
+    # Delete old items
+    kb.delete(kb.created_at < cutoff_date)
+    
+    return {'deleted': count, 'message': f'Deleted {count} items older than {days_old} days'}
+
+
 if __name__ == "__main__":
     """Example setup"""
     

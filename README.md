@@ -48,44 +48,48 @@ Restart Claude Code to load the MCP servers.
 
 ### 3. Ingest Your Codebase
 
+You can now ask Claude Code to ingest your projects directly:
+
+> "Ingest this codebase as 'auth-service'"
+
+Or use the MCP tool explicitly:
+
 ```python
-from pixeltable_setup import setup_knowledge_base, ingest_codebase
-
-kb = setup_knowledge_base()
-ingest_codebase(kb, '/path/to/your/repo', 'your-service-name')
-```
-
-Or use the helper script:
-
-```bash
-cd ~/.mcp-servers/context-aware-ai-system
-./scripts/ingest.sh
+# Claude will call this tool for you
+ingest_codebase(
+    repo_path=os.getcwd(),
+    service_name="auth-service"
+)
 ```
 
 ### 4. Add Historical Context
 
-```python
-from pixeltable_setup import ingest_adr, ingest_incident
-from datetime import datetime
+> "Add this ADR to the knowledge base"
+> "Record this incident: Auth service outage on Nov 27 due to timeout"
 
+Or use the tools:
+
+```python
 # Add an ADR
-ingest_adr(
-    kb,
-    'docs/adr/001-database-choice.md',
-    'ADR 001: Database Choice'
+ingest_architectural_decision(
+    adr_path="docs/adr/001-database.md",
+    title="ADR 001: Database Choice"
 )
 
 # Add an incident
-ingest_incident(kb, {
-    'title': 'Auth Service Outage - Nov 2024',
-    'description': 'Token validation failed due to...',
-    'date': datetime(2024, 11, 15),
-    'service': 'auth-service',
-    'severity': 'critical',
-    'resolved': True,
-    'root_cause': 'Missing expiry check on refresh tokens'
-})
+ingest_incident(
+    title="Auth Service Outage",
+    description="Timeout in auth service caused 500 errors...",
+    service="auth-service"
+)
 ```
+
+### 5. Manage Your Knowledge Base
+
+> "Show me stats about the knowledge base"
+> "Create a snapshot called 'pre-release'"
+> "List all services"
+
 
 ## Example Queries
 
