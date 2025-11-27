@@ -21,6 +21,8 @@ A hybrid approach combining session memory, long-term persistent knowledge, and 
 - Tool Search Tool: On-demand tool discovery (85% token reduction)
 - Programmatic Tool Calling: Efficient multi-step workflows (37% token reduction)
 
+**📖 Deep Dive**: See [Multi-Project Architecture](multi-project-architecture.md) for how session and long-term memory work together across multiple projects.
+
 ## Quick Start
 
 ### 1. Clone and Install
@@ -104,6 +106,15 @@ Once configured, Claude can query both memory tiers:
 "Have we had any incidents related to database connections?"
 "Find all code related to user authentication"
 ```
+
+**Project-specific queries** (with filtering):
+```
+"Show me ADRs about database design in the auth-service project"
+"What incidents has payment-api had?"
+"Search for rate limiting code in the web-app service"
+```
+
+The Pixeltable tools support optional `service` parameter to filter results to specific projects.
 
 **Complex orchestration** (programmatic):
 ```

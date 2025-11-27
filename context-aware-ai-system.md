@@ -518,8 +518,12 @@ See [CONTRIBUTING.md - Automation Opportunities](CONTRIBUTING.md#automation-oppo
 4. **Ingest**: Add your codebase and ADRs
 5. **Test**: Ask "What are recent changes?" and verify it works
 6. **Automate** (optional): Set up git hooks to keep knowledge base current (see [CONTRIBUTING.md](CONTRIBUTING.md#automation-opportunities))
-7. **Iterate**: Add incidents, meetings, and other context over time
 
+## Further Reading
+
+- **[Multi-Project Architecture](multi-project-architecture.md)** - How session and Pixeltable memory work together across multiple projects, with project filtering examples
+- **[Pixeltable Overview](pixeltable-overview.md)** - Deep dive into Pixeltable's capabilities and architecture
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development setup and automation opportunities
 The system gets smarter as you add more context. It's not just about larger context windows—it's about **persistent, queryable memory** that compounds over time.
 
 ---
