@@ -257,18 +257,16 @@ pxt.restore('my_table', snapshot='pre-refactor')
 - **Community**: Growing, smaller than established tools
 - **Enterprise Use**: Adopted by teams at AI startups and research labs
 
-### Performance Benchmarks
+### Performance Characteristics
 
-| Operation | Latency | Dataset Size |
-|-----------|---------|--------------|
-| Insert (no transformations) | Sub-millisecond to ~1ms | 100k rows |
-| Insert (with embedding) | 50-200ms | Depends on model |
-| Semantic search | 100-500ms | 1M embeddings |
-| Incremental update | Only changed rows | Any size |
+| Operation | Performance Profile |
+|-----------|---------------------|
+| **Insert (no transformations)** | Very fast—in-memory operations with PostgreSQL persistence |
+| **Insert (with embedding)** | Model-dependent; CPU/GPU bound based on embedding model size |
+| **Semantic search** | Efficient for typical production workloads; scales with index size |
+| **Incremental update** | Only recomputes affected columns; unchanged data uses cached results |
 
-**Note**: Performance figures are representative based on typical workloads. Actual performance varies by model size, data complexity, and hardware configuration.
-
-**Scalability**: Handles TB-scale multimodal datasets in production with proper worker configuration.
+**Scalability**: Handles TB-scale multimodal datasets in production with proper worker configuration. Performance depends on hardware, model complexity, and data volume.
 
 ### Failure Handling
 
