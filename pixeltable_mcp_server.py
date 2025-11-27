@@ -71,7 +71,7 @@ class PixeltableMemoryServer:
             .limit(limit)
         )
         
-        return [dict(row) for row in matches]
+        return [dict(row) for row in matches.collect()]
     
     async def get_adrs(self, topic: Optional[str] = None, limit: int = 5) -> List[Dict[str, Any]]:
         """Get Architectural Decision Records"""
@@ -95,7 +95,7 @@ class PixeltableMemoryServer:
             self.kb.metadata
         ).limit(limit)
         
-        return [dict(row) for row in results]
+        return [dict(row) for row in results.collect()]
     
     async def get_incidents(
         self,
@@ -123,7 +123,7 @@ class PixeltableMemoryServer:
             self.kb.metadata
         ).limit(limit)
         
-        return [dict(row) for row in results]
+        return [dict(row) for row in results.collect()]
     
     async def get_full_content(self, path: str) -> Optional[str]:
         """Get full content for a specific item by path"""
@@ -135,7 +135,7 @@ class PixeltableMemoryServer:
             self.kb.content
         ).limit(1)
         
-        items = list(result)
+        items = list(result.collect())
         return items[0]['content'] if items else None
     
     async def search_meetings(
@@ -160,7 +160,7 @@ class PixeltableMemoryServer:
             score=sim
         ).limit(limit)
         
-        return [dict(row) for row in results]
+        return [dict(row) for row in results.collect()]
     
     async def get_service_context(self, service: str) -> Dict[str, Any]:
         """Get comprehensive context for a specific service"""

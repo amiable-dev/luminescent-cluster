@@ -32,12 +32,12 @@ def setup_knowledge_base():
     kb = pxt.create_table(
         'org_knowledge',
         {
-            'type': pxt.StringType(),           # 'code', 'decision', 'incident', 'meeting'
-            'path': pxt.StringType(),           # File path or URL
-            'content': pxt.StringType(),        # Main content
-            'title': pxt.StringType(),          # Short title
-            'created_at': pxt.TimestampType(),  # When created
-            'metadata': pxt.JsonType(),         # Additional metadata
+            'type': pxt.String,           # 'code', 'decision', 'incident', 'meeting'
+            'path': pxt.String,           # File path or URL
+            'content': pxt.String,        # Main content
+            'title': pxt.String,          # Short title
+            'created_at': pxt.Timestamp,  # When created
+            'metadata': pxt.Json,         # Additional metadata
         }
     )
     
@@ -67,8 +67,7 @@ def setup_knowledge_base():
         return f"Summary: {snippet[:200]}..."
     
     kb.add_computed_column(
-        'summary',
-        generate_summary(kb.content)
+        summary=generate_summary(kb.content)
     )
     print("✓ Added summary computed column")
     
@@ -87,8 +86,7 @@ def setup_knowledge_base():
         )
     
     kb.add_computed_column(
-        'is_adr',
-        is_architecture_decision(kb.path, kb.content)
+        is_adr=is_architecture_decision(kb.path, kb.content)
     )
     print("✓ Added ADR detection column")
     
@@ -108,12 +106,12 @@ def setup_meetings_table():
     meetings = pxt.create_table(
         'meetings',
         {
-            'title': pxt.StringType(),
-            'date': pxt.TimestampType(),
-            'attendees': pxt.JsonType(),         # List of attendees
-            'audio_path': pxt.StringType(),      # Path to audio file
-            'transcript': pxt.StringType(),      # Will be computed
-            'topics': pxt.JsonType(),            # Tags/topics
+            'title': pxt.String,
+            'date': pxt.Timestamp,
+            'attendees': pxt.Json,         # List of attendees
+            'audio_path': pxt.String,      # Path to audio file
+            'transcript': pxt.String,      # Will be computed
+            'topics': pxt.Json,            # Tags/topics
         }
     )
     
@@ -131,6 +129,8 @@ def setup_meetings_table():
     
     return meetings
 
+
+from datetime import datetime
 
 def ingest_codebase(kb, repo_path: str, service_name: str):
     """Ingest code files from a repository"""
@@ -171,7 +171,7 @@ def ingest_codebase(kb, repo_path: str, service_name: str):
                     'path': str(relative_path),
                     'content': content,
                     'title': file,
-                    'created_at': pxt.functions.now(),
+                    'created_at': datetime.now(),
                     'metadata': {
                         'service': service_name,
                         'language': file.split('.')[-1],
@@ -202,7 +202,7 @@ def ingest_adr(kb, adr_path: str, title: str):
         'path': adr_path,
         'content': content,
         'title': title,
-        'created_at': pxt.functions.now(),
+        'created_at': datetime.now(),
         'metadata': {
             'category': 'architecture',
             'status': 'accepted'  # or 'proposed', 'deprecated'
@@ -258,7 +258,7 @@ def search_knowledge(kb, query: str, type_filter: Optional[str] = None, limit: i
         .limit(limit)
     )
     
-    return list(matches)
+    return list(matches.collect())
 
 
 def get_adrs(kb, topic: Optional[str] = None):
@@ -278,7 +278,7 @@ def get_adrs(kb, topic: Optional[str] = None):
             kb.title,
             kb.summary,
             kb.created_at
-        ).limit(10)
+        ).limit(10).collect()
     )
 
 

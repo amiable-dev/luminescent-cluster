@@ -239,10 +239,57 @@ def run_all_examples():
     
     # Example 8: Programmatic concept
     example_8_programmatic_query()
+
+    # Example 9: Graceful Fallback (RAG)
+    example_9_rag_fallback(kb)
     
     print("\n" + "=" * 60)
     print("✓ All examples completed!")
     print("=" * 60)
+
+
+def example_9_rag_fallback(kb):
+    """Example 9: Graceful Fallback / RAG Pattern"""
+    print("\n" + "=" * 60)
+    print("Example 9: Graceful Fallback (RAG Pattern)")
+    print("=" * 60)
+    
+    print("Demonstrating how to use the system with models that DON'T support tools.")
+    print("Strategy: Pre-fetch context -> Construct Prompt -> Send to LLM\n")
+    
+    # 1. User Query
+    user_query = "What caused the context window overflow incident?"
+    print(f"User Query: {user_query}\n")
+    
+    # 2. Application Logic: Retrieve Context (The "R" in RAG)
+    print("... Retrieving relevant context (Application Layer) ...")
+    context_items = search_knowledge(kb, query=user_query, limit=2)
+    
+    # 3. Construct Prompt (The "A" in RAG)
+    context_str = ""
+    for item in context_items:
+        context_str += f"""
+---
+Title: {item['title']}
+Type: {item['type']}
+Content: {item.get('summary', 'No summary')}
+---
+"""
+    
+    final_prompt = f"""
+Context information is below.
+---------------------
+{context_str}
+---------------------
+Given the context information and not prior knowledge, answer the query.
+Query: {user_query}
+"""
+    
+    print("\nGenerated Prompt for LLM:")
+    print("-" * 40)
+    print(final_prompt.strip())
+    print("-" * 40)
+    print("\n(This prompt would now be sent to the non-tool-capable model)")
 
 
 if __name__ == "__main__":

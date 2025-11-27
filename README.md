@@ -260,3 +260,56 @@ MIT License - see LICENSE file
 - [Pixeltable Documentation](https://docs.pixeltable.com)
 - [Claude Advanced Tool Use](https://www.anthropic.com/engineering/advanced-tool-use)
 - [MCP Protocol](https://modelcontextprotocol.org)
+
+## Advanced Usage & Fallbacks
+
+## Advanced Usage & Fallbacks
+
+### Enabling Advanced Tool Use (Claude Code)
+To leverage Anthropic's **Advanced Tool Use** features (Tool Search and Programmatic Tool Calling) with this system, you must configure your client (Claude Code).
+
+**Configuration (`claude_config.json`):**
+```json
+{
+    "toolConfiguration": {
+        "toolSearch": {
+            "enabled": true,
+            "provider": "regex"  // or "embedding"
+        },
+        "programmaticToolCalling": {
+            "enabled": true
+        },
+        "deferredLoading": {
+            "pixeltableMemory": true  // Defer heavy tools
+        }
+    }
+}
+```
+
+**How it works:**
+-   **Tool Search**: When enabled, Claude Code automatically handles the "beta headers" and tool discovery process. You do not need to implement `search_tools` yourself; the client handles it.
+-   **Programmatic Tool Calling**: Claude Code will write Python orchestration scripts to call our atomic tools (`get_recent_commits`, `search_knowledge`) efficiently.
+
+### Graceful Fallback (RAG Pattern)
+For other AI clients or models that do not support tool calling (or if you prefer manual control), the system fully supports the **RAG (Retrieval Augmented Generation)** pattern.
+
+**How to use:**
+1.  **Pre-fetch Context**: Use the provided scripts to search for relevant information.
+2.  **Inject Context**: Insert the retrieved text into your prompt.
+
+**Example (Python):**
+```python
+# 1. Retrieve context programmatically
+context = search_knowledge(kb, query="database schema", limit=2)
+
+# 2. Construct prompt
+prompt = f"""
+Context: {context}
+Question: How do I query the user table?
+"""
+
+# 3. Send to LLM
+response = llm.complete(prompt)
+```
+
+See `examples/example_usage.py` (Example 9) for a complete working demonstration.
