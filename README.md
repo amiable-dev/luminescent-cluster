@@ -21,52 +21,28 @@ A hybrid approach combining session memory, long-term persistent knowledge, and 
 - Tool Search Tool: On-demand tool discovery (85% token reduction)
 - Programmatic Tool Calling: Efficient multi-step workflows (37% token reduction)
 
-## Installation
+## Quick Start
 
-### Prerequisites
-
-```bash
-# Install Python dependencies
-pip install pixeltable gitpython mcp sentence-transformers
-
-# Optional: Install OpenAI for summaries
-pip install openai
-```
-
-### Setup Pixeltable Knowledge Base
+### 1. Clone and Install
 
 ```bash
-# Initialize knowledge base
-python pixeltable_setup.py
+# Clone to a standard location (system-wide MCP servers)
+git clone https://github.com/your-org/context-aware-ai-system.git ~/.mcp-servers/context-aware-ai-system
+cd ~/.mcp-servers/context-aware-ai-system
+
+# Run installer (sets up user-scope MCP servers)
+./install.sh
 ```
 
-### Configure MCP Servers
+The installer will:
+- Install Python dependencies
+- Configure MCP servers in Claude Code (user scope)
+- Initialize Pixeltable knowledge base
+- Make servers available across all your projects
 
-The system includes two MCP servers:
+### 2. Restart Claude Code
 
-1. **Session Memory Server** (`session_memory_server.py`)
-   - Provides git context
-   - No external dependencies beyond gitpython
-
-2. **Pixeltable Memory Server** (`pixeltable_mcp_server.py`)
-   - Provides semantic search over organizational knowledge
-   - Requires Pixeltable to be set up first
-
-## Usage
-
-### 1. Start MCP Servers
-
-```bash
-# In terminal 1: Session memory
-python session_memory_server.py
-
-# In terminal 2: Long-term memory
-python pixeltable_mcp_server.py
-```
-
-### 2. Configure Claude Code
-
-Use the `.mcp.json` file or Claude Code CLI to connect to both MCP servers.
+Restart Claude Code to load the MCP servers.
 
 ### 3. Ingest Your Codebase
 
@@ -75,6 +51,13 @@ from pixeltable_setup import setup_knowledge_base, ingest_codebase
 
 kb = setup_knowledge_base()
 ingest_codebase(kb, '/path/to/your/repo', 'your-service-name')
+```
+
+Or use the helper script:
+
+```bash
+cd ~/.mcp-servers/context-aware-ai-system
+./scripts/ingest.sh
 ```
 
 ### 4. Add Historical Context

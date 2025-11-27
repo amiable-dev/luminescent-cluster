@@ -230,22 +230,6 @@ OPENAI_API_KEY=sk-...
 PIXELTABLE_HOME=/data
 ```
 
-### First-Time Setup
-
-```bash
-# Initialize knowledge base and ingest your codebase
-docker-compose exec pixeltable-memory python pixeltable_setup.py
-
-# Ingest your repository
-docker-compose exec pixeltable-memory python -c "
-from pixeltable_setup import setup_knowledge_base, ingest_codebase
-kb = setup_knowledge_base()
-ingest_codebase(kb, '/repos', 'your-service-name')
-"
-```
-
-**Alternative**: Use helper script
-```bash
 # Create scripts/ingest.py in your repo
 docker-compose exec pixeltable-memory python /app/scripts/ingest.py
 ```
@@ -331,29 +315,18 @@ You can now ask:
 
 ## Usage Examples
 
-### Direct CLI (No AI Agent)
+Once installed, the MCP servers work automatically in any Claude Code project.
 
-```bash
-# Get recent commits
-python agent_tools.py session get_recent_commits --limit 5
+### Example Queries
 
-# Search knowledge base
-python agent_tools.py pixeltable search_knowledge --query "authentication"
-
-# Get architectural decisions
-python agent_tools.py pixeltable get_architectural_decisions --topic "database"
-```
-
-### Via AI Agent
-
-**Session queries** (fast):
+**Session queries** (git context in current project):
 ```
 "What files changed in the last 24 hours?"
 "Show recent commits about authentication"
 "What's the current branch status?"
 ```
 
-**Long-term queries** (semantic):
+**Long-term queries** (semantic search across org knowledge):
 ```
 "What architectural decisions did we make about caching?"
 "Have we had incidents related to database connections?"
