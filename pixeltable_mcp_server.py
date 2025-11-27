@@ -177,21 +177,28 @@ class PixeltableMemoryServer:
         if not self.kb:
             return {}
         
-        service_data = self.kb.where(
-            self.kb.metadata['service'] == service
-        )
-        
         # Get counts by type
-        code_count = len(list(service_data.where(self.kb.type == 'code')))
-        decision_count = len(list(service_data.where(self.kb.type == 'decision')))
-        incident_count = len(list(service_data.where(self.kb.type == 'incident')))
+        code_count = self.kb.where(
+            (self.kb.metadata['service'] == service) & (self.kb.type == 'code')
+        ).count()
+        
+        decision_count = self.kb.where(
+            (self.kb.metadata['service'] == service) & (self.kb.type == 'decision')
+        ).count()
+        
+        incident_count = self.kb.where(
+            (self.kb.metadata['service'] == service) & (self.kb.type == 'incident')
+        ).count()
         
         # Get recent incidents
         recent_incidents = list(
-            service_data.where(self.kb.type == 'incident')
+            self.kb.where(
+                (self.kb.metadata['service'] == service) & (self.kb.type == 'incident')
+            )
             .order_by(self.kb.created_at, asc=False)
             .select(self.kb.title, self.kb.created_at)
             .limit(3)
+            .collect()
         )
         
         return {
@@ -284,7 +291,7 @@ class PixeltableMemoryServer:
         try:
             return list_services(self.kb)
         except Exception as e:
-            return []
+            return [f"Error listing services: {str(e)}"]
     
     # Snapshot Operations
     async def create_knowledge_snapshot(
