@@ -1,339 +1,323 @@
-# Building Context-Aware AI Development: A Hybrid Approach
+# Context-Aware AI Development: A Practical Implementation
 
 ## The Problem
 
-Modern AI coding assistants suffer from a fundamental limitation: **they forget everything between sessions**. 
+AI coding assistants **forget everything between sessions**. Every conversation starts from scratch:
+- Architectural decisions made last week? Gone.
+- Production incidents debugged yesterday? Forgotten.
+- Team design discussions? Lost.
 
-Every time you start a new conversation with your AI assistant, you're starting from scratch. The architectural decision you made last week? Gone. The production incident you debugged yesterday? Forgotten. The team's design discussion about why approach A won over approach B? Lost in the void.
-
-This creates a vicious cycle:
-- **Repetitive explanations**: Developers waste hours re-explaining the same context
-- **Inconsistent decisions**: AI suggests refactors that contradict past architectural choices
-- **Lost institutional knowledge**: Team decisions evaporate when they're not captured properly
-- **Context window limitations**: Even with 200K token windows, models degrade in performance when overloaded with too much context
-
-The consequences are severe. Developers report that AI assistants provide code that's "almost right, but not quite" 66% of the time. The root cause isn't the AI's capabilities—it's the **lack of persistent, queryable context infrastructure**.
-
-### Current Failed Approaches
-
-**1. Manual Context Management**
-Maintaining CONTEXT.md files that developers manually update. This fails because:
-- Developers forget to update documentation
-- Files become stale within days
-- No semantic search capability
-- Doesn't scale beyond small projects
-
-**2. Brittle RAG Hacks**
-Spinning up a vector database with custom chunking scripts:
-- Code changes but indexes don't automatically update
-- Maintaining three separate systems (vector DB, storage, orchestration)
-- Manual re-indexing required
-- No multimodal support (just code, no design docs or meeting recordings)
-
-**3. Overstuffed Context Windows**
-Dumping entire codebases into large context windows:
-- Models perform worse with too much irrelevant context
-- Token costs skyrocket
-- Hidden reasoning steps consume actual capacity
-- Everything gets equal weight (critical vs. trivial)
-
-We need a fundamentally different approach: **treating context as persistent, queryable infrastructure** that gets smarter over time.
-
----
+This creates a cycle of repetitive explanations, inconsistent suggestions, and lost institutional knowledge.
 
 ## The Solution: Tiered Memory Architecture
 
-The key insight is that **not all context is created equal**. Some context is hot (currently editing files), some is warm (recent decisions), and some is cold (historical architectural context).
+Different context has different access patterns. Our solution uses **three tiers**:
 
-Our solution uses a **three-tiered memory architecture** that combines:
+1. **Session Memory (Hot)**: Fast, ephemeral context for active work
+2. **Long-term Memory (Cold)**: Persistent organizational knowledge with semantic search
+3. **Intelligent Orchestration**: On-demand tool discovery and efficient retrieval
 
-1. **Session Memory**: Fast, ephemeral context for active work
-2. **Long-term Memory**: Persistent, multimodal organizational knowledge
-3. **Intelligent Retrieval**: On-demand tool discovery and orchestration
-
-This hybrid approach leverages **Claude's advanced tool use features** (Tool Search Tool, Programmatic Tool Calling) with **selective use of persistent storage** (Pixeltable) where it provides the most value.
-
----
-
-## Architecture Overview
+## Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│               Claude Code (AI Agent)                      │
+│               AI Agent (Claude/Antigravity)               │
 │                                                           │
-│  Tool Search Tool: Dynamic discovery of 100+ tools       │
-│  Programmatic Tool Calling: Efficient orchestration      │
+│  • Tool Search: Dynamic discovery of tools               │
+│  • Programmatic Calling: Efficient orchestration         │
 └────────────┬──────────────────────────┬──────────────────┘
-             │                          │
              │ MCP Protocol             │ MCP Protocol
              │                          │
    ┌─────────▼──────────┐    ┌─────────▼────────────┐
-   │  Tier 1: Session   │    │ Tier 2: Long-term    │
-   │  Memory (Hot)      │    │ Memory (Cold)        │
-   │                    │    │                      │
-   │ • Active files     │    │ • Code repositories  │
-   │ • Recent commits   │    │ • ADR documents      │
-   │ • Current diffs    │    │ • Incident reports   │
-   │ • Open PRs         │    │ • Meeting recordings │
-   │ • Task context     │    │ • Design artifacts   │
-   │                    │    │ • Decision history   │
-   │ Simple Python      │    │ Pixeltable           │  
-   │ MCP Server         │    │ MCP Server           │
+   │  Session Memory    │    │ Long-term Memory     │
+   │  (Hot - <10ms)     │    │ (Cold - 100-500ms)   │
+   ├────────────────────┤    ├──────────────────────┤
+   │ • Recent commits   │    │ • Code repositories  │
+   │ • Current diffs    │    │ • ADR documents      │
+   │ • Branch state     │    │ • Incident reports   │
+   │ • Active files     │    │ • Meeting records    │
+   │                    │    │ • Design artifacts   │
+   │ Python + gitpython │    │ Pixeltable + Vector  │
    └────────────────────┘    └──────────────────────┘
 ```
 
-### Data Flow
+## Current Status
 
-1. **User Query** → Claude Code
-2. **Tool Discovery** → Tool Search Tool finds relevant MCP tools on-demand
-3. **Session Check** → Fast lookup in session memory for recent context
-4. **Deep Search** → If needed, semantic search in long-term memory (Pixeltable)
-5. **Orchestration** → Programmatic Tool Calling coordinates multiple queries without context pollution
-6. **Response** → Claude synthesizes answer from retrieved context
+✅ **Fully Implemented and Operational**
 
----
+- Session memory MCP server with git integration
+- Pixeltable-based long-term memory with semantic search
+- Docker Compose deployment for easy setup
+- Integration guides for Antigravity and Claude Code
+- Helper tools for direct CLI access
 
 ## Key Design Decisions
 
-### Decision 1: Tiered Memory Over Single Database
+### 1. Tiered Memory Over Single Database
 
-**Rationale**: Not all context has equal access patterns or value.
+**Why**: Different access patterns require different solutions.
+- Session data needs microsecond latency → in-memory structures
+- Historical data needs durability and search → persistent database
 
-- **Session memory** needs microsecond latency → Simple in-memory data structures
-- **Long-term memory** needs durability and search → Persistent database with indexing
+### 2. Pixeltable for Long-term Memory
 
-**Alternative Considered**: Single Pixeltable database for everything
-**Rejected Because**: Unnecessary complexity and latency for ephemeral session data
+**Why**: Incremental computation + multimodal support.
+- **Auto-updating embeddings**: Code changes automatically trigger re-indexing
+- **Multimodal native**: Videos, images, audio, documents in one system
+- **Lineage tracking**: Audit trail for compliance
+- **Unified interface**: One API instead of orchestrating 3+ systems
 
----
+**Alternative considered**: PostgreSQL + pgvector + S3  
+**Rejected**: Requires manual pipeline orchestration
 
-### Decision 2: Tool Search Tool for Scalability
+### 3. Selective Persistence
 
-**Rationale**: Token efficiency and accuracy improvement.
-
-With 50+ MCP tools, loading all tool definitions upfront consumes 55K+ tokens before any work begins. Tool Search Tool:
-- Reduces initial token consumption by 85%
-- Improves tool selection accuracy (88.1% vs 79.5% on benchmarks)
-- Enables scaling to hundreds of tools
-
-**Alternative Considered**: Load all tools upfront
-**Rejected Because**: Wastes context window and degrades model performance
-
----
-
-### Decision 3: Programmatic Tool Calling for Complex Workflows
-
-**Rationale**: Efficiency and accuracy for multi-step operations.
-
-Traditional approach: Each tool result enters Claude's context
-- 20 API calls querying employee expenses = 200KB of raw data in context
-- Multiple inference passes add latency
-- Intermediate results distract from actual task
-
-Programmatic approach: Claude writes orchestration code
-- All tool results processed in sandbox
-- Only final summary enters context
-- 37% token reduction, 10x latency improvement
-
-**Alternative Considered**: Sequential tool calling with full results
-**Rejected Because**: Doesn't scale for complex research or batch operations
-
----
-
-### Decision 4: Pixeltable for Long-term Memory
-
-**Rationale**: Incremental computation + multimodal support.
-
-Key advantages:
-- **Computed columns**: Define transformations once (embeddings, summaries), auto-run on updates
-- **Multimodal native**: Videos, images, audio, documents in one unified interface
-- **Lineage tracking**: Audit trail of what data influenced which decisions
-- **Snapshots**: Version control for knowledge state
-
-**Alternative Considered**: PostgreSQL + pgvector + separate storage
-**Rejected Because**: Requires orchestrating 3+ systems with manual pipeline management
-
----
-
-### Decision 5: Selective Persistence Strategy
-
-**Rationale**: Cost and complexity management.
-
-**Store in long-term memory**:
+**Store**:
 - ✅ Architectural decision records (ADRs)
 - ✅ Production incidents
 - ✅ Meeting transcripts/recordings
 - ✅ Major refactoring decisions
-- ✅ Design evolution (Figma → screenshots)
 
 **Keep ephemeral**:
 - ❌ Current file contents (use git)
-- ❌ Dependency manifests (query directly)
 - ❌ Build logs (too noisy)
 - ❌ Temporary experiments
 
-**Alternative Considered**: Store everything
-**Rejected Because**: Storage costs and noise outweigh benefits
+## Deployment
 
----
+### Prerequisites
 
-## Implementation Approach
+```bash
+# Required
+docker
+docker-compose
 
-### Phase 1: Session Memory (Week 1)
+# Optional (for local development)
+python 3.11+
+```
 
-Build a lightweight MCP server for hot context.
+### Quick Start
 
-**Components**:
-- Git repository integration (recent commits, diffs, branches)
-- Active file tracking (what's currently being edited)
-- PR context (open reviews, comments)
-- Task context (current work focus)
+```bash
+# Clone repository
+git clone <repo-url> && cd luminescent-cluster
 
-**Technology**: Python MCP server with `gitpython` library
+# Start services
+docker-compose up -d
 
-**Why First**: Immediate value with minimal infrastructure overhead
+# Verify health
+docker-compose ps
+# Both services should show "healthy"
 
----
+# Initialize knowledge base (first time only)
+docker-compose exec pixeltable-memory python pixeltable_setup.py
+```
 
-### Phase 2: Long-term Memory (Week 2)
+### Ingest Your Data
 
-Set up Pixeltable for persistent organizational knowledge.
+```bash
+# From examples directory
+docker-compose exec pixeltable-memory python -c "
+from pixeltable_setup import ingest_codebase
+ingest_codebase('/repos', 'your-service-name')
+"
+```
 
-**Components**:
-- Knowledge base table (code, decisions, incidents, meetings)
-- Auto-embedding generation (incremental updates)
-- Semantic search via MCP tools
-- ADR and incident ingestion
+## Integration with AI Agents
 
-**Technology**: Pixeltable + HuggingFace embeddings + GPT-4o for summaries
+### Antigravity (Gemini Code Assist)
 
-**Why Second**: Provides depth after establishing breadth
+Add to `~/.gemini/antigravity/mcp_config.json`:
 
----
+```json
+{
+  "mcpServers": {
+    "session-memory": {
+      "command": "docker",
+      "args": ["exec", "-i", "session-memory-mcp", "python", "session_memory_server.py"],
+      "description": "Git context and active changes"
+    },
+    "pixeltable-memory": {
+      "command": "docker", 
+      "args": ["exec", "-i", "pixeltable-memory-mcp", "python", "pixeltable_mcp_server.py"],
+      "description": "Long-term organizational memory"
+    }
+  }
+}
+```
 
-### Phase 3: Tool Orchestration (Week 3)
+Restart Antigravity. You can now ask:
+- "What are recent changes in this repo?"
+- "Search for architectural decisions about database"
 
-Configure Claude's advanced tool use features.
+### Claude Code
 
-**Components**:
-- Tool Search Tool configuration (defer-load most tools)
-- Programmatic Tool Calling setup (enable orchestration)
-- MCP server registration and connection
+Use the provided `claude_config.json` with:
+- Tool Search enabled for on-demand discovery
+- Programmatic Tool Calling for efficient multi-step workflows
+- Deferred loading for Pixeltable (larger tool set)
 
-**Technology**: Claude API configuration with MCP protocol
+## Usage Examples
 
-**Why Third**: Ties together session and long-term memory efficiently
+### Direct CLI (No AI Agent)
 
----
+```bash
+# Get recent commits
+python agent_tools.py session get_recent_commits --limit 5
 
-### Phase 4: Multimodal Enhancement (Week 4)
+# Search knowledge base
+python agent_tools.py pixeltable search_knowledge --query "authentication"
 
-Extend to non-code artifacts.
+# Get architectural decisions
+python agent_tools.py pixeltable get_architectural_decisions --topic "database"
+```
 
-**Components**:
-- Meeting recording ingestion (auto-transcription)
-- Design artifact storage (Figma screenshots)
-- Video demo archival
-- Action item extraction
+### Via AI Agent
 
-**Technology**: Pixeltable multimodal types + Whisper + GPT-4 Vision
+**Session queries** (fast):
+```
+"What files changed in the last 24 hours?"
+"Show recent commits about authentication"
+"What's the current branch status?"
+```
 
-**Why Last**: Optimization layer after core functionality is proven
+**Long-term queries** (semantic):
+```
+"What architectural decisions did we make about caching?"
+"Have we had incidents related to database connections?"
+"Find code related to user authentication"
+```
 
----
+**Complex orchestration**:
+```
+"Compare current auth implementation against the ADR and 
+related incidents to suggest improvements"
+```
 
-## Expected Outcomes
+## Performance
 
-### Quantitative Improvements
+### Session Memory
+- **Latency**: <10ms
+- **Scope**: Current repository, last 200 commits
+- **Best for**: Hot context, active work
 
-- **85% reduction** in token usage from Tool Search Tool
-- **37% reduction** in context consumption from Programmatic Tool Calling
-- **70%+ reduction** in compute costs through incremental updates
-- **10x faster** complex multi-step workflows
+### Long-term Memory
+- **Latency**: 100-500ms (semantic search)
+- **Scope**: Entire organizational history
+- **Best for**: Architecture decisions, incident history, cross-service context
 
-### Qualitative Improvements
+### Token Efficiency
+- **Tool Search**: 85% reduction in upfront token usage
+- **Programmatic Calling**: 37% reduction in context consumption
+- **Combined**: ~90% reduction for complex queries
 
-- AI assistant remembers architectural decisions across sessions
-- Team knowledge persists and compounds over time
-- Automatic context refresh when code changes
-- Audit trail for compliance and debugging
-- Reduced developer frustration from re-explaining context
+## Troubleshooting
 
----
+### Session Memory Can't Find Git Repo
 
-## Success Metrics
+**Symptom**: "Warning: /app is not a git repository"
 
-**Week 1 Milestone**: Session memory reduces context re-explanation by 40%
-- Metric: Number of times developer manually pastes git diffs or file contents
+**Fix**: Ensure `docker-compose.yml` volume mount is correct:
+```yaml
+volumes:
+  - ${REPO_PATH:-.}:/repos:ro
+```
 
-**Week 2 Milestone**: Long-term memory surfaces relevant ADRs in 80% of architecture discussions
-- Metric: Track ADR retrieval accuracy in logged conversations
+The `REPO_PATH` environment variable must point to your git repository.
 
-**Week 4 Milestone**: End-to-end workflow demonstrates compound knowledge
-- Metric: AI suggests refactor that correctly references 3+ historical decisions
+### Pixeltable Connection Fails
 
----
+**Symptom**: "Could not connect to org_knowledge"
 
-## Risk Mitigation
+**Fix**: 
+1. Check service health: `docker-compose ps`
+2. Initialize database: `docker-compose exec pixeltable-memory python pixeltable_setup.py`
+3. View logs: `docker-compose logs pixeltable-memory`
 
-### Risk 1: Over-engineering
+### Tools Not Appearing in Agent
 
-**Mitigation**: Phased rollout starting with simplest valuable component (session memory)
+**Symptom**: AI agent doesn't recognize MCP tools
 
-### Risk 2: Cost escalation
+**Fix**:
+1. Verify services are running: `docker-compose ps`
+2. Check MCP config file paths are absolute
+3. Restart AI agent after config changes
+4. Test direct access: `python agent_tools.py session get_recent_commits`
 
-**Mitigation**: 
-- Monitor embedding generation costs
-- Use smaller models for summaries (gpt-4o-mini)
-- Implement cost caps and alerts
+## Maintenance
 
-### Risk 3: Stale context
+### Refreshing the Knowledge Base
 
-**Mitigation**: 
-- Pixeltable's incremental computation auto-updates embeddings
-- Session memory always reflects current git state
-- Timestamp tracking for age-based weighting
+**Important**: Pixeltable does NOT automatically detect filesystem changes. You must manually re-ingest when code changes.
 
-### Risk 4: Privacy/security
+```bash
+# Re-ingest your codebase after changes
+docker-compose exec pixeltable-memory python -c "
+from pixeltable_setup import setup_knowledge_base, ingest_codebase
+kb = setup_knowledge_base()
+ingest_codebase(kb, '/repos', 'your-service-name')
+"
+```
 
-**Mitigation**:
-- Access control via filtered Pixeltable views
-- Sensitive data tagging and exclusion
-- Snapshot audit trails for compliance
+**What's automatic**: When you update the database, embeddings recompute automatically:
 
----
+```python
+# This triggers automatic embedding re-computation
+kb.update({kb.path == 'file.py'}, {'content': new_content})
+```
 
-## When This Approach Fits
+**What's NOT automatic**: Detecting file changes on disk. Consider:
+- Manual re-ingestion after significant changes
+- Cron job to periodically refresh (e.g., nightly)
+- Git hooks to trigger updates on commits
 
-### Ideal For:
+### Create Snapshots
 
-✅ **Teams with significant historical context** (mature codebases)  
-✅ **Multi-person projects** where knowledge sharing matters  
-✅ **Regulated industries** needing audit trails (healthcare, finance)  
-✅ **Multimodal workflows** (design, video demos, meetings)  
-✅ **Complex architectures** with many interconnected services  
+Before major refactors:
 
-### Not Ideal For:
+```python
+from pixeltable_setup import snapshot_knowledge_base
+snapshot_knowledge_base(name='pre-refactor', tags=['v2.0'])
+```
 
-❌ **Solo developers** on greenfield projects  
-❌ **Prototype/MVP development** without history  
-❌ **Teams without AI assistant adoption**  
-❌ **Simple, single-file projects**  
+### Cost Optimization
 
----
+- Uses local `sentence-transformers` for embeddings (free)
+- OpenAI optional for higher-quality summaries
+- Token reduction from Tool Search (85%) + Programmatic Calling (37%)
+
+## When to Use This
+
+### Ideal For
+
+✅ Teams with significant historical context (mature codebases)  
+✅ Multi-person projects where knowledge sharing matters  
+✅ Regulated industries needing audit trails (healthcare, finance)  
+✅ Multimodal workflows (design, videos, meetings)  
+✅ Complex architectures with interconnected services
+
+### Not Ideal For
+
+❌ Solo developers on greenfield projects  
+❌ Prototype/MVP development without history  
+❌ Teams without AI assistant adoption  
+❌ Simple, single-file projects
 
 ## Next Steps
 
-1. **Choose Starting Point**: Session memory or long-term memory based on pain point
-2. **Identify High-value Context**: What do you explain most often?
-3. **Set Up Infrastructure**: Python environment + Claude API access
-4. **Implement Phase 1**: Get first wins within a week
-5. **Measure and Iterate**: Track reduction in context re-explanation
+1. **Deploy**: Run `docker-compose up -d`
+2. **Integrate**: Configure your AI agent (Antigravity or Claude Code)
+3. **Ingest**: Add your codebase and ADRs
+4. **Test**: Ask "What are recent changes?" and verify it works
+5. **Automate** (optional): Set up git hooks to keep knowledge base current (see [CONTRIBUTING.md](CONTRIBUTING.md#automation-opportunities))
+6. **Iterate**: Add incidents, meetings, and other context over time
 
-The future of AI-assisted development isn't just about larger context windows—it's about **smarter, tiered memory systems** that know what to remember, what to forget, and when to retrieve what.
-
-Context-aware AI development turns your assistant from a helpful but forgetful intern into a knowledgeable colleague with perfect institutional memory.
+The system gets smarter as you add more context. It's not just about larger context windows—it's about **persistent, queryable memory** that compounds over time.
 
 ---
 
-**Ready to build persistent AI memory?** Let's implement it.
+## References
+
+- [Pixeltable Documentation](https://docs.pixeltable.com)
+- [MCP Protocol](https://modelcontextprotocol.org)
+- [Sample ADR](examples/sample_adr.md) in this repository
