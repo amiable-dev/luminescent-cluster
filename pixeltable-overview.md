@@ -252,7 +252,7 @@ pxt.restore('my_table', snapshot='pre-refactor')
 
 ### Maturity & Adoption
 
-- **First Release**: 2023 (emerging technology)
+- **Open-Source Launch**: December 2023 (Pixeltable Inc. founded 2024)
 - **Status**: Production-ready but newer than Postgres/Pinecone
 - **Community**: Growing, smaller than established tools
 - **Enterprise Use**: Adopted by teams at AI startups and research labs
@@ -261,10 +261,12 @@ pxt.restore('my_table', snapshot='pre-refactor')
 
 | Operation | Latency | Dataset Size |
 |-----------|---------|--------------|
-| Insert (no transformations) | ~1ms | 100k rows |
-| Insert (with embedding) | ~50-200ms | Depends on model |
+| Insert (no transformations) | Sub-millisecond to ~1ms | 100k rows |
+| Insert (with embedding) | 50-200ms | Depends on model |
 | Semantic search | 100-500ms | 1M embeddings |
 | Incremental update | Only changed rows | Any size |
+
+**Note**: Performance figures are representative based on typical workloads. Actual performance varies by model size, data complexity, and hardware configuration.
 
 **Scalability**: Handles TB-scale multimodal datasets in production with proper worker configuration.
 
