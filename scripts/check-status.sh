@@ -50,12 +50,19 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Convert bash boolean to Python boolean
+if [ "$VERBOSE" = true ]; then
+    PY_VERBOSE="True"
+else
+    PY_VERBOSE="False"
+fi
+
 python3 -c "
 import pixeltable as pxt
 import sys
 from datetime import datetime, timedelta
 
-verbose = $VERBOSE
+verbose = $PY_VERBOSE
 limit = $LIMIT
 
 try:
