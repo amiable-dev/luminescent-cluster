@@ -91,6 +91,11 @@ ingest_incident(
 - **Generated code**: Build outputs, node_modules, vendor directories (adds noise)
 - **Non-text formats**: Don't benefit from embedding-based semantic search
 
+**Smart filtering**: 
+- **Respects `.gitignore`**: If your project has a `.gitignore`, it's automatically used to skip files
+- **Fallback filters**: Without `.gitignore`, skips common patterns (node_modules, __pycache__, .git, dist, build, etc.)
+- **Extension filtering**: Only ingests source code files (configurable, see below)
+
 **Default extensions**: Python, JavaScript, TypeScript, Rust, Go, Java, C/C++, Shell, SQL, YAML, Markdown, and more.
 
 **Customize for your project**:

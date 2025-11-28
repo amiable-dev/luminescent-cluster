@@ -190,25 +190,54 @@ def ingest_codebase(kb, repo_path: str, service_name: str, extensions: set = Non
             '.md', '.yaml', '.yml', '.sql', '.xml', '.ini', '.conf'
         }
     
-    # Directories to skip (common build/dependency directories)
+    
+    # Parse .gitignore if it exists
+    gitignore_spec = None
+    gitignore_path = repo_path / '.gitignore'
+    
+    if gitignore_path.exists():
+        try:
+            import pathspec
+            with open(gitignore_path, 'r', encoding='utf-8') as f:
+                gitignore_spec = pathspec.PathSpec.from_lines('gitwildmatch', f)
+            print(f"✓ Using .gitignore from {repo_path}")
+        except Exception as e:
+            print(f"⚠ Could not parse .gitignore: {e}, using fallback filters")
+    
+    # Fallback directories to skip if no .gitignore
     # These contain generated/vendored code that shouldn't be indexed
-    skip_dirs = {
+    fallback_skip_dirs = {
         'node_modules', '__pycache__', '.git', 'dist', 'build',
-        'venv', 'env', '.venv', 'target', 'vendor'
+        'venv', 'env', '.venv', 'target', 'vendor', '.idea', '.vscode'
     }
     
     files_ingested = 0
     
     for root, dirs, files in os.walk(repo_path):
-        # Filter out skip directories
-        dirs[:] = [d for d in dirs if d not in skip_dirs]
+        root_path = Path(root)
+        
+        # Filter directories
+        if gitignore_spec:
+            # Use .gitignore patterns
+            dirs[:] = [
+                d for d in dirs 
+                if not gitignore_spec.match_file(str((root_path / d).relative_to(repo_path)))
+            ]
+        else:
+            # Use fallback skip list
+            dirs[:] = [d for d in dirs if d not in fallback_skip_dirs]
         
         for file in files:
-            if not any(file.endswith(ext) for ext in extensions):
+            file_path = root_path / file
+            relative_path = file_path.relative_to(repo_path)
+            
+            # Check .gitignore first
+            if gitignore_spec and gitignore_spec.match_file(str(relative_path)):
                 continue
             
-            file_path = Path(root) / file
-            relative_path = file_path.relative_to(repo_path)
+            # Check extension filter
+            if not any(file.endswith(ext) for ext in extensions):
+                continue
             
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
