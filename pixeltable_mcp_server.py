@@ -251,13 +251,19 @@ class PixeltableMemoryServer:
         
         from pixeltable_setup import ingest_codebase
         import time
+        import asyncio
         start_time = time.time()
         
         try:
             # Convert list to set if provided
             ext_set = set(extensions) if extensions else None
             logger.debug(f"Starting ingestion from {repo_path}...")
-            count = ingest_codebase(self.kb, repo_path, service_name, extensions=ext_set)
+            
+            # Run blocking Pixeltable operation in thread pool to avoid blocking event loop
+            count = await asyncio.to_thread(
+                ingest_codebase, self.kb, repo_path, service_name, ext_set
+            )
+            
             duration = time.time() - start_time
             logger.info(f"Ingested {count} files from {service_name} in {duration:.1f}s")
             result = {
@@ -272,6 +278,7 @@ class PixeltableMemoryServer:
         except Exception as e:
             logger.error(f"Ingestion failed: {e}", exc_info=True)
             return {'success': False, 'error': str(e)}
+    
     
     async def ingest_adr_data(
         self,
