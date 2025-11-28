@@ -130,6 +130,8 @@ def setup_meetings_table():
     return meetings
 
 
+from datetime import datetime
+
 def ingest_codebase(kb, repo_path: str, service_name: str, extensions: set = None):
     """
     Ingest code files from a repository into the knowledge base.
