@@ -84,6 +84,33 @@ ingest_incident(
 )
 ```
 
+#### File Filtering
+
+**Why we filter**: The ingestion process filters files by extension to avoid:
+- **Binary files**: Images, executables, compiled artifacts (not useful for text search)
+- **Generated code**: Build outputs, node_modules, vendor directories (adds noise)
+- **Non-text formats**: Don't benefit from embedding-based semantic search
+
+**Default extensions**: Python, JavaScript, TypeScript, Rust, Go, Java, C/C++, Shell, SQL, YAML, Markdown, and more.
+
+**Customize for your project**:
+
+> "Ingest this codebase as 'my-service' with only Rust files"
+
+Or specify custom extensions:
+```python
+ingest_codebase(
+    repo_path=".",
+    service_name="my-service",
+    extensions=[".rs", ".toml", ".proto"]
+)
+```
+
+**Check what was ingested**:
+```bash
+./scripts/check-status.sh -v  # Shows recent entries with file paths
+```
+
 ### 5. Manage Your Knowledge Base
 
 > "Show me stats about the knowledge base"

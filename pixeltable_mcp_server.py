@@ -213,7 +213,8 @@ class PixeltableMemoryServer:
     async def ingest_codebase_data(
         self,
         repo_path: str,
-        service_name: str
+        service_name: str,
+        extensions: list = None
     ) -> Dict[str, Any]:
         """Ingest code files from a repository"""
         if not self.kb:
@@ -221,7 +222,9 @@ class PixeltableMemoryServer:
         
         from pixeltable_setup import ingest_codebase
         try:
-            count = ingest_codebase(self.kb, repo_path, service_name)
+            # Convert list to set if provided
+            ext_set = set(extensions) if extensions else None
+            count = ingest_codebase(self.kb, repo_path, service_name, extensions=ext_set)
             return {
                 'success': True,
                 'files_ingested': count,
@@ -521,7 +524,9 @@ async def serve():
                 name="ingest_codebase",
                 description=(
                     "Ingest code files from a repository into the knowledge base. "
-                    "Use this to add a new service/project to organizational memory."
+                    "Use this to add a new service/project to organizational memory. "
+                    "By default, ingests common programming languages (Python, JS, Rust, Go, etc.). "
+                    "You can customize file extensions via the extensions parameter."
                 ),
                 inputSchema={
                     "type": "object",
@@ -533,6 +538,11 @@ async def serve():
                         "service_name": {
                             "type": "string",
                             "description": "Service identifier (e.g., 'auth-service', 'payment-api')"
+                        },
+                        "extensions": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Optional: File extensions to include (e.g., ['.rs', '.toml']). If omitted, uses default set."
                         }
                     },
                     "required": ["repo_path", "service_name"]

@@ -130,34 +130,68 @@ def setup_meetings_table():
     return meetings
 
 
-from datetime import datetime
-
-def ingest_codebase(kb, repo_path: str, service_name: str):
-    """Ingest code files from a repository"""
+def ingest_codebase(kb, repo_path: str, service_name: str, extensions: set = None):
+    """
+    Ingest code files from a repository into the knowledge base.
+    
+    This function filters files by extension to avoid ingesting:
+    - Binary files (images, executables, compiled artifacts)
+    - Generated files (build outputs, node_modules, vendor dirs)
+    - Non-text formats that don't benefit from embedding-based search
+    
+    By filtering, we:
+    1. Reduce storage costs (only index source code, not binaries)
+    2. Improve search quality (embeddings work best on human-written text)
+    3. Speed up ingestion (skip large binary/generated files)
+    
+    Args:
+        kb: Pixeltable knowledge base table
+        repo_path: Path to repository (absolute or relative)
+        service_name: Service identifier for tagging (e.g., 'auth-service')
+        extensions: Optional set of file extensions to include (e.g., {'.rs', '.py'})
+                   If None, uses comprehensive default set covering most languages.
+    
+    Returns:
+        int: Number of files successfully ingested
+    
+    Example:
+        # Use defaults (Python, JS, Rust, Go, etc.)
+        ingest_codebase(kb, './my-repo', 'my-service')
+        
+        # Only ingest Rust files
+        ingest_codebase(kb, './my-repo', 'my-service', extensions={'.rs', '.toml'})
+        
+        # Custom set for specific project
+        ingest_codebase(kb, './my-repo', 'my-service', 
+                       extensions={'.proto', '.graphql', '.thrift'})
+    """
     
     repo_path = Path(repo_path)
     
-    # File extensions to include
-    extensions = {
-        # Python
-        '.py', 
-        # JavaScript/TypeScript/Web
-        '.js', '.ts', '.tsx', '.jsx', '.html', '.css', '.json',
-        # Rust
-        '.rs', '.toml',
-        # Go
-        '.go',
-        # Java/JVM
-        '.java', '.kt', '.scala',
-        # C/C++
-        '.c', '.cpp', '.h', '.hpp',
-        # Shell
-        '.sh',
-        # Data/Config
-        '.md', '.yaml', '.yml', '.sql', '.xml', '.ini', '.conf'
-    }
+    # Default file extensions to include
+    # Covers most common programming languages and config formats
+    if extensions is None:
+        extensions = {
+            # Python
+            '.py', 
+            # JavaScript/TypeScript/Web
+            '.js', '.ts', '.tsx', '.jsx', '.html', '.css', '.json',
+            # Rust
+            '.rs', '.toml',
+            # Go
+            '.go',
+            # Java/JVM
+            '.java', '.kt', '.scala',
+            # C/C++
+            '.c', '.cpp', '.h', '.hpp',
+            # Shell
+            '.sh',
+            # Data/Config
+            '.md', '.yaml', '.yml', '.sql', '.xml', '.ini', '.conf'
+        }
     
-    # Directories to skip
+    # Directories to skip (common build/dependency directories)
+    # These contain generated/vendored code that shouldn't be indexed
     skip_dirs = {
         'node_modules', '__pycache__', '.git', 'dist', 'build',
         'venv', 'env', '.venv', 'target', 'vendor'
