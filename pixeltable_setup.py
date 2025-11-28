@@ -434,19 +434,35 @@ def list_services(kb):
 
 
 def delete_service_data(kb, service_name: str):
-    """Delete all data for a specific service"""
+    """
+    Delete all data for a specific service.
     
-    # Count items to be deleted
-    items = kb.where(kb.metadata['service'] == service_name)
-    count = items.count()
+    Uses row-by-row deletion since JSON filtering (metadata['service'] == X)
+    is not expressible in SQL in all Pixeltable versions.
+    """
     
-    if count == 0:
+    # Get all rows with their IDs and metadata
+    all_rows = kb.select(kb._rowid, kb.metadata).collect()
+    
+    # Find row IDs to delete
+    rows_to_delete = [
+        row['_rowid'] for row in all_rows
+        if isinstance(row.get('metadata'), dict) 
+        and row['metadata'].get('service') == service_name
+    ]
+    
+    if not rows_to_delete:
         return {'deleted': 0, 'service': service_name, 'message': 'No data found'}
     
-    # Delete the items
-    kb.delete(kb.metadata['service'] == service_name)
+    # Delete rows by ID
+    for row_id in rows_to_delete:
+        kb.delete(kb._rowid == row_id)
     
-    return {'deleted': count, 'service': service_name, 'message': f'Deleted {count} items'}
+    return {
+        'deleted': len(rows_to_delete),
+        'service': service_name,
+        'message': f'Deleted {len(rows_to_delete)} items from service {service_name}'
+    }
 
 
 def prune_old_data(kb, days_old: int):
