@@ -68,6 +68,9 @@ echo ""
 
 # Add pixeltable-memory MCP server
 echo -e "${BLUE}[3/3] Configuring pixeltable-memory MCP server...${NC}"
+
+# Note: To enable debug logging, manually edit ~/.config/claude/config.json after installation
+# and add "env": {"PIXELTABLE_MCP_DEBUG": "1"} to the pixeltable-memory server config
 claude mcp add --transport stdio pixeltable-memory \
   --scope user \
   -- $PYTHON_CMD "${SCRIPT_DIR}/pixeltable_mcp_server.py"

@@ -2,12 +2,39 @@
 
 ## Enable Debug Logging
 
-Add to `~/.zshrc` or `~/.bashrc`:
+MCP servers are spawned by Claude Code, so you need to configure environment variables in the MCP configuration file, not your shell.
+
+### Step 1: Find Your MCP Config
+
 ```bash
-export PIXELTABLE_MCP_DEBUG=1
+# macOS/Linux
+~/.config/claude/config.json
+
+# Or check with:
+claude mcp list
 ```
 
-Then restart Claude Code.
+### Step 2: Edit the Configuration
+
+Find the `pixeltable-memory` server entry and add the `env` field:
+
+```json
+{
+  "mcpServers": {
+    "pixeltable-memory": {
+      "command": "python3",
+      "args": ["/absolute/path/to/pixeltable_mcp_server.py"],
+      "env": {
+        "PIXELTABLE_MCP_DEBUG": "1"
+      }
+    }
+  }
+}
+```
+
+### Step 3: Restart Claude Code
+
+Close and reopen Claude Code to reload the MCP configuration.
 
 ## Log Location
 
@@ -37,11 +64,7 @@ grep ERROR ~/.mcp-servers/logs/pixeltable-memory.log
 
 ## Disable
 
-```bash
-unset PIXELTABLE_MCP_DEBUG
-```
-
-Then restart Claude Code.
+Remove the `"env"` field from the MCP config and restart Claude Code.
 
 ## Example Log Output
 

@@ -64,27 +64,41 @@ ingest_codebase(
 
 #### Debug Logging
 
-For troubleshooting, enable detailed logging:
+For troubleshooting, enable detailed logging by editing your MCP configuration:
 
+**Step 1**: Find your Claude Code MCP config:
 ```bash
-# In your shell config (~/.zshrc or ~/.bashrc)
-export PIXELTABLE_MCP_DEBUG=1
-
-# Then restart Claude Code
+~/.config/claude/config.json
 ```
 
-Logs written to: `~/.mcp-servers/logs/pixeltable-memory.log`
+**Step 2**: Add `env` to the `pixeltable-memory` server:
+```json
+{
+  "mcpServers": {
+    "pixeltable-memory": {
+      "command": "python3",
+      "args": ["/path/to/pixeltable_mcp_server.py"],
+      "env": {
+        "PIXELTABLE_MCP_DEBUG": "1"
+      }
+    }
+  }
+}
+```
+
+**Step 3**: Restart Claude Code
+
+**Logs**: `~/.mcp-servers/logs/pixeltable-memory.log`
 
 Shows:
 - Exact paths being ingested
-- File counts and timing
-- Error details
+- File counts and timing  
+- Error details and stack traces
 - MCP call parameters
 
-**Disable** by unsetting the variable:
-```bash
-unset PIXELTABLE_MCP_DEBUG
-```
+**Disable**: Remove the `"env"` field and restart.
+
+See [`docs/DEBUG_LOGGING.md`](docs/DEBUG_LOGGING.md) for details.
 
 ### 4. Add Historical Context
 
