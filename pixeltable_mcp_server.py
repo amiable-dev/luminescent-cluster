@@ -107,12 +107,16 @@ class PixeltableMemoryServer:
         limit: int = 5
     ) -> List[Dict[str, Any]]:
         """Get Architectural Decision Records"""
-        
+
         if not self.kb:
             return []
-        
-        adrs = self.kb.where(self.kb.is_adr == True)
-        
+
+        # Filter for actual ADRs: must be in /adr/ directory OR type='decision'
+        adrs = self.kb.where(
+            (self.kb.is_adr == True) &
+            ((self.kb.path.contains('/adr/')) | (self.kb.type == 'decision'))
+        )
+
         # Filter by service if specified
         if service:
             adrs = adrs.where(self.kb.metadata['service'] == service)

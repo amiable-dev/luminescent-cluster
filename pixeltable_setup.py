@@ -74,16 +74,25 @@ def setup_knowledge_base():
     # Add computed column to identify ADRs
     @pxt.udf
     def is_architecture_decision(path: str, content: str) -> bool:
-        """Detect if this is an architectural decision record"""
+        """Detect if this is an architectural decision record.
+
+        Tightened logic to reduce false positives:
+        - Path must contain '/adr/' directory (not just 'adr' anywhere)
+        - Or content has ADR-style header pattern
+        """
         path_lower = path.lower()
         content_lower = content.lower()
-        
-        return (
-            'adr' in path_lower or
-            'decision' in path_lower or
-            '## decision' in content_lower or
-            'architectural decision' in content_lower
-        )
+
+        # Must be in an /adr/ directory
+        if '/adr/' in path_lower:
+            return True
+
+        # Or have ADR-style header (e.g., "# ADR-001:" or "## ADR 001:")
+        import re
+        if re.search(r'#+ *adr[- ]?\d+', content_lower):
+            return True
+
+        return False
     
     kb.add_computed_column(
         is_adr=is_architecture_decision(kb.path, kb.content)
