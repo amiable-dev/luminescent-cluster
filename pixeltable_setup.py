@@ -293,12 +293,29 @@ def ingest_codebase(kb, repo_path: str, service_name: str, extensions: set = Non
     return files_ingested
 
 
-def ingest_adr(kb, adr_path: str, title: str):
-    """Ingest an Architectural Decision Record"""
-    
+def ingest_adr(kb, adr_path: str, title: str, service: str = None):
+    """Ingest an Architectural Decision Record
+
+    Args:
+        kb: Knowledge base table
+        adr_path: Path to the ADR file
+        title: ADR title
+        service: Service name (e.g., 'council-cloud', 'llm-council-mcp')
+                 If not provided, attempts to infer from path
+    """
+    # Infer service from path if not provided
+    if service is None:
+        path_lower = adr_path.lower()
+        if 'council-cloud' in path_lower:
+            service = 'council-cloud'
+        elif 'llm-council' in path_lower:
+            service = 'llm-council-mcp'
+        else:
+            service = 'unknown'
+
     with open(adr_path, 'r') as f:
         content = f.read()
-    
+
     kb.insert([{
         'type': 'decision',
         'path': adr_path,
@@ -306,12 +323,13 @@ def ingest_adr(kb, adr_path: str, title: str):
         'title': title,
         'created_at': datetime.now(),
         'metadata': {
+            'service': service,
             'category': 'architecture',
             'status': 'accepted'  # or 'proposed', 'deprecated'
         }
     }])
-    
-    print(f"✓ Ingested ADR: {title}")
+
+    print(f"✓ Ingested ADR: {title} (service: {service})")
 
 
 def ingest_incident(kb, incident_data: Dict[str, Any]):

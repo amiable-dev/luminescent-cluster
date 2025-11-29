@@ -287,16 +287,17 @@ class PixeltableMemoryServer:
     async def ingest_adr_data(
         self,
         adr_path: str,
-        title: str
+        title: str,
+        service: str = None
     ) -> Dict[str, Any]:
         """Ingest an Architectural Decision Record"""
         if not self.kb:
             return {'error': 'Knowledge base not initialized'}
-        
+
         from pixeltable_setup import ingest_adr
         try:
-            ingest_adr(self.kb, adr_path, title)
-            return {'success': True, 'adr': title, 'path': adr_path}
+            ingest_adr(self.kb, adr_path, title, service=service)
+            return {'success': True, 'adr': title, 'path': adr_path, 'service': service}
         except Exception as e:
             return {'success': False, 'error': str(e)}
     
@@ -614,6 +615,10 @@ async def serve():
                         "title": {
                             "type": "string",
                             "description": "ADR title (e.g., 'ADR 001: Database Choice')"
+                        },
+                        "service": {
+                            "type": "string",
+                            "description": "Service name (e.g., 'council-cloud', 'llm-council-mcp'). If omitted, inferred from path."
                         }
                     },
                     "required": ["adr_path", "title"]
@@ -798,7 +803,8 @@ async def serve():
             elif name == "ingest_architectural_decision":
                 result = await memory.ingest_adr_data(
                     adr_path=arguments["adr_path"],
-                    title=arguments["title"]
+                    title=arguments["title"],
+                    service=arguments.get("service")
                 )
             
             elif name == "ingest_incident":
