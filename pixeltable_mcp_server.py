@@ -3,12 +3,20 @@ Pixeltable MCP Server
 
 Exposes long-term organizational memory to Claude via MCP protocol.
 Provides semantic search over code, decisions, incidents, and meetings.
+
+IMPORTANT: This server uses Pixeltable which serializes UDFs using pickle.
+The database is bound to the Python version that created it.
+See ADR-001 for details on Python version requirements.
 """
+
+# CRITICAL: Version guard must run BEFORE any pixeltable import (ADR-001)
+from src.version_guard import enforce_python_version
+enforce_python_version()
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
-import pixeltable as pxt
+import pixeltable as pxt  # Safe to import after version guard
 import json
 from typing import Optional, List, Dict, Any
 from pathlib import Path

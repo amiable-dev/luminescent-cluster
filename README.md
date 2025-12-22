@@ -310,6 +310,40 @@ pxt.restore('org_knowledge', snapshot='pre-auth-refactor')
 - Programmatic Tool Calling: 37% reduction
 - Combined effect: ~90% reduction for complex queries
 
+## Python Version Requirements
+
+**CRITICAL:** The Pixeltable database is bound to the Python version that created it. Using a different Python minor version will cause a **silent segmentation fault** (exit code 139).
+
+### Version Compatibility
+
+| Created With | Safe to Run | Unsafe |
+|--------------|-------------|--------|
+| 3.10.x       | 3.10.0 - 3.10.99 | 3.9.x, 3.11+ |
+| 3.11.x       | 3.11.0 - 3.11.99 | 3.10.x, 3.12+ |
+| 3.12.x       | 3.12.0 - 3.12.99 | 3.11.x, 3.13+ |
+
+**Patch version changes are SAFE** (3.11.0 -> 3.11.9). Only minor version changes are dangerous.
+
+### Runtime Protection
+
+The MCP servers include a version guard that:
+- Creates a `.python_version` marker on first run
+- Exits with code **78** if Python version mismatches
+- Exits with code **65** for legacy databases without markers
+
+### Quick Fix
+
+```bash
+# Check what version the database expects
+cat ~/.pixeltable/.python_version
+
+# Switch to the correct version
+uv venv --python 3.11
+source .venv/bin/activate
+```
+
+For migration procedures, see [ADR-001](docs/adrs/ADR-001-python-version-requirement-for-mcp-servers.md).
+
 ## Troubleshooting
 
 ### "No git repository found"
@@ -320,6 +354,35 @@ Run `python pixeltable_setup.py` first to initialize the knowledge base.
 
 ### Tools not appearing in Claude
 Check `.mcp.json` exists and MCP servers are configured correctly.
+
+### Exit code 78: Python version mismatch
+The runtime guard detected that your Python version doesn't match the database.
+```bash
+# Check expected version
+cat ~/.pixeltable/.python_version
+
+# Switch to correct version
+uv venv --python <version>
+source .venv/bin/activate
+```
+
+### Exit code 65: Legacy database detected
+The database was created before version tracking was implemented.
+```bash
+# If you know the Python version that created it:
+echo '3.11' > ~/.pixeltable/.python_version
+
+# Then run with that version
+uv venv --python 3.11
+source .venv/bin/activate
+```
+
+### Exit code 139: Segmentation fault
+The version guard was bypassed or not installed. Restore from backup:
+```bash
+rm -rf ~/.pixeltable
+mv ~/.pixeltable.backup.* ~/.pixeltable
+```
 
 ## Contributing
 

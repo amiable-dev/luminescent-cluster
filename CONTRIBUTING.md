@@ -1,4 +1,4 @@
-# Contributing to Context-Aware AI System
+# Contributing to Luminescent Cluster
 
 Thank you for your interest in contributing!
 
@@ -15,12 +15,33 @@ Thank you for your interest in contributing!
 
 ## Development Setup
 
+### Python Version Requirements (CRITICAL)
+
+**The Pixeltable database is bound to the Python version that created it.** Using a different Python minor version will cause a silent segmentation fault.
+
+```bash
+# Check .python-version file for required version
+cat .python-version  # Should show 3.11
+
+# Use pyenv, mise, or uv to install the correct version
+pyenv install 3.11.9
+pyenv local 3.11.9
+
+# Or with uv
+uv venv --python 3.11
+source .venv/bin/activate
+```
+
+See [ADR-001](docs/adrs/ADR-001-python-version-requirement-for-mcp-servers.md) for full details on this constraint.
+
+### Quick Start
+
 ```bash
 ./quickstart.sh
 ```
 
 This will:
-- Create a virtual environment
+- Create a virtual environment with the correct Python version
 - Install dependencies
 - Run verification tests
 
@@ -35,9 +56,17 @@ This will:
 
 Before submitting a PR:
 
-1. Run the test suite: `python test_setup.py`
+1. Run the test suite:
+   ```bash
+   # Run all tests
+   uv run python -m pytest tests/ -v
+
+   # Run specific test file
+   uv run python -m pytest tests/test_version_guard.py -v
+   ```
 2. Test your MCP server manually
 3. Verify no regressions in existing functionality
+4. Ensure Python version guard tests pass (ADR-001)
 
 ## Areas for Contribution
 
@@ -189,7 +218,7 @@ Tool(
 - Update README.md for user-facing changes
 - Add inline comments for complex logic
 - Create examples in `examples/` directory
-- Update `context-aware-ai-system.md` for architectural changes
+- Update `luminescent-cluster.md` for architectural changes
 
 ## Commit Messages
 

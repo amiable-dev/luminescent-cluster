@@ -9,12 +9,198 @@ Creates persistent knowledge base for:
 - Design artifacts
 
 This is Tier 2 memory - persistent, searchable, multimodal.
+
+IMPORTANT: This module uses Pixeltable which serializes UDFs using pickle.
+The database is bound to the Python version that created it.
+See ADR-001 for details on Python version requirements.
 """
 
-import pixeltable as pxt
+# CRITICAL: Version guard must run BEFORE any pixeltable import (ADR-001)
+from src.version_guard import enforce_python_version
+enforce_python_version()
+
+import pixeltable as pxt  # Safe to import after version guard
 from typing import Optional, Dict, Any, List
 import os
 from pathlib import Path
+import json
+import re
+import subprocess
+
+
+def _infer_service_name(file_path: str) -> Optional[str]:
+    """
+    Auto-infer service name from project configuration files.
+    
+    Walks up directory tree looking for:
+    1. pyproject.toml (Python projects)
+    2. package.json (Node.js projects)
+    3. Git remote URL
+    
+    Args:
+        file_path: Path to a file in the project
+        
+    Returns:
+        Inferred service name or None if unable to infer
+    """
+    current_path = Path(file_path).resolve()
+    
+    # If file_path is a file, start from its parent directory
+    if current_path.is_file():
+        current_path = current_path.parent
+    
+    # Walk up directory tree (limit to 10 levels to avoid infinite loops)
+    for _ in range(10):
+        # Check for pyproject.toml
+        pyproject_path = current_path / 'pyproject.toml'
+        if pyproject_path.exists():
+            try:
+                import tomli
+                with open(pyproject_path, 'rb') as f:
+                    data = tomli.load(f)
+                    # Try different common locations for project name
+                    name = (data.get('project', {}).get('name') or 
+                           data.get('tool', {}).get('poetry', {}).get('name'))
+                    if name:
+                        return name
+            except Exception:
+                # If tomli not available, try basic parsing
+                try:
+                    with open(pyproject_path, 'r') as f:
+                        content = f.read()
+                        match = re.search(r'name\s*=\s*["\']([^"\']+)["\']', content)
+                        if match:
+                            return match.group(1)
+                except Exception:
+                    pass
+        
+        # Check for package.json
+        package_json_path = current_path / 'package.json'
+        if package_json_path.exists():
+            try:
+                with open(package_json_path, 'r') as f:
+                    data = json.load(f)
+                    name = data.get('name')
+                    if name:
+                        # Remove npm scope if present (e.g., @org/package -> package)
+                        return name.split('/')[-1]
+            except Exception:
+                pass
+        
+        # Check if this is a git repository root
+        git_dir = current_path / '.git'
+        if git_dir.exists():
+            try:
+                # Try to get remote URL
+                result = subprocess.run(
+                    ['git', 'config', '--get', 'remote.origin.url'],
+                    cwd=current_path,
+                    capture_output=True,
+                    text=True,
+                    timeout=2
+                )
+                if result.returncode == 0:
+                    url = result.stdout.strip()
+                    # Extract repo name from URL
+                    # Handles: git@github.com:org/repo.git, https://github.com/org/repo.git
+                    match = re.search(r'[:/]([^/]+)/([^/]+?)(\.git)?$', url)
+                    if match:
+                        return match.group(2)
+            except Exception:
+                pass
+        
+        # Move up one directory
+        parent = current_path.parent
+        if parent == current_path:  # Reached root
+            break
+        current_path = parent
+    
+    return None
+
+
+def _upsert_entry(kb, entry: Dict[str, Any]) -> bool:
+    """
+    Insert or update an entry in the knowledge base.
+    
+    Uses (service, path) as composite unique key. If entry exists:
+    - Updates content, title, type (with promotion logic), and updated_at
+    - Preserves created_at from original entry
+    
+    Type promotion logic:
+    - documentation → decision (decisions are more specific)
+    - decision → decision (no change)
+    
+    Args:
+        kb: Knowledge base table
+        entry: Entry dict with keys: type, path, content, title, metadata, etc.
+        
+    Returns:
+        True if updated existing entry, False if inserted new entry
+    """
+    from datetime import datetime
+    
+    service = entry.get('metadata', {}).get('service', 'unknown')
+    path = entry['path']
+    
+    # Query for existing entry with same (service, path)
+    # Note: We can't directly filter on metadata['service'] in WHERE clause
+    # so we need to fetch and filter in Python
+    # Query for existing entry with same path
+    # Optimization: Filter by path in the database query instead of fetching all rows
+    try:
+        # Filter by path first (indexed/primary identifier)
+        # Note: We still need to check service match in Python because of metadata JSON structure
+        existing_matches = kb.where(kb.path == path).select(
+            kb.type, kb.path, kb.content, kb.title, 
+            kb.created_at, kb.metadata
+        ).collect()
+        
+        existing = None
+        for row in existing_matches:
+            row_meta = row.get('metadata', {})
+            row_service = row_meta.get('service', 'unknown') if isinstance(row_meta, dict) else 'unknown'
+            if row_service == service:
+                existing = row
+                break
+        
+        if existing:
+            # Entry exists - perform update
+            new_type = entry['type']
+            old_type = existing['type']
+            
+            # Type promotion logic
+            if old_type == 'documentation' and new_type == 'decision':
+                final_type = 'decision'  # Promote
+            elif old_type == 'decision':
+                final_type = 'decision'  # Keep as decision
+            else:
+                final_type = new_type  # Use new type
+            
+            # Update the entry using Pixeltable's update syntax
+            # Need to match on both path AND service (composite key)
+            # Since we can't filter on JSON fields in WHERE, we delete and re-insert
+            kb.delete(kb.path == path)
+            
+            # Re-insert with updated values
+            entry['type'] = final_type
+            entry['created_at'] = existing.get('created_at', datetime.now())
+            entry['updated_at'] = datetime.now()
+            kb.insert([entry])
+            return True
+        else:
+            # Entry doesn't exist - insert new
+            entry['created_at'] = entry.get('created_at', datetime.now())
+            entry['updated_at'] = datetime.now()
+            kb.insert([entry])
+            return False
+            
+    except Exception as e:
+        # If upsert fails, fall back to insert
+        print(f"  Warning: Upsert failed for {path}, falling back to insert: {e}")
+        entry['created_at'] = entry.get('created_at', datetime.now())
+        entry['updated_at'] = datetime.now()
+        kb.insert([entry])
+        return False
 
 
 def setup_knowledge_base():
@@ -24,9 +210,29 @@ def setup_knowledge_base():
     try:
         kb = pxt.get_table('org_knowledge')
         print("Knowledge base already exists")
+        
+        # Check if updated_at column exists, add it if missing (schema migration)
+        try:
+            # Try to access the column
+            _ = kb.updated_at
+            print("  ✓ updated_at column already exists")
+        except AttributeError:
+            # Column doesn't exist, add it
+            print("  Adding updated_at column (schema migration)...")
+            from datetime import datetime
+            kb.add_column(updated_at=pxt.Timestamp)
+            # Set initial value for existing rows to created_at
+            kb.update({}, {'updated_at': kb.created_at})
+            print("  ✓ Added updated_at column and migrated existing rows")
+        except Exception as e:
+            print(f"  Warning: Could not add updated_at column: {e}")
+        
         return kb
-    except Exception:
-        pass
+    except Exception as e:
+        # Table doesn't exist, create it
+        if "does not exist" not in str(e).lower():
+            # Some other error
+            print(f"Warning while checking for existing table: {e}")
     
     # Create main knowledge base table
     kb = pxt.create_table(
@@ -37,6 +243,7 @@ def setup_knowledge_base():
             'content': pxt.String,        # Main content
             'title': pxt.String,          # Short title
             'created_at': pxt.Timestamp,  # When created
+            'updated_at': pxt.Timestamp,  # When last updated (for upsert tracking)
             'metadata': pxt.Json,         # Additional metadata
         }
     )
@@ -223,7 +430,6 @@ def ingest_codebase(kb, repo_path: str, service_name: str, extensions: set = Non
     }
     
     files_ingested = 0
-    batch = []  # Collect files for batch insertion
     
     for root, dirs, files in os.walk(repo_path):
         root_path = Path(root)
@@ -258,36 +464,32 @@ def ingest_codebase(kb, repo_path: str, service_name: str, extensions: set = Non
                 # Determine type
                 file_type = 'documentation' if file.endswith('.md') else 'code'
                 
-                # Add to batch instead of inserting immediately
-                batch.append({
+                # Create entry
+                entry = {
                     'type': file_type,
                     'path': str(relative_path),
                     'content': content,
                     'title': file,
-                    'created_at': datetime.now(),
                     'metadata': {
                         'service': service_name,
                         'language': file.split('.')[-1],
                         'absolute_path': str(file_path)
                     }
-                })
+                }
                 
+                # Use upsert to avoid duplicates
+                _upsert_entry(kb, entry)
                 files_ingested += 1
                 
-                # Insert in batches of 100 for better performance
-                if len(batch) >= 100:
-                    kb.insert(batch)
-                    batch = []
+                # Progress indicator every 100 files
+                if files_ingested % 100 == 0:
                     import sys
-                    print(f"  Ingested {files_ingested} files...", flush=True)
+                    print(f"  Processed {files_ingested} files...", flush=True)
                     sys.stdout.flush()  # Ensure output is visible in MCP logs
                     
             except Exception as e:
                 print(f"  Skipping {relative_path}: {e}")
     
-    # Insert any remaining items in the batch
-    if batch:
-        kb.insert(batch)
     
     print(f"✓ Ingested {files_ingested} files from {service_name}")
     return files_ingested
@@ -301,35 +503,43 @@ def ingest_adr(kb, adr_path: str, title: str, service: str = None):
         adr_path: Path to the ADR file
         title: ADR title
         service: Service name (e.g., 'council-cloud', 'llm-council-mcp')
-                 If not provided, attempts to infer from path
+                 If not provided, attempts to auto-infer from project files
     """
-    # Infer service from path if not provided
+    # Auto-infer service from project files if not provided
     if service is None:
-        path_lower = adr_path.lower()
-        if 'council-cloud' in path_lower:
-            service = 'council-cloud'
-        elif 'llm-council' in path_lower:
-            service = 'llm-council-mcp'
+        service = _infer_service_name(adr_path)
+        if service:
+            print(f"  Auto-inferred service name: {service}")
         else:
-            service = 'unknown'
+            # Fallback to path-based inference (legacy behavior)
+            path_lower = adr_path.lower()
+            if 'council-cloud' in path_lower:
+                service = 'council-cloud'
+            elif 'llm-council' in path_lower:
+                service = 'llm-council-mcp'
+            else:
+                service = 'unknown'
+                print(f"  Warning: Could not infer service name, using 'unknown'")
 
     with open(adr_path, 'r') as f:
         content = f.read()
 
-    kb.insert([{
+    entry = {
         'type': 'decision',
         'path': adr_path,
         'content': content,
         'title': title,
-        'created_at': datetime.now(),
         'metadata': {
             'service': service,
             'category': 'architecture',
             'status': 'accepted'  # or 'proposed', 'deprecated'
         }
-    }])
-
-    print(f"✓ Ingested ADR: {title} (service: {service})")
+    }
+    
+    # Use upsert to avoid duplicates
+    was_updated = _upsert_entry(kb, entry)
+    action = "Updated" if was_updated else "Ingested"
+    print(f"✓ {action} ADR: {title} (service: {service})")
 
 
 def ingest_incident(kb, incident_data: Dict[str, Any]):
