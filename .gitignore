@@ -44,3 +44,4 @@ temp/
 # Claude Code local scope (contains user-specific MCP servers)
 .claude/
 .mcp.json
+.venv/

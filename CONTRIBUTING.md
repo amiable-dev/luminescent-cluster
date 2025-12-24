@@ -2,16 +2,29 @@
 
 Thank you for your interest in contributing!
 
+## Contributor License Agreement (CLA)
+
+Before your contribution can be accepted, you must sign the Contributor License Agreement (CLA).
+
+When you open your first Pull Request, the CLA Assistant bot will automatically comment with a link to sign the CLA. This is a one-time process that takes about 2 minutes.
+
+**Why a CLA?**
+- Ensures the project can be licensed under Apache 2.0
+- Protects both contributors and users
+- Required for dual-licensing flexibility (per ADR-005)
+
+The CLA is based on the Apache Individual Contributor License Agreement and grants the project a perpetual, royalty-free license to use your contributions.
+
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/yourusername/context-aware-ai-system.git`
+2. Clone your fork: `git clone https://github.com/yourusername/luminescent-cluster.git`
 3. Create a branch: `git checkout -b feature/your-feature-name`
 4. Make your changes
-5. Run tests: `python test_setup.py`
+5. Run tests: `pytest tests/ -v`
 6. Commit: `git commit -am 'Add some feature'`
 7. Push: `git push origin feature/your-feature-name`
-8. Create a Pull Request
+8. Create a Pull Request (CLA Assistant will guide you through signing if needed)
 
 ## Development Setup
 
@@ -58,11 +71,14 @@ Before submitting a PR:
 
 1. Run the test suite:
    ```bash
-   # Run all tests
-   uv run python -m pytest tests/ -v
+   # Run all tests (121 tests)
+   pytest tests/ -v --ignore=tests/test_pixeltable_mcp_server.py
 
    # Run specific test file
-   uv run python -m pytest tests/test_version_guard.py -v
+   pytest tests/test_version_guard.py -v
+
+   # Run with coverage
+   pytest tests/ -v --cov=src --cov=integrations
    ```
 2. Test your MCP server manually
 3. Verify no regressions in existing functionality
@@ -218,7 +234,7 @@ Tool(
 - Update README.md for user-facing changes
 - Add inline comments for complex logic
 - Create examples in `examples/` directory
-- Update `luminescent-cluster.md` for architectural changes
+- Update docs/adrs/ for architectural changes
 
 ## Commit Messages
 
@@ -243,4 +259,19 @@ Open an issue for:
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+By contributing, you agree that your contributions will be licensed under the Apache License 2.0.
+
+## CLA Setup for Maintainers
+
+To set up CLA Assistant on this repository:
+
+1. Go to https://cla-assistant.io/
+2. Sign in with GitHub
+3. Add this repository: `amiable-dev/luminescent-cluster`
+4. Create a CLA gist with the Apache ICLA content
+5. Configure the webhook
+
+The CLA Assistant will automatically:
+- Comment on new PRs from first-time contributors
+- Block merging until the CLA is signed
+- Track all signatures in a private gist

@@ -1,15 +1,7 @@
 # Local Deployment Guide
 
-Quick guide to run the Context-Aware AI System locally on your machine.
-
-## Prerequisites
-
-- Docker Desktop installed and running
-- Git (already have it since you cloned the repo)
-- (Optional) OpenAI API key for meeting transcription
-
-## Quick Start
-
+Quick guide to run the **Luminescent Cluster** locally on your machine.
+...
 ### 1. Navigate to Project Directory
 
 ```bash

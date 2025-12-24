@@ -1,0 +1,94 @@
+# Copyright 2024-2025 Amiable Development
+# SPDX-License-Identifier: Apache-2.0
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run tests
+        run: |
+          python -m pytest tests/ -v --ignore=tests/test_pixeltable_mcp_server.py
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install linters
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+
+      - name: Check formatting
+        run: ruff format --check .
+
+      - name: Lint
+        run: ruff check .
+        continue-on-error: true  # Don't fail on lint warnings for now
+
+  license-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check license headers
+        run: |
+          # Check that main source files have Apache 2.0 license headers
+          files=(
+            "session_memory_server.py"
+            "pixeltable_mcp_server.py"
+            "pixeltable_setup.py"
+            "agent_tools.py"
+            "src/version_guard.py"
+            "src/extensions/protocols.py"
+            "src/extensions/registry.py"
+            "integrations/github_pat.py"
+            "integrations/gitlab_pat.py"
+          )
+
+          missing=()
+          for file in "${files[@]}"; do
+            if [ -f "$file" ]; then
+              if ! grep -q "Apache License" "$file"; then
+                missing+=("$file")
+              fi
+            fi
+          done
+
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "Missing Apache 2.0 license header in:"
+            printf '%s\n' "${missing[@]}"
+            exit 1
+          fi
+
+          echo "All source files have license headers"

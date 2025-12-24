@@ -1,7 +1,7 @@
 #!/bin/bash
 # Quick ingestion helper - customize for your projects
 
-cd ~/.mcp-servers/context-aware-ai-system
+cd ~/.mcp-servers/luminescent-cluster
 
 python3 << 'EOF'
 from pixeltable_setup import setup_knowledge_base, ingest_codebase

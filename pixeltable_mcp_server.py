@@ -1,3 +1,17 @@
+# Copyright 2024-2025 Amiable Development
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 Pixeltable MCP Server
 
@@ -24,6 +38,9 @@ import os
 import logging
 from datetime import datetime
 
+# Extension system for OSS/Cloud separation (ADR-005)
+from src.extensions import ExtensionRegistry
+
 # Configurable debug logging
 # Set PIXELTABLE_MCP_DEBUG=1 to enable detailed logging
 DEBUG_ENABLED = os.getenv('PIXELTABLE_MCP_DEBUG', '0') == '1'
@@ -46,6 +63,100 @@ else:
     logging.basicConfig(level=logging.WARNING)
 
 logger = logging.getLogger(__name__)
+
+
+# ============================================================================
+# Extension Helper Functions (ADR-005)
+# ============================================================================
+
+def get_tenant_filter(context: dict) -> dict:
+    """
+    Get tenant filter from context if multi-tenancy is enabled.
+
+    This helper is called before database queries to apply tenant isolation
+    in cloud mode. Returns empty dict in OSS mode (no filtering).
+
+    Args:
+        context: Request context with tenant info (x-tenant-id, user_id, etc.)
+
+    Returns:
+        Filter dict for Pixeltable query, or empty dict in OSS mode.
+    """
+    registry = ExtensionRegistry.get()
+    if registry.tenant_provider:
+        tenant_id = registry.tenant_provider.get_tenant_id(context)
+        if tenant_id:
+            return registry.tenant_provider.get_tenant_filter(tenant_id)
+    return {}
+
+
+def check_quota(tenant_id: str, operation: str) -> tuple[bool, Optional[str]]:
+    """
+    Check if tenant has quota for operation.
+
+    Args:
+        tenant_id: Tenant identifier
+        operation: Operation type (query, ingest, etc.)
+
+    Returns:
+        Tuple of (allowed, reason). In OSS mode, always returns (True, None).
+    """
+    registry = ExtensionRegistry.get()
+    if registry.usage_tracker:
+        return registry.usage_tracker.check_quota(tenant_id, operation)
+    return (True, None)
+
+
+def track_usage(operation: str, tokens: int, metadata: dict) -> None:
+    """
+    Track usage for billing purposes.
+
+    No-op in OSS mode. In cloud mode, records usage event.
+
+    Args:
+        operation: Operation type
+        tokens: Token/unit count
+        metadata: Additional context
+    """
+    registry = ExtensionRegistry.get()
+    if registry.usage_tracker:
+        try:
+            registry.usage_tracker.track(operation, tokens, metadata)
+        except Exception:
+            # Don't fail the request if tracking fails
+            pass
+
+
+def log_audit(
+    event_type: str,
+    actor: str,
+    resource: str,
+    action: str,
+    outcome: str,
+    details: Optional[dict] = None,
+) -> None:
+    """
+    Log audit event for compliance.
+
+    No-op in OSS mode. In cloud mode, records audit event.
+
+    Args:
+        event_type: Event category (data_access, admin, etc.)
+        actor: User/system performing action
+        resource: Resource being acted upon
+        action: Action performed
+        outcome: Result (success, failure, denied)
+        details: Additional context
+    """
+    registry = ExtensionRegistry.get()
+    if registry.audit_logger:
+        try:
+            registry.audit_logger.log_event(
+                event_type, actor, resource, action, outcome, details
+            )
+        except Exception:
+            # Don't fail the request if audit fails
+            pass
 
 
 class PixeltableMemoryServer:
@@ -71,27 +182,39 @@ class PixeltableMemoryServer:
         query: str,
         type_filter: Optional[str] = None,
         service_filter: Optional[str] = None,
-        limit: int = 5
+        limit: int = 5,
+        context: Optional[Dict[str, Any]] = None
     ) -> List[Dict[str, Any]]:
         """Search organizational knowledge base"""
-        
+        context = context or {}
+
         if not self.kb:
             return []
-        
+
+        # Apply tenant filter if multi-tenancy is enabled (ADR-005)
+        tenant_filter = get_tenant_filter(context)
+
         results = self.kb
-        
-        # Apply filters
+
+        # Apply tenant isolation filter
+        if tenant_filter:
+            # In cloud mode, filter by tenant_id in metadata
+            results = results.where(
+                self.kb.metadata['tenant_id'] == tenant_filter.get('tenant_id', {}).get('$eq')
+            )
+
+        # Apply user filters
         if type_filter:
             results = results.where(self.kb.type == type_filter)
-        
+
         if service_filter:
             results = results.where(
                 self.kb.metadata['service'] == service_filter
             )
-        
+
         # Semantic similarity search
         sim = self.kb.content.similarity(query)
-        
+
         matches = (
             results.order_by(sim, asc=False)
             .select(
@@ -105,8 +228,26 @@ class PixeltableMemoryServer:
             )
             .limit(limit)
         )
-        
-        return [dict(row) for row in matches.collect()]
+
+        result_list = [dict(row) for row in matches.collect()]
+
+        # Track usage for billing (no-op in OSS mode)
+        track_usage("search", len(query), {
+            "tenant_id": context.get("x-tenant-id"),
+            "result_count": len(result_list)
+        })
+
+        # Log audit event (no-op in OSS mode)
+        log_audit(
+            "data_access",
+            context.get("user_id", "anonymous"),
+            "knowledge_base",
+            "search",
+            "success",
+            {"query": query[:100], "results": len(result_list)}
+        )
+
+        return result_list
     
     async def get_adrs(
         self,
@@ -253,29 +394,45 @@ class PixeltableMemoryServer:
         self,
         repo_path: str,
         service_name: str,
-        extensions: list = None
+        extensions: list = None,
+        context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Ingest code files from a repository"""
+        context = context or {}
         logger.debug(f"ingest_codebase called: repo_path={repo_path}, service={service_name}, extensions={extensions}")
-        
+
         if not self.kb:
             return {'error': 'Knowledge base not initialized'}
-        
+
+        # Check quota before expensive operation (ADR-005)
+        tenant_id = context.get("x-tenant-id", "")
+        allowed, reason = check_quota(tenant_id, "ingest")
+        if not allowed:
+            log_audit(
+                "data_access",
+                context.get("user_id", "anonymous"),
+                f"codebase:{service_name}",
+                "ingest",
+                "denied",
+                {"reason": reason}
+            )
+            return {'success': False, 'error': reason}
+
         from pixeltable_setup import ingest_codebase
         import time
         import asyncio
         start_time = time.time()
-        
+
         try:
             # Convert list to set if provided
             ext_set = set(extensions) if extensions else None
             logger.debug(f"Starting ingestion from {repo_path}...")
-            
+
             # Run blocking Pixeltable operation in thread pool to avoid blocking event loop
             count = await asyncio.to_thread(
                 ingest_codebase, self.kb, repo_path, service_name, ext_set
             )
-            
+
             duration = time.time() - start_time
             logger.info(f"Ingested {count} files from {service_name} in {duration:.1f}s")
             result = {
@@ -286,9 +443,35 @@ class PixeltableMemoryServer:
                 'duration_seconds': duration
             }
             logger.debug(f"Ingestion result: {result}")
+
+            # Track usage for billing (no-op in OSS mode)
+            track_usage("ingest", count, {
+                "tenant_id": tenant_id,
+                "service": service_name,
+                "duration_seconds": duration
+            })
+
+            # Log audit event (no-op in OSS mode)
+            log_audit(
+                "data_access",
+                context.get("user_id", "anonymous"),
+                f"codebase:{service_name}",
+                "ingest",
+                "success",
+                {"files": count, "duration": duration}
+            )
+
             return result
         except Exception as e:
             logger.error(f"Ingestion failed: {e}", exc_info=True)
+            log_audit(
+                "data_access",
+                context.get("user_id", "anonymous"),
+                f"codebase:{service_name}",
+                "ingest",
+                "failure",
+                {"error": str(e)}
+            )
             return {'success': False, 'error': str(e)}
     
     
@@ -385,27 +568,62 @@ class PixeltableMemoryServer:
         except Exception as e:
             return []
     
-    # Data Management Operations    
+    # Data Management Operations
     async def delete_service(
         self,
         service_name: str,
-        confirm: bool = False
+        confirm: bool = False,
+        context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Delete all data for a service"""
+        context = context or {}
+
         if not self.kb:
             return {'error': 'Knowledge base not initialized'}
-        
+
         if not confirm:
             return {
                 'error': 'Confirmation required',
                 'message': f'Set confirm=True to delete all data for {service_name}'
             }
-        
+
+        # Log security event before destructive operation (ADR-005)
+        registry = ExtensionRegistry.get()
+        if registry.audit_logger:
+            try:
+                registry.audit_logger.log_security_event(
+                    "admin_action",
+                    "warning",
+                    f"Service deletion initiated: {service_name}",
+                    {"service": service_name, "user": context.get("user_id", "anonymous")}
+                )
+            except Exception:
+                pass
+
         from pixeltable_setup import delete_service_data
         try:
             result = delete_service_data(self.kb, service_name)
+
+            # Log audit event for successful deletion
+            log_audit(
+                "admin",
+                context.get("user_id", "anonymous"),
+                f"service:{service_name}",
+                "delete",
+                "success",
+                {"deleted_count": result.get("deleted_count", 0)}
+            )
+
             return {**result, 'success': True}
         except Exception as e:
+            log_audit(
+                "admin",
+                context.get("user_id", "anonymous"),
+                f"service:{service_name}",
+                "delete",
+                "failure",
+                {"error": str(e)}
+            )
             return {'success': False, 'error': str(e)}
     
     async def prune_old(
