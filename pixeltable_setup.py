@@ -1,3 +1,17 @@
+# Copyright 2024-2025 Amiable Development
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 Pixeltable Long-term Memory Setup
 
@@ -13,6 +27,10 @@ This is Tier 2 memory - persistent, searchable, multimodal.
 IMPORTANT: This module uses Pixeltable which serializes UDFs using pickle.
 The database is bound to the Python version that created it.
 See ADR-001 for details on Python version requirements.
+
+RECOVERY: If you encounter segfaults during INSERT operations:
+    python -m scripts.db_repair --check              # Check for issues
+    python -m scripts.backup_restore --backup-restore --confirm  # Backup and restore
 """
 
 # CRITICAL: Version guard must run BEFORE any pixeltable import (ADR-001)
@@ -26,6 +44,64 @@ from pathlib import Path
 import json
 import re
 import subprocess
+import sys
+
+
+def verify_computed_columns_healthy(kb) -> bool:
+    """
+    Verify that computed columns are working correctly.
+
+    This performs a quick sanity check to ensure UDFs haven't been
+    corrupted by Python version changes. Corrupted UDFs cause
+    segfaults during INSERT operations.
+
+    Args:
+        kb: Knowledge base table
+
+    Returns:
+        True if computed columns appear healthy, False otherwise
+    """
+    try:
+        # Try to query a row with computed columns
+        # This is a read operation that should be safe
+        test_query = kb.select(kb.path, kb.is_adr, kb.summary).limit(1)
+        _ = list(test_query.collect())
+        return True
+    except Exception as e:
+        error_str = str(e).lower()
+        # Check for signs of UDF corruption
+        if any(indicator in error_str for indicator in [
+            "pickle",
+            "cannot be unpickled",
+            "udf",
+            "corrupted",
+        ]):
+            return False
+        # Other errors might be okay
+        return True
+
+
+def print_recovery_instructions():
+    """Print instructions for recovering from database issues."""
+    print("\n" + "=" * 60)
+    print("DATABASE RECOVERY INSTRUCTIONS")
+    print("=" * 60)
+    print("""
+Your database may have corrupted UDFs (User-Defined Functions).
+This typically happens when changing Python versions.
+
+To diagnose:
+    python -m scripts.db_repair --check
+
+To recover (preserves data):
+    python -m scripts.backup_restore --backup-restore --confirm
+
+For fresh install (deletes all data):
+    rm -rf ~/.pixeltable/
+
+See docs/KNOWN_ISSUES.md for more information.
+""")
+    print("=" * 60 + "\n")
 
 
 def _infer_service_name(file_path: str) -> Optional[str]:
@@ -203,14 +279,18 @@ def _upsert_entry(kb, entry: Dict[str, Any]) -> bool:
         return False
 
 
-def setup_knowledge_base():
-    """Initialize Pixeltable knowledge base with computed columns"""
-    
+def setup_knowledge_base(check_health: bool = True):
+    """Initialize Pixeltable knowledge base with computed columns
+
+    Args:
+        check_health: If True, verify computed columns are working (default True)
+    """
+
     # Check if table already exists
     try:
         kb = pxt.get_table('org_knowledge')
         print("Knowledge base already exists")
-        
+
         # Check if updated_at column exists, add it if missing (schema migration)
         try:
             # Try to access the column
@@ -226,7 +306,18 @@ def setup_knowledge_base():
             print("  ✓ Added updated_at column and migrated existing rows")
         except Exception as e:
             print(f"  Warning: Could not add updated_at column: {e}")
-        
+
+        # Verify computed columns are healthy (detect UDF corruption)
+        if check_health:
+            try:
+                if not verify_computed_columns_healthy(kb):
+                    print("  ⚠ Computed columns may be corrupted!")
+                    print_recovery_instructions()
+                else:
+                    print("  ✓ Computed columns appear healthy")
+            except Exception as e:
+                print(f"  Warning: Could not verify computed columns: {e}")
+
         return kb
     except Exception as e:
         # Table doesn't exist, create it

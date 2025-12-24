@@ -378,24 +378,181 @@ source .venv/bin/activate
 ```
 
 ### Exit code 139: Segmentation fault
-The version guard was bypassed or not installed. Restore from backup:
+
+Caused by corrupted UDFs (User-Defined Functions) after Python version changes.
+
+**Quick diagnosis:**
 ```bash
-rm -rf ~/.pixeltable
-mv ~/.pixeltable.backup.* ~/.pixeltable
+python -m scripts.db_repair --check
+```
+
+**Recovery options:**
+
+1. **Use correct Python version** (recommended):
+   ```bash
+   uv venv --python 3.11  # Use version that created DB
+   source .venv/bin/activate
+   ```
+
+2. **Backup and restore** (preserves data):
+   ```bash
+   python -m scripts.backup_restore --backup-restore --confirm
+   ```
+
+3. **Fresh install** (deletes all data):
+   ```bash
+   rm -rf ~/.pixeltable/
+   ```
+
+See [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md#known-issue-udf-corruption-after-python-version-change) for detailed recovery procedures.
+
+## Architecture: Extension System
+
+Luminescent Cluster uses a **Protocol/Registry pattern** for extensibility (see [ADR-005](docs/adrs/ADR-005-repository-organization-strategy.md)).
+
+### Extension Points
+
+| Extension | Purpose | OSS Default |
+|-----------|---------|-------------|
+| `TenantProvider` | Multi-tenancy isolation | None (single-user) |
+| `UsageTracker` | Usage metering/billing | None (no tracking) |
+| `AuditLogger` | Compliance audit logs | None (local logs only) |
+
+### Usage Pattern
+
+```python
+from src.extensions import ExtensionRegistry
+
+# Check if extensions are registered
+registry = ExtensionRegistry.get()
+
+# OSS mode: Extensions are None, code handles gracefully
+if registry.tenant_provider:
+    tenant_id = registry.tenant_provider.get_tenant_id(context)
+    filter = registry.tenant_provider.get_tenant_filter(tenant_id)
+
+# Check mode
+registry.get_status()  # {'mode': 'oss', ...} or {'mode': 'cloud', ...}
+```
+
+### Implementing Extensions
+
+Extensions implement Python Protocols (duck typing):
+
+```python
+from src.extensions import ExtensionRegistry
+
+class MyTenantProvider:
+    def get_tenant_id(self, ctx: dict) -> str:
+        return ctx.get("x-tenant-id")
+
+    def get_tenant_filter(self, tenant_id: str) -> dict:
+        return {"tenant_id": {"$eq": tenant_id}}
+
+    def validate_tenant_access(self, tenant_id, user_id, resource) -> bool:
+        return True  # Your RBAC logic
+
+# Register at startup
+registry = ExtensionRegistry.get()
+registry.tenant_provider = MyTenantProvider()
+```
+
+## Project Structure
+
+```
+luminescent-cluster/
+├── session_memory_server.py       # Tier 1: Session memory MCP server
+├── pixeltable_mcp_server.py       # Tier 2: Long-term memory MCP server
+├── pixeltable_setup.py            # Knowledge base setup
+├── src/
+│   ├── version_guard.py           # Python version safety (ADR-001)
+│   └── extensions/                # Extension system (ADR-005)
+│       ├── protocols.py           # TenantProvider, UsageTracker, AuditLogger
+│       └── registry.py            # ExtensionRegistry singleton
+├── scripts/
+│   ├── db_repair.py               # Database health check utility
+│   ├── backup_restore.py          # Backup and restore utility
+│   └── check-status.sh            # Status verification script
+├── integrations/                  # FREE tier integrations (ADR-005)
+│   ├── github_pat.py              # Read-only GitHub via Personal Access Token
+│   └── gitlab_pat.py              # Read-only GitLab via Personal Access Token
+├── tests/
+│   ├── test_version_guard.py      # Version guard tests (19 tests)
+│   ├── test_extensions.py         # Extension system tests (30 tests)
+│   ├── test_mcp_extension_integration.py  # MCP integration tests (21 tests)
+│   ├── test_github_pat.py         # GitHub PAT tests (24 tests)
+│   ├── test_gitlab_pat.py         # GitLab PAT tests (27 tests)
+│   ├── test_db_repair.py          # Database health check tests (21 tests)
+│   └── test_backup_restore.py     # Backup/restore tests (15 tests)
+├── docs/
+│   ├── KNOWN_ISSUES.md            # Known issues and troubleshooting
+│   └── adrs/                      # Architectural Decision Records
+│       ├── ADR-001-*.md           # Python version requirement
+│       ├── ADR-003-*.md           # Project intent & memory architecture
+│       ├── ADR-004-*.md           # Monetization strategy
+│       └── ADR-005-*.md           # Repository organization (OSS vs Paid)
+├── .github/workflows/             # CI/CD configuration
+│   ├── ci.yml                     # Tests, linting, license checks
+│   └── publish.yml                # PyPI publishing workflow
+└── examples/
+    └── *.py                       # Usage examples
 ```
 
 ## Contributing
 
-This is a proof-of-concept implementation. Improvements welcome:
+This is an open-source project under Apache 2.0 license. Contributions welcome!
 
-1. Add GitHub PR integration to session memory
-2. Implement multimodal support (images, videos)
-3. Add cost tracking and metrics
-4. Build web UI for knowledge base management
+**Note**: First-time contributors will need to sign a Contributor License Agreement (CLA). The CLA Assistant will guide you through the process when you open your first PR.
+
+### Development Setup
+
+```bash
+# Clone and install
+git clone https://github.com/amiable-dev/luminescent-cluster.git
+cd luminescent-cluster
+pip install -e ".[dev]"
+
+# Run tests
+pytest tests/ -v
+
+# Run specific test file
+pytest tests/test_extensions.py -v
+```
+
+### Contribution Areas
+
+1. **Core Features**: MCP server improvements, semantic search enhancements
+2. **Integrations**: Webhook support, IDE plugins, additional Git hosting providers
+3. **Documentation**: Examples, tutorials, API documentation
+4. **Testing**: Additional test coverage, integration tests
+
+### Test Suite
+
+The project maintains a comprehensive test suite (166 tests):
+
+```bash
+# Run all tests
+pytest tests/ -v --ignore=tests/test_pixeltable_mcp_server.py
+
+# Run specific test categories
+pytest tests/test_extensions.py -v          # Extension system (30 tests)
+pytest tests/test_github_pat.py -v          # GitHub integration (24 tests)
+pytest tests/test_gitlab_pat.py -v          # GitLab integration (27 tests)
+pytest tests/test_version_guard.py -v       # Version safety (19 tests)
+pytest tests/test_db_repair.py -v           # Health check (21 tests)
+pytest tests/test_backup_restore.py -v      # Backup/restore (15 tests)
+```
+
+### ADR Process
+
+Significant changes require an ADR (Architectural Decision Record):
+1. Copy `docs/adrs/template.md` to `docs/adrs/ADR-NNN-title.md`
+2. Fill in context, decision, and consequences
+3. Submit PR for review
 
 ## License
 
-MIT License - see LICENSE file
+Apache 2.0 License - see LICENSE file
 
 ## References
 

@@ -1,3 +1,17 @@
+# Copyright 2024-2025 Amiable Development
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 Python Version Guard for Pixeltable MCP Servers (ADR-001)
 
@@ -138,18 +152,24 @@ def enforce_python_version() -> None:
                         },
                     )
                     print(
-                        f"FATAL: Pixeltable database was created with Python {stored_version}, "
-                        f"but you are running Python {current_version}.\n"
                         f"\n"
-                        f"This WILL cause a segmentation fault. You must either:\n"
-                        f"  1. Use Python {stored_version} (recommended)\n"
-                        f"  2. Migrate data using the procedure in ADR-001\n"
-                        f"\n"
-                        f"To use Python {stored_version}:\n"
-                        f"  uv venv --python {stored_version}\n"
-                        f"  source .venv/bin/activate\n"
-                        f"\n"
-                        f"Marker file: {version_marker}",
+                        f"╔══════════════════════════════════════════════════════════════╗\n"
+                        f"║  PYTHON VERSION MISMATCH - DATABASE INCOMPATIBLE             ║\n"
+                        f"╠══════════════════════════════════════════════════════════════╣\n"
+                        f"║  Database created with: Python {stored_version:<10}                    ║\n"
+                        f"║  Currently running:     Python {current_version:<10}                    ║\n"
+                        f"║                                                              ║\n"
+                        f"║  OPTIONS:                                                    ║\n"
+                        f"║  1. Use correct Python version:                              ║\n"
+                        f"║       uv venv --python {stored_version}                                ║\n"
+                        f"║       source .venv/bin/activate                              ║\n"
+                        f"║                                                              ║\n"
+                        f"║  2. Fresh install (deletes all data):                        ║\n"
+                        f"║       rm -rf {str(pixeltable_dir):<45} ║\n"
+                        f"║                                                              ║\n"
+                        f"║  3. Backup and restore (preserves data):                     ║\n"
+                        f"║       python -m scripts.backup_restore --backup-restore      ║\n"
+                        f"╚══════════════════════════════════════════════════════════════╝\n",
                         file=sys.stderr,
                     )
                     sys.exit(EX_CONFIG)  # 78
@@ -175,17 +195,23 @@ def enforce_python_version() -> None:
                     },
                 )
                 print(
-                    f"FATAL: Legacy Pixeltable database detected at {pixeltable_dir}\n"
-                    f"but no Python version marker exists.\n"
                     f"\n"
-                    f"This database was created before version tracking was implemented.\n"
-                    f"Running with Python {current_version} may cause a segmentation fault.\n"
-                    f"\n"
-                    f"To fix this, you must:\n"
-                    f"  1. Identify the Python version that created this database\n"
-                    f"  2. Create the marker manually:\n"
-                    f"     echo '3.11' > {version_marker}\n"
-                    f"  3. Run again with that Python version, OR migrate per ADR-001\n",
+                    f"╔══════════════════════════════════════════════════════════════╗\n"
+                    f"║  LEGACY DATABASE DETECTED - NO VERSION MARKER                ║\n"
+                    f"╠══════════════════════════════════════════════════════════════╣\n"
+                    f"║  Database location: {str(pixeltable_dir):<40} ║\n"
+                    f"║  Currently running: Python {current_version:<10}                      ║\n"
+                    f"║                                                              ║\n"
+                    f"║  This database was created before version tracking was       ║\n"
+                    f"║  implemented. Running may cause a segmentation fault.        ║\n"
+                    f"║                                                              ║\n"
+                    f"║  OPTIONS:                                                    ║\n"
+                    f"║  1. Create marker manually (if you know the Python version): ║\n"
+                    f"║       echo '3.XX' > {str(version_marker):<39} ║\n"
+                    f"║                                                              ║\n"
+                    f"║  2. Fresh install (deletes all data):                        ║\n"
+                    f"║       rm -rf {str(pixeltable_dir):<45} ║\n"
+                    f"╚══════════════════════════════════════════════════════════════╝\n",
                     file=sys.stderr,
                 )
                 sys.exit(EX_DATAERR)  # 65
