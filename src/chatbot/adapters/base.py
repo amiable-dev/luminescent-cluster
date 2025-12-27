@@ -75,25 +75,27 @@ class ChatMessage:
 
     Attributes:
         id: Unique message identifier
-        platform: Platform name (discord, slack, telegram, whatsapp)
-        channel_id: Channel/conversation identifier
-        author: Message author information
         content: Message text content
+        author: Message author information
+        channel_id: Channel/conversation identifier
         timestamp: When the message was sent
+        platform: Platform name (discord, slack, telegram, whatsapp)
         thread_id: Thread/conversation thread ID (optional)
         reply_to_id: ID of message being replied to (optional)
+        is_direct_message: Whether this is a DM/private message
         attachments: List of attachment metadata (optional)
         metadata: Platform-specific metadata (optional)
     """
 
     id: str
-    platform: str
-    channel_id: str
-    author: MessageAuthor
     content: str
+    author: MessageAuthor
+    channel_id: str
     timestamp: datetime
+    platform: str = ""
     thread_id: Optional[str] = None
     reply_to_id: Optional[str] = None
+    is_direct_message: bool = False
     attachments: list[dict[str, Any]] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
 
