@@ -25,12 +25,25 @@ Usage (Cloud - with extensions):
     registry.usage_tracker = StripeUsageTracker()
 """
 
-from .protocols import TenantProvider, UsageTracker, AuditLogger
+from .protocols import (
+    TenantProvider,
+    UsageTracker,
+    AuditLogger,
+    ChatbotAuthProvider,
+    ChatbotRateLimiter,
+    ChatbotAccessController,
+)
 from .registry import ExtensionRegistry
 
 __all__ = [
+    # Core protocols
     "TenantProvider",
     "UsageTracker",
     "AuditLogger",
+    # Chatbot protocols (ADR-006)
+    "ChatbotAuthProvider",
+    "ChatbotRateLimiter",
+    "ChatbotAccessController",
+    # Registry
     "ExtensionRegistry",
 ]

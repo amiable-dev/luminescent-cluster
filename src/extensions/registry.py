@@ -36,7 +36,14 @@ from typing import Optional, ClassVar, TYPE_CHECKING
 import threading
 
 if TYPE_CHECKING:
-    from .protocols import TenantProvider, UsageTracker, AuditLogger
+    from .protocols import (
+        TenantProvider,
+        UsageTracker,
+        AuditLogger,
+        ChatbotAuthProvider,
+        ChatbotRateLimiter,
+        ChatbotAccessController,
+    )
 
 
 @dataclass
@@ -59,12 +66,20 @@ class ExtensionRegistry:
         tenant_provider: Multi-tenancy support (isolation, filtering)
         usage_tracker: Usage metering for billing/quotas
         audit_logger: Enterprise audit logging for compliance
+        chatbot_auth_provider: Chatbot platform authentication (ADR-006)
+        chatbot_rate_limiter: Chatbot rate limiting (ADR-006)
+        chatbot_access_controller: Chatbot access control (ADR-006)
     """
 
     # Extension implementations (all optional, default None)
     tenant_provider: Optional["TenantProvider"] = None
     usage_tracker: Optional["UsageTracker"] = None
     audit_logger: Optional["AuditLogger"] = None
+
+    # Chatbot extension implementations (ADR-006)
+    chatbot_auth_provider: Optional["ChatbotAuthProvider"] = None
+    chatbot_rate_limiter: Optional["ChatbotRateLimiter"] = None
+    chatbot_access_controller: Optional["ChatbotAccessController"] = None
 
     # Singleton management (ClassVars are not dataclass fields)
     _instance: ClassVar[Optional["ExtensionRegistry"]] = None
@@ -140,6 +155,23 @@ class ExtensionRegistry:
         """
         return self.audit_logger is not None
 
+    def is_chatbot_enabled(self) -> bool:
+        """
+        Check if chatbot extensions are enabled.
+
+        Returns:
+            True if any chatbot extension is registered.
+
+        Note:
+            Chatbot can function without extensions (OSS mode),
+            but with reduced functionality (no auth, no rate limiting).
+        """
+        return any([
+            self.chatbot_auth_provider,
+            self.chatbot_rate_limiter,
+            self.chatbot_access_controller,
+        ])
+
     def get_status(self) -> dict:
         """
         Get status of all registered extensions.
@@ -156,17 +188,27 @@ class ExtensionRegistry:
                 "mode": "oss"
             }
         """
-        has_any = any([
+        has_core = any([
             self.tenant_provider,
             self.usage_tracker,
             self.audit_logger,
+        ])
+
+        has_chatbot = any([
+            self.chatbot_auth_provider,
+            self.chatbot_rate_limiter,
+            self.chatbot_access_controller,
         ])
 
         return {
             "tenant_provider": self.tenant_provider is not None,
             "usage_tracker": self.usage_tracker is not None,
             "audit_logger": self.audit_logger is not None,
-            "mode": "cloud" if has_any else "oss",
+            "chatbot_auth_provider": self.chatbot_auth_provider is not None,
+            "chatbot_rate_limiter": self.chatbot_rate_limiter is not None,
+            "chatbot_access_controller": self.chatbot_access_controller is not None,
+            "mode": "cloud" if has_core else "oss",
+            "chatbot_mode": "cloud" if has_chatbot else "oss",
         }
 
 

@@ -22,6 +22,9 @@ from src.extensions import (
     TenantProvider,
     UsageTracker,
     AuditLogger,
+    ChatbotAuthProvider,
+    ChatbotRateLimiter,
+    ChatbotAccessController,
 )
 
 
@@ -630,3 +633,298 @@ class TestConcreteImplementations:
 
         allowed, _ = registry.usage_tracker.check_quota("test-tenant", "query")
         assert allowed is True
+
+
+class TestChatbotExtensionRegistry:
+    """Test suite for chatbot extension registry fields (ADR-006)."""
+
+    @pytest.fixture(autouse=True)
+    def reset_registry(self):
+        """Reset the singleton before each test."""
+        ExtensionRegistry.reset()
+        yield
+        ExtensionRegistry.reset()
+
+    # ========================================
+    # Test: Default State (OSS Mode)
+    # ========================================
+    def test_default_chatbot_extensions_are_none(self):
+        """All chatbot extensions should default to None (OSS mode)."""
+        registry = ExtensionRegistry.get()
+
+        assert registry.chatbot_auth_provider is None
+        assert registry.chatbot_rate_limiter is None
+        assert registry.chatbot_access_controller is None
+
+    def test_default_chatbot_mode_is_oss(self):
+        """Default chatbot mode should be 'oss' when no extensions registered."""
+        registry = ExtensionRegistry.get()
+        status = registry.get_status()
+
+        assert status["chatbot_mode"] == "oss"
+        assert status["chatbot_auth_provider"] is False
+        assert status["chatbot_rate_limiter"] is False
+        assert status["chatbot_access_controller"] is False
+
+    def test_is_chatbot_enabled_false_by_default(self):
+        """is_chatbot_enabled() should be False when no extensions registered."""
+        registry = ExtensionRegistry.get()
+        assert registry.is_chatbot_enabled() is False
+
+    # ========================================
+    # Test: Chatbot Extension Registration
+    # ========================================
+    def test_register_chatbot_auth_provider(self):
+        """Should allow registering a ChatbotAuthProvider."""
+        registry = ExtensionRegistry.get()
+        mock_provider = MagicMock(spec=ChatbotAuthProvider)
+
+        registry.chatbot_auth_provider = mock_provider
+
+        assert registry.chatbot_auth_provider is mock_provider
+        assert registry.is_chatbot_enabled() is True
+        assert registry.get_status()["chatbot_auth_provider"] is True
+
+    def test_register_chatbot_rate_limiter(self):
+        """Should allow registering a ChatbotRateLimiter."""
+        registry = ExtensionRegistry.get()
+        mock_limiter = MagicMock(spec=ChatbotRateLimiter)
+
+        registry.chatbot_rate_limiter = mock_limiter
+
+        assert registry.chatbot_rate_limiter is mock_limiter
+        assert registry.is_chatbot_enabled() is True
+        assert registry.get_status()["chatbot_rate_limiter"] is True
+
+    def test_register_chatbot_access_controller(self):
+        """Should allow registering a ChatbotAccessController."""
+        registry = ExtensionRegistry.get()
+        mock_controller = MagicMock(spec=ChatbotAccessController)
+
+        registry.chatbot_access_controller = mock_controller
+
+        assert registry.chatbot_access_controller is mock_controller
+        assert registry.is_chatbot_enabled() is True
+        assert registry.get_status()["chatbot_access_controller"] is True
+
+    def test_chatbot_mode_becomes_cloud_with_any_extension(self):
+        """Chatbot mode should be 'cloud' when any chatbot extension is registered."""
+        registry = ExtensionRegistry.get()
+
+        # Register just one chatbot extension
+        registry.chatbot_rate_limiter = MagicMock(spec=ChatbotRateLimiter)
+
+        assert registry.get_status()["chatbot_mode"] == "cloud"
+
+    def test_register_all_chatbot_extensions(self):
+        """Should allow registering all chatbot extensions."""
+        registry = ExtensionRegistry.get()
+
+        registry.chatbot_auth_provider = MagicMock(spec=ChatbotAuthProvider)
+        registry.chatbot_rate_limiter = MagicMock(spec=ChatbotRateLimiter)
+        registry.chatbot_access_controller = MagicMock(spec=ChatbotAccessController)
+
+        status = registry.get_status()
+        assert status["chatbot_auth_provider"] is True
+        assert status["chatbot_rate_limiter"] is True
+        assert status["chatbot_access_controller"] is True
+        assert status["chatbot_mode"] == "cloud"
+
+    def test_chatbot_and_core_extensions_independent(self):
+        """Chatbot extensions should be independent from core extensions."""
+        registry = ExtensionRegistry.get()
+
+        # Register only chatbot extension
+        registry.chatbot_auth_provider = MagicMock(spec=ChatbotAuthProvider)
+
+        status = registry.get_status()
+        # Core mode should still be OSS
+        assert status["mode"] == "oss"
+        # But chatbot mode should be cloud
+        assert status["chatbot_mode"] == "cloud"
+
+        # Verify core extensions still None
+        assert registry.tenant_provider is None
+        assert registry.usage_tracker is None
+        assert registry.audit_logger is None
+
+
+class TestChatbotProtocolUsage:
+    """Test suite for chatbot protocol usage patterns."""
+
+    @pytest.fixture(autouse=True)
+    def reset_registry(self):
+        """Reset the singleton before each test."""
+        ExtensionRegistry.reset()
+        yield
+        ExtensionRegistry.reset()
+
+    @pytest.fixture
+    def mock_auth_provider(self):
+        """Create a mock ChatbotAuthProvider."""
+        provider = MagicMock()
+        provider.authenticate_platform_user.return_value = {
+            "authenticated": True,
+            "tenant_id": "tenant-123",
+            "user_id": "user-456",
+            "permissions": ["read", "write"],
+        }
+        provider.resolve_tenant.return_value = "tenant-123"
+        provider.get_user_identity.return_value = {
+            "user_id": "user-456",
+            "email": "test@example.com",
+        }
+        return provider
+
+    @pytest.fixture
+    def mock_rate_limiter(self):
+        """Create a mock ChatbotRateLimiter."""
+        limiter = MagicMock()
+        limiter.check_rate_limit.return_value = (True, None)
+        limiter.get_remaining_quota.return_value = {
+            "requests_remaining": 100,
+            "tokens_remaining": 10000,
+        }
+        return limiter
+
+    @pytest.fixture
+    def mock_access_controller(self):
+        """Create a mock ChatbotAccessController."""
+        controller = MagicMock()
+        controller.check_channel_access.return_value = (True, None)
+        controller.check_command_access.return_value = (True, None)
+        controller.get_allowed_channels.return_value = ["general", "dev"]
+        return controller
+
+    # ========================================
+    # Test: ChatbotAuthProvider Interface
+    # ========================================
+    def test_authenticate_platform_user(self, mock_auth_provider):
+        """ChatbotAuthProvider should authenticate platform users."""
+        registry = ExtensionRegistry.get()
+        registry.chatbot_auth_provider = mock_auth_provider
+
+        result = registry.chatbot_auth_provider.authenticate_platform_user(
+            platform="discord",
+            platform_user_id="123456789",
+            workspace_id="guild-acme"
+        )
+
+        assert result["authenticated"] is True
+        assert result["tenant_id"] == "tenant-123"
+        mock_auth_provider.authenticate_platform_user.assert_called_once()
+
+    def test_resolve_tenant(self, mock_auth_provider):
+        """ChatbotAuthProvider should resolve platform workspace to tenant."""
+        registry = ExtensionRegistry.get()
+        registry.chatbot_auth_provider = mock_auth_provider
+
+        tenant_id = registry.chatbot_auth_provider.resolve_tenant(
+            platform="slack", workspace_id="T12345"
+        )
+
+        assert tenant_id == "tenant-123"
+
+    # ========================================
+    # Test: ChatbotRateLimiter Interface
+    # ========================================
+    def test_check_rate_limit(self, mock_rate_limiter):
+        """ChatbotRateLimiter should check rate limits."""
+        registry = ExtensionRegistry.get()
+        registry.chatbot_rate_limiter = mock_rate_limiter
+
+        allowed, reason = registry.chatbot_rate_limiter.check_rate_limit(
+            user_id="user-123",
+            channel_id="channel-456",
+            workspace_id="ws-789"
+        )
+
+        assert allowed is True
+        assert reason is None
+
+    def test_rate_limit_exceeded(self, mock_rate_limiter):
+        """ChatbotRateLimiter should return reason when limit exceeded."""
+        mock_rate_limiter.check_rate_limit.return_value = (
+            False,
+            "Rate limit exceeded: 10 requests per minute"
+        )
+        registry = ExtensionRegistry.get()
+        registry.chatbot_rate_limiter = mock_rate_limiter
+
+        allowed, reason = registry.chatbot_rate_limiter.check_rate_limit(
+            user_id="user-123"
+        )
+
+        assert allowed is False
+        assert "Rate limit exceeded" in reason
+
+    # ========================================
+    # Test: ChatbotAccessController Interface
+    # ========================================
+    def test_check_channel_access(self, mock_access_controller):
+        """ChatbotAccessController should check channel access."""
+        registry = ExtensionRegistry.get()
+        registry.chatbot_access_controller = mock_access_controller
+
+        allowed, reason = registry.chatbot_access_controller.check_channel_access(
+            user_id="user-123",
+            channel_id="general",
+            workspace_id="ws-789"
+        )
+
+        assert allowed is True
+
+    def test_check_command_access(self, mock_access_controller):
+        """ChatbotAccessController should check command access."""
+        registry = ExtensionRegistry.get()
+        registry.chatbot_access_controller = mock_access_controller
+
+        allowed, reason = registry.chatbot_access_controller.check_command_access(
+            user_id="user-123",
+            command="/help",
+            workspace_id="ws-789"
+        )
+
+        assert allowed is True
+
+    # ========================================
+    # Test: Graceful OSS Mode Handling
+    # ========================================
+    def test_graceful_handling_without_chatbot_extensions(self):
+        """Code should handle missing chatbot extensions gracefully."""
+        registry = ExtensionRegistry.get()
+
+        # Simulate OSS chatbot handler pattern
+        def handle_chatbot_message(platform: str, user_id: str, message: str):
+            # Check rate limit if available
+            if registry.chatbot_rate_limiter:
+                allowed, reason = registry.chatbot_rate_limiter.check_rate_limit(
+                    user_id=user_id
+                )
+                if not allowed:
+                    return {"error": reason}
+
+            # Check auth if available
+            tenant_id = None
+            if registry.chatbot_auth_provider:
+                result = registry.chatbot_auth_provider.authenticate_platform_user(
+                    platform=platform,
+                    platform_user_id=user_id,
+                    workspace_id="default"
+                )
+                if result["authenticated"]:
+                    tenant_id = result["tenant_id"]
+
+            # Process message (no extensions in OSS mode)
+            return {
+                "status": "ok",
+                "tenant_id": tenant_id,  # None in OSS
+                "response": f"Processed: {message}"
+            }
+
+        # Execute in OSS mode (no extensions)
+        result = handle_chatbot_message("discord", "user-123", "Hello")
+
+        assert result["status"] == "ok"
+        assert result["tenant_id"] is None  # No auth in OSS
+        assert "Hello" in result["response"]

@@ -31,7 +31,7 @@ Protocol Versioning:
 - PATCH: Documentation or type hint fixes
 """
 
-from typing import Protocol, Optional, Any
+from typing import Protocol, Optional, Any, runtime_checkable
 from datetime import datetime
 
 
@@ -274,5 +274,293 @@ class AuditLogger(Protocol):
                     "ip_address": "192.168.1.1"
                 }
             )
+        """
+        ...
+
+
+# =============================================================================
+# Chatbot Extension Protocols (ADR-006)
+# =============================================================================
+
+
+@runtime_checkable
+class ChatbotAuthProvider(Protocol):
+    """
+    Extension point for chatbot platform authentication.
+
+    Maps platform-specific identities (Discord user IDs, Slack user IDs) to
+    internal tenant and user identities.
+
+    OSS Behavior: Not registered; all users treated as anonymous.
+    Cloud Behavior: Maps platform workspaces to tenants, users to accounts.
+
+    Version: 1.0.0
+
+    Related: ADR-006 Chatbot Platform Integrations
+    """
+
+    def authenticate_platform_user(
+        self,
+        platform: str,
+        platform_user_id: str,
+        workspace_id: str,
+    ) -> dict:
+        """
+        Authenticate a user from a chat platform.
+
+        Args:
+            platform: Platform identifier ("discord", "slack", "telegram", "whatsapp")
+            platform_user_id: User ID from the platform (e.g., Discord snowflake)
+            workspace_id: Workspace/guild/org ID from the platform
+
+        Returns:
+            Authentication result dict:
+            {
+                "authenticated": bool,
+                "tenant_id": str | None,
+                "user_id": str | None,
+                "permissions": list[str],
+                "error": str | None
+            }
+
+        Example:
+            result = provider.authenticate_platform_user(
+                platform="discord",
+                platform_user_id="123456789",
+                workspace_id="guild-acme"
+            )
+            if result["authenticated"]:
+                tenant_id = result["tenant_id"]
+        """
+        ...
+
+    def resolve_tenant(
+        self,
+        platform: str,
+        workspace_id: str,
+    ) -> Optional[str]:
+        """
+        Resolve a platform workspace to a tenant ID.
+
+        Args:
+            platform: Platform identifier
+            workspace_id: Workspace ID from the platform
+
+        Returns:
+            Tenant ID if workspace is registered, None otherwise.
+
+        Example:
+            tenant = provider.resolve_tenant("slack", "T12345")
+            # Returns "acme-corp" if Slack workspace T12345 is linked to acme-corp
+        """
+        ...
+
+    def get_user_identity(
+        self,
+        platform: str,
+        platform_user_id: str,
+    ) -> Optional[dict]:
+        """
+        Get internal user identity for a platform user.
+
+        Args:
+            platform: Platform identifier
+            platform_user_id: User ID from the platform
+
+        Returns:
+            User identity dict or None:
+            {
+                "user_id": str,
+                "email": str | None,
+                "display_name": str | None
+            }
+
+        Note:
+            Returns None if user is not linked to an internal account.
+        """
+        ...
+
+
+@runtime_checkable
+class ChatbotRateLimiter(Protocol):
+    """
+    Extension point for chatbot-specific rate limiting.
+
+    Implements token bucket or sliding window rate limiting for chatbot requests.
+    Supports per-user, per-channel, and per-workspace limits.
+
+    OSS Behavior: Not registered; no rate limiting (or simple local limiter).
+    Cloud Behavior: Distributed rate limiting with Redis/Valkey backend.
+
+    Version: 1.0.0
+
+    Related: ADR-006 Chatbot Platform Integrations
+    """
+
+    def check_rate_limit(
+        self,
+        user_id: str,
+        channel_id: Optional[str] = None,
+        workspace_id: Optional[str] = None,
+    ) -> tuple[bool, Optional[str]]:
+        """
+        Check if a request should be allowed under rate limits.
+
+        Args:
+            user_id: User making the request
+            channel_id: Channel where request originated (optional)
+            workspace_id: Workspace context (optional)
+
+        Returns:
+            Tuple of (allowed: bool, reason: Optional[str])
+            If not allowed, reason explains the limit exceeded.
+
+        Example:
+            allowed, reason = limiter.check_rate_limit(
+                user_id="user-123",
+                channel_id="channel-456",
+                workspace_id="ws-789"
+            )
+            if not allowed:
+                return f"Rate limited: {reason}"
+        """
+        ...
+
+    def record_request(
+        self,
+        user_id: str,
+        tokens_used: int = 0,
+        channel_id: Optional[str] = None,
+        workspace_id: Optional[str] = None,
+    ) -> None:
+        """
+        Record a request for rate limiting purposes.
+
+        Args:
+            user_id: User who made the request
+            tokens_used: Number of LLM tokens consumed
+            channel_id: Channel context (optional)
+            workspace_id: Workspace context (optional)
+
+        Note:
+            Call this after successful request processing.
+        """
+        ...
+
+    def get_remaining_quota(
+        self,
+        user_id: str,
+        workspace_id: Optional[str] = None,
+    ) -> dict:
+        """
+        Get remaining quota for a user.
+
+        Args:
+            user_id: User to check
+            workspace_id: Workspace context (optional)
+
+        Returns:
+            Quota status dict:
+            {
+                "requests_remaining": int,
+                "tokens_remaining": int,
+                "reset_at": datetime | None
+            }
+        """
+        ...
+
+
+@runtime_checkable
+class ChatbotAccessController(Protocol):
+    """
+    Extension point for chatbot access control.
+
+    Controls which channels the bot can respond in and which commands
+    users can execute. Implements allowlist/blocklist patterns.
+
+    OSS Behavior: Not registered; bot responds everywhere.
+    Cloud Behavior: Per-workspace channel allowlists, command permissions.
+
+    Version: 1.0.0
+
+    Related: ADR-006 Chatbot Platform Integrations
+    """
+
+    def check_channel_access(
+        self,
+        user_id: str,
+        channel_id: str,
+        workspace_id: str,
+    ) -> tuple[bool, Optional[str]]:
+        """
+        Check if bot should respond in a channel.
+
+        Args:
+            user_id: User who triggered the bot
+            channel_id: Channel where bot was invoked
+            workspace_id: Workspace context
+
+        Returns:
+            Tuple of (allowed: bool, reason: Optional[str])
+            If not allowed, reason explains why.
+
+        Example:
+            allowed, reason = controller.check_channel_access(
+                user_id="user-123",
+                channel_id="private-channel",
+                workspace_id="ws-789"
+            )
+            if not allowed:
+                # Silently ignore or send ephemeral message
+                pass
+        """
+        ...
+
+    def check_command_access(
+        self,
+        user_id: str,
+        command: str,
+        workspace_id: str,
+    ) -> tuple[bool, Optional[str]]:
+        """
+        Check if user can execute a command.
+
+        Args:
+            user_id: User requesting command execution
+            command: Command being executed (e.g., "/admin", "/config")
+            workspace_id: Workspace context
+
+        Returns:
+            Tuple of (allowed: bool, reason: Optional[str])
+            If not allowed, reason explains permission requirement.
+
+        Example:
+            allowed, reason = controller.check_command_access(
+                user_id="user-123",
+                command="/config",
+                workspace_id="ws-789"
+            )
+            if not allowed:
+                return f"Permission denied: {reason}"
+        """
+        ...
+
+    def get_allowed_channels(
+        self,
+        workspace_id: str,
+    ) -> list[str]:
+        """
+        Get list of channels where bot is enabled.
+
+        Args:
+            workspace_id: Workspace to query
+
+        Returns:
+            List of channel IDs where bot can respond.
+            Empty list means bot is disabled in workspace.
+
+        Note:
+            If this returns an empty list and no blocklist is configured,
+            implementations may choose to allow all channels by default.
         """
         ...
