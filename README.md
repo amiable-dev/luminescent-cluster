@@ -457,6 +457,74 @@ registry = ExtensionRegistry.get()
 registry.tenant_provider = MyTenantProvider()
 ```
 
+## Chatbot Platform Integrations (ADR-006)
+
+Luminescent Cluster supports conversational interfaces via chatbot integrations on **Slack, Discord, Telegram, and WhatsApp**. See [ADR-006](docs/adrs/ADR-006-chatbot-platform-integrations.md) for full details.
+
+### Access Control Configuration
+
+The chatbot uses a pluggable access control system:
+
+```python
+from src.chatbot.access_control import (
+    DefaultAccessControlPolicy,      # OSS: allow all
+    ConfigurableAccessControlPolicy,  # Self-hosted: config-based
+    ResponseFilterPolicy,             # Filter sensitive data
+)
+
+# Default (OSS mode) - allows all channels and commands
+policy = DefaultAccessControlPolicy()
+
+# Self-hosted with restrictions
+policy = ConfigurableAccessControlPolicy(
+    allowed_channels=["#general", "#engineering"],
+    blocked_channels=["#hr", "#legal"],
+    allowed_commands=["/help", "/ask", "/search"],
+)
+
+# Filter sensitive data in public channels
+filter_policy = ResponseFilterPolicy(
+    sensitive_patterns=[
+        r"password\s*[:=]\s*\S+",
+        r"api[_-]?key\s*[:=]\s*\S+",
+    ]
+)
+```
+
+### Context Persistence
+
+Conversation context persists in Pixeltable with 90-day retention:
+
+```python
+from src.chatbot.context import ThreadContextManager, PixeltableContextStore
+
+# With persistence
+store = PixeltableContextStore()
+manager = ThreadContextManager(context_store=store)
+
+# Get/update thread context
+context = await manager.get_context(thread_id="thread-123")
+await manager.update_context(thread_id="thread-123", message=new_message)
+```
+
+### Observability
+
+ChatMetrics provides telemetry for monitoring:
+
+```python
+from src.chatbot.metrics import ChatMetrics
+
+metrics = ChatMetrics()
+await metrics.record_query(
+    platform="discord",
+    user_id="user-123",
+    query_type="search",
+    latency_ms=245,
+    tokens_used=150,
+    memory_hits=3,
+)
+```
+
 ## Project Structure
 
 ```
@@ -466,9 +534,19 @@ luminescent-cluster/
 ├── pixeltable_setup.py            # Knowledge base setup
 ├── src/
 │   ├── version_guard.py           # Python version safety (ADR-001)
-│   └── extensions/                # Extension system (ADR-005)
-│       ├── protocols.py           # TenantProvider, UsageTracker, AuditLogger
-│       └── registry.py            # ExtensionRegistry singleton
+│   ├── extensions/                # Extension system (ADR-005)
+│   │   ├── protocols.py           # TenantProvider, UsageTracker, AuditLogger
+│   │   └── registry.py            # ExtensionRegistry singleton
+│   └── chatbot/                   # Chatbot platform integrations (ADR-006)
+│       ├── gateway.py             # Central Chat Gateway
+│       ├── context.py             # Thread context management
+│       ├── metrics.py             # ChatMetrics telemetry
+│       ├── access_control.py      # Access control policies
+│       └── adapters/              # Platform-specific adapters
+│           ├── discord.py         # Discord adapter
+│           ├── slack.py           # Slack adapter
+│           ├── telegram.py        # Telegram adapter
+│           └── whatsapp.py        # WhatsApp adapter
 ├── scripts/
 │   ├── db_repair.py               # Database health check utility
 │   ├── backup_restore.py          # Backup and restore utility
@@ -483,14 +561,21 @@ luminescent-cluster/
 │   ├── test_github_pat.py         # GitHub PAT tests (24 tests)
 │   ├── test_gitlab_pat.py         # GitLab PAT tests (27 tests)
 │   ├── test_db_repair.py          # Database health check tests (21 tests)
-│   └── test_backup_restore.py     # Backup/restore tests (15 tests)
+│   ├── test_backup_restore.py     # Backup/restore tests (15 tests)
+│   └── chatbot/                   # Chatbot tests (414 tests)
+│       ├── test_gateway*.py       # Gateway tests
+│       ├── test_context*.py       # Context tests
+│       ├── test_metrics.py        # Metrics tests
+│       ├── test_access_control.py # Access control tests
+│       └── adapters/              # Adapter tests
 ├── docs/
 │   ├── KNOWN_ISSUES.md            # Known issues and troubleshooting
 │   └── adrs/                      # Architectural Decision Records
 │       ├── ADR-001-*.md           # Python version requirement
 │       ├── ADR-003-*.md           # Project intent & memory architecture
 │       ├── ADR-004-*.md           # Monetization strategy
-│       └── ADR-005-*.md           # Repository organization (OSS vs Paid)
+│       ├── ADR-005-*.md           # Repository organization (OSS vs Paid)
+│       └── ADR-006-*.md           # Chatbot platform integrations
 ├── .github/workflows/             # CI/CD configuration
 │   ├── ci.yml                     # Tests, linting, license checks
 │   └── publish.yml                # PyPI publishing workflow

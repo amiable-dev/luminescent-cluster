@@ -39,6 +39,7 @@ import logging
 from src.chatbot.adapters.base import ChatMessage
 from src.chatbot.context import ThreadContextManager, ContextConfig
 from src.chatbot.rate_limiter import TokenBucketRateLimiter, RateLimitConfig
+from src.extensions.registry import ExtensionRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -314,6 +315,25 @@ class ChatbotGateway:
         # Check if we should respond
         if not self.invocation_policy.should_respond(message):
             return None
+
+        # Check access control (ADR-006 peer review remediation)
+        registry = ExtensionRegistry.get()
+        if registry.chatbot_access_controller:
+            try:
+                allowed, reason = registry.chatbot_access_controller.check_channel_access(
+                    user_id=message.author.id,
+                    channel_id=message.channel_id,
+                    workspace_id=request.workspace_id or "",
+                )
+                if not allowed:
+                    logger.debug(
+                        f"Access denied for user {message.author.id} "
+                        f"in channel {message.channel_id}: {reason}"
+                    )
+                    return None
+            except Exception as e:
+                # Fail-open: allow request if access control raises an exception
+                logger.warning(f"Access control check failed, allowing request: {e}")
 
         # Check rate limits
         if self.rate_limiter:

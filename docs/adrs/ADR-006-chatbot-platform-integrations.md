@@ -629,3 +629,112 @@ class ChatMetrics:
 |---------|------|---------|
 | 1.0 | 2025-12-24 | Initial draft based on industry research and ADR alignment |
 | 1.1 | 2025-12-24 | **Council Validation**: Resolved all 5 open questions. Added invocation policy, message persistence, ACLs, rate limiting, LLM capability detection, circuit breaker. Revised timeline with dogfooding week and parallel Slack development. Added observability requirements and citations requirement. |
+| 1.2 | 2025-12-28 | **Peer Review Remediation**: Implemented all critical gaps identified in peer review. See Implementation Notes below. |
+
+---
+
+## Implementation Notes (v1.2)
+
+**Peer Review Date**: 2025-12-28
+**Status**: All critical gaps remediated
+
+### Implemented Components
+
+| Component | Status | Location | Tests |
+|-----------|--------|----------|-------|
+| **Access Control Integration** | ✅ Complete | `src/chatbot/gateway.py:316+` | `tests/chatbot/test_gateway_access_control.py` |
+| **Pixeltable Context Persistence** | ✅ Complete | `src/chatbot/context.py` | `tests/chatbot/test_context_persistence.py` |
+| **ChatMetrics Telemetry** | ✅ Complete | `src/chatbot/metrics.py` | `tests/chatbot/test_metrics.py` |
+| **DefaultAccessControlPolicy** | ✅ Complete | `src/chatbot/access_control.py` | `tests/chatbot/test_access_control.py` |
+
+### Access Control (`src/chatbot/access_control.py`)
+
+Three policy classes per ADR-006 requirements:
+
+1. **DefaultAccessControlPolicy**: Permissive OSS default - allows all channels and commands
+2. **ConfigurableAccessControlPolicy**: File-based allowlist/blocklist for self-hosted deployments
+3. **ResponseFilterPolicy**: Filters sensitive data (passwords, API keys) in public channels
+
+```python
+# OSS mode (default)
+from src.chatbot.access_control import DefaultAccessControlPolicy
+policy = DefaultAccessControlPolicy()
+allowed, reason = policy.check_channel_access(user_id, channel_id, workspace_id)
+# allowed == True for all channels
+
+# Self-hosted with restrictions
+from src.chatbot.access_control import ConfigurableAccessControlPolicy
+policy = ConfigurableAccessControlPolicy(
+    allowed_channels=["#general", "#engineering"],
+    blocked_channels=["#hr", "#legal"],
+    allowed_commands=["/help", "/ask", "/search"],
+)
+```
+
+### Context Persistence (`src/chatbot/context.py`)
+
+Pixeltable-backed context storage per ADR-003 memory architecture:
+
+- **Hot cache**: In-memory dict for fast reads
+- **Persistence**: Pixeltable `conversation_context` table
+- **Retention**: 90-day TTL per ADR-006
+
+```python
+# Schema
+pxt.create_table('conversation_context', {
+    'thread_id': pxt.String,
+    'channel_id': pxt.String,
+    'created_at': pxt.Timestamp,
+    'last_activity': pxt.Timestamp,
+    'messages': pxt.Json,
+    'metadata': pxt.Json,
+})
+```
+
+### ChatMetrics Telemetry (`src/chatbot/metrics.py`)
+
+Observability per ADR-006 spec:
+
+```python
+class ChatMetrics:
+    async def record_query(
+        self,
+        platform: str,        # "discord", "slack", "telegram", "whatsapp"
+        user_id: str,
+        query_type: str,      # "search", "memorize", "reset"
+        latency_ms: int,
+        tokens_used: int,
+        memory_hits: int,
+    ) -> None:
+        # Emits: latency, memory_relevance, degraded status
+```
+
+**Key Metrics**:
+- Query latency by platform (p50, p95)
+- Memory retrieval relevance (`memory_hits / tokens_used`)
+- Token usage by user/workspace
+- Error rates by LLM provider
+
+### Test Coverage
+
+Total chatbot tests: **414 passing**
+
+| Test File | Count | Coverage |
+|-----------|-------|----------|
+| `test_gateway_access_control.py` | 15 | ACL integration in gateway |
+| `test_context_persistence.py` | 18 | Pixeltable storage, TTL, cache |
+| `test_metrics.py` | 12 | ChatMetrics recording |
+| `test_access_control.py` | 21 | Policy behavior |
+| Platform adapters | 348 | Discord, Slack, Telegram, WhatsApp |
+
+### Repository Placement (per ADR-005)
+
+| Component | Repository | Rationale |
+|-----------|------------|-----------|
+| DefaultAccessControlPolicy | luminescent-cluster (public) | OSS permissive default |
+| ConfigurableAccessControlPolicy | luminescent-cluster (public) | Self-hosted config |
+| ResponseFilterPolicy | luminescent-cluster (public) | Core security |
+| ContextStore protocol | luminescent-cluster (public) | Interface definition |
+| PixeltableContextStore | luminescent-cluster (public) | Uses user's own Pixeltable |
+| ChatMetrics | luminescent-cluster (public) | Core observability |
+| CloudAccessController | luminescent-cloud (private) | Workspace SSO, ACLs |
