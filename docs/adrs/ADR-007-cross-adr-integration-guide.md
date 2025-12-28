@@ -690,3 +690,33 @@ The Council finds ADR-007 **fundamentally sound and highly effective** at resolv
 |---------|------|---------|
 | 1.0 | 2025-12-28 | Initial draft: Integration map, protocol consolidation, phase alignment, compliance matrix |
 | 1.1 | 2025-12-28 | **Council Validated**: Added Security Overlay (1a), Error Handling & Resilience (1b), Migration Strategy (1c). Updated Phase Matrix with explicit dependencies. Added Protocol Versioning (SemVer). Added GDPR auto-deletion policy by tier. Updated status tracking with hybrid approach. Resolved all 4 open questions. |
+| 1.2 | 2025-12-28 | **Implementation Complete**: All protocol layer changes (OSS) and cloud implementations (Private) completed via TDD. 655+ OSS tests, 135 cloud tests. All issues closed. |
+
+---
+
+## Implementation Tracker
+
+### luminescent-cluster (OSS)
+
+| Issue | Title | Status | Tests | Notes |
+|-------|-------|--------|-------|-------|
+| #71 | Add Protocol Version Constants | ✅ Complete | 20 | Version constants for all protocols |
+| #72 | Consolidate ContextStore | ✅ Complete | 18 | Moved to protocols.py, added to registry |
+| #73 | Add GDPR Audit Methods | ✅ Complete | 7 | log_gdpr_deletion, log_gdpr_export |
+| #74 | Integrate Response Filtering | ✅ Complete | 10 | ResponseFilter protocol, registry slot |
+| #75 | Add Usage Tracking | ✅ Complete | 7 | usage_tracker.track() in gateway |
+| #76 | Fix Gateway Fail-Closed | ✅ Complete | 6 | CRITICAL security fix |
+
+**Total OSS Tests**: 655+ (all passing)
+
+### luminescent-cloud (Private)
+
+| Issue | Title | Status | Tests | Notes |
+|-------|-------|--------|-------|-------|
+| #5 | GDPR Methods in CloudAuditLogger | ✅ Complete | 9 | Protocol compliance verified |
+| #6 | Workspace Event Webhooks | ✅ Complete | 12 | Team tier auto-deletion via webhooks |
+| #7 | Implement CloudContextStore | ✅ Complete | 19 | Tenant-isolated persistence |
+| #8 | Register CloudAccessController | ✅ Complete | - | Added to startup.py |
+| #9 | Update GDPRService | ✅ Complete | - | Already uses audit methods |
+
+**Total Cloud Tests**: 135 (all passing)

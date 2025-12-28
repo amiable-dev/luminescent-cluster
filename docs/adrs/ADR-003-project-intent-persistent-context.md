@@ -4,7 +4,7 @@
 **Date**: 2025-12-22
 **Decision Makers**: Development Team
 **Owners**: @christopherjoseph
-**Version**: 4.1 (Council Validated)
+**Version**: 4.2 (Cross-ADR Synchronized)
 
 ## Decision Summary
 
@@ -167,7 +167,7 @@ The LLM memory landscape has evolved rapidly. Key developments:
 
 This ADR explicitly does **not** address:
 
-- **Multi-tenant/shared AI systems**: Single-project scope only
+- **Multi-tenant implementation details**: Multi-tenancy is technically supported via the Extension Registry (ADR-005) and unified in the integration layer (ADR-007). This ADR remains focused strictly on memory architecture; tenant isolation is treated here as an external constraint rather than a core feature
 - **General documentation RAG**: Focus is on technical context, not help docs
 - **AGI-style continuous learning**: Memory is curated, not autonomous
 - **PII/secrets storage**: Sensitive data excluded by policy
@@ -246,6 +246,8 @@ We implement a **three-tier memory architecture** exposed via the Model Context 
 ```
 
 ## Interface Contract (MCP)
+
+> **Implementation Note**: These interface definitions represent the conceptual architectural vision. For live, versioned protocol signatures (including `ContextStore`, `TenantProvider`, and `AuditLogger`), refer to `src/extensions/protocols.py` as consolidated in ADR-007. Chatbot-specific implementations of these interfaces are provided by the adapters defined in ADR-006.
 
 The memory system exposes the following MCP resources and tools:
 
@@ -1025,6 +1027,33 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+> **Tier Constraints (ADR-004)**: Memory persistence depth and retention policies vary by monetization tier. Free tier has local-only storage; Team tier includes cloud persistence with GDPR auto-deletion; Enterprise tier supports configurable retention with legal hold. See ADR-004 for tier definitions and ADR-007 for implementation details.
+
+---
+
+## Implementation Tracker
+
+| Phase | Component | Status | Notes |
+|-------|-----------|--------|-------|
+| **Phase 0** | Evaluation Harness | 📝 Not Started | Fixed task set + automated scoring |
+| Phase 0 | Memory Schema & Lifecycle | 📝 Not Started | TTL policies, versioning |
+| Phase 0 | Governance & Observability | 📝 Not Started | Tracing, audit logs |
+| **Phase 1** | Session Memory MCP | ✅ Complete | `session_memory_server.py` - 45 tests |
+| Phase 1 | Pixeltable MCP | ✅ Complete | `pixeltable_mcp_server.py` - 62 tests |
+| Phase 1a | Hot Memory Storage | 📝 Not Started | user_memory, conversation_memory tables |
+| Phase 1b | Async Extraction | 📝 Not Started | LLM UDF with small model |
+| Phase 1c | Retrieval & Ranking | 📝 Not Started | Query rewriting, scope-aware |
+| Phase 1d | Janitor Process | 📝 Not Started | Nightly consolidation |
+| **Phase 2** | Memory Blocks Architecture | 📝 Not Started | Context Engineering |
+| Phase 2 | Provenance Tracking | 🔄 Partial | Via AuditLogger protocol (ADR-007) |
+| Phase 2 | Temporal Decay | 📝 Not Started | Relevance scoring |
+| **Phase 3** | Knowledge Graph | 📝 Not Started | HybridRAG |
+| Phase 3 | Entity Extraction | 📝 Not Started | Async pipeline |
+| **Phase 4** | Hindsight Integration | 📝 Not Started | Conditional on Phase 3 |
+| Phase 4 | MaaS Architecture | 📝 Not Started | Multi-agent support |
+
+**Legend**: ✅ Complete | 🔄 Partial | 📝 Not Started | ❌ Blocked
+
 ---
 
 ## Consequences
@@ -1125,13 +1154,20 @@ Per recent research (MEXTRA attack, February 2025), memory systems are vulnerabl
 
 ## Open Questions
 
-The following questions require further investigation:
+The following questions have been investigated and resolved:
 
-1. **Single-tenant vs Multi-tenant**: Current scope is single-project; what's the path to multi-tenant?
-2. **Memory Approval Workflows**: Which memories require human verification before becoming "canonical"?
-3. **Retention Policies**: How long should different memory types persist? Legal/compliance implications?
-4. **Embedding Model Upgrades**: How do we handle embedding model changes without full re-indexing?
-5. **Conflict Resolution**: When memories contradict, what's the tie-breaker? (recency? source authority? user preference?)
+1. **Single-tenant vs Multi-tenant**: ✅ **Resolved** - Multi-tenancy is supported via the `TenantProvider` protocol (ADR-005) and `CloudTenantProvider` implementation (ADR-007). See ADR-007 Section 1a for tenant isolation enforcement points.
+
+2. **Memory Approval Workflows**: ✅ **Resolved** - The `AuditLogger` protocol (ADR-007) provides provenance tracking. GDPR compliance workflows in `GDPRService` (luminescent-cloud) implement approval gates for data deletion.
+
+3. **Retention Policies**: ✅ **Resolved** - ADR-007 Section 4 defines tier-specific retention:
+   - **Free (OSS)**: User's responsibility (no auto-deletion)
+   - **Team (Cloud)**: Auto-delete on workspace exit (GDPR Article 17)
+   - **Enterprise**: Configurable (legal hold support)
+
+4. **Embedding Model Upgrades**: 🔄 **Partially Resolved** - Pixeltable computed columns support re-indexing. Full migration strategy deferred to Phase 3 (HybridRAG).
+
+5. **Conflict Resolution**: 🔄 **Partially Resolved** - Phase 1d Janitor Process implements "newer wins" with flagging for review. Complex contradiction handling deferred to Phase 2 (Context Engineering).
 
 ## Council Review Summary
 
@@ -1156,8 +1192,10 @@ The following questions require further investigation:
 
 - **ADR-001**: Python Version Requirement (database integrity)
 - **ADR-002**: Workflow Integration (automated ingestion)
-- **ADR-004**: Monetization Strategy (see separate document)
-- **ADR-005**: Repository Organization Strategy (OSS vs Paid separation)
+- **ADR-004**: Monetization Strategy (tier-based memory constraints)
+- **ADR-005**: Repository Organization Strategy (OSS vs Paid separation, Extension Registry)
+- **ADR-006**: Chatbot Platform Integrations (adapters implementing memory I/O)
+- **ADR-007**: Cross-ADR Integration Guide (Phase Alignment Matrix, protocol consolidation)
 
 ## Changelog
 
@@ -1168,3 +1206,4 @@ The following questions require further investigation:
 | 3.0 | 2025-12-22 | **Council Review**: Revised roadmap (Phase 0 + reordering), added decision drivers, non-goals, success metrics table, interface contract, 5 additional options (G-K), comprehensive risk matrix, council feedback summary |
 | 4.0 | 2025-12-22 | **Council Review #2**: Rejected Mem0 integration in favor of Pixeltable-native memory. Added "Build vs Integrate" decision section with code examples. Updated Phase 1 to Pixeltable Native approach. Added reference to ADR-004 (Monetization). |
 | 4.1 | 2025-12-23 | **Council Validation**: Extended Phase 1 to 8 weeks. Added "Janitor" (Hot/Warm/Cold) architecture for async extraction. Added Golden Dataset requirement. Added validation metrics and decision reversal triggers. |
+| 4.2 | 2025-12-28 | **Cross-ADR Synchronization**: Added ADR-006 and ADR-007 to Related Decisions. Updated Non-Goals to reflect multi-tenancy via Extension Registry. Added Interface Contract admonition linking to consolidated protocols. Marked Open Questions as resolved with references. Added Implementation Tracker section. Added tier constraints note to Roadmap. Council review (Grok-4, GPT-4o). |
