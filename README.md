@@ -525,6 +525,33 @@ await metrics.record_query(
 )
 ```
 
+### Data Management (Self-Hosted)
+
+When using luminescent-cluster self-hosted, you have full control over your data:
+
+- **Location**: Data stored in your local Pixeltable instance (`~/.pixeltable/`)
+- **Deletion**: Use Pixeltable CLI or API to manage/delete data
+- **No Third Party**: Amiable does not access your self-hosted data
+- **Retention**: Default 90-day TTL for conversation context (configurable)
+
+For GDPR compliance in self-hosted deployments, you are the data controller. Use Pixeltable's built-in tools:
+
+```python
+import pixeltable as pxt
+
+# View stored data
+pxt.list_tables()
+
+# Delete conversation context
+table = pxt.get_table('conversation_context')
+table.delete(table.thread_id == 'thread-to-delete')
+
+# Clear all chatbot data
+pxt.drop_table('conversation_context')
+```
+
+**Note**: For managed Luminescent Cloud deployments, GDPR-compliant `/forget-me` and `/export-my-data` commands are available.
+
 ## Project Structure
 
 ```

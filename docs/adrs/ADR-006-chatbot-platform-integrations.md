@@ -738,3 +738,15 @@ Total chatbot tests: **414 passing**
 | PixeltableContextStore | luminescent-cluster (public) | Uses user's own Pixeltable |
 | ChatMetrics | luminescent-cluster (public) | Core observability |
 | CloudAccessController | luminescent-cloud (private) | Workspace SSO, ACLs |
+| GDPRService | luminescent-cloud (private) | /forget-me, /export-my-data |
+
+### GDPR Compliance by Deployment Type
+
+| Deployment | Data Controller | GDPR Applies | Deletion Method |
+|------------|-----------------|--------------|-----------------|
+| Self-hosted (OSS) | User | User's responsibility | Pixeltable CLI/API |
+| Luminescent Cloud | Amiable | Yes | `/forget-me` command |
+
+**Self-hosted**: Users control their own data. No third-party data processor involved.
+
+**Luminescent Cloud**: Amiable acts as data processor. GDPR-compliant `/forget-me` and `/export-my-data` commands implemented in cloud tier.
