@@ -35,6 +35,25 @@ from typing import Protocol, Optional, Any, runtime_checkable
 from datetime import datetime
 
 
+# =============================================================================
+# Protocol Version Constants (ADR-007)
+# =============================================================================
+# These constants enable runtime version validation for cross-repo compatibility.
+# Follow SemVer: MAJOR.MINOR.PATCH
+# - MAJOR: Breaking changes to method signatures
+# - MINOR: New optional methods with defaults
+# - PATCH: Documentation or type hint fixes
+
+TENANT_PROVIDER_VERSION = "1.0.0"
+USAGE_TRACKER_VERSION = "1.0.0"
+AUDIT_LOGGER_VERSION = "1.1.0"  # Bumped for GDPR methods (Issue #73)
+CHATBOT_AUTH_PROVIDER_VERSION = "1.0.0"
+CHATBOT_RATE_LIMITER_VERSION = "1.0.0"
+CHATBOT_ACCESS_CONTROLLER_VERSION = "1.0.0"
+CONTEXT_STORE_VERSION = "1.0.0"
+RESPONSE_FILTER_VERSION = "1.0.0"
+
+
 class TenantProvider(Protocol):
     """
     Extension point for multi-tenancy support.
@@ -199,6 +218,7 @@ class UsageTracker(Protocol):
         ...
 
 
+@runtime_checkable
 class AuditLogger(Protocol):
     """
     Extension point for enterprise audit logging.
@@ -274,6 +294,80 @@ class AuditLogger(Protocol):
                     "ip_address": "192.168.1.1"
                 }
             )
+        """
+        ...
+
+    def log_gdpr_deletion(
+        self,
+        user_id: str,
+        workspace_id: str,
+        items_deleted: dict,
+        timestamp: datetime,
+    ) -> None:
+        """
+        Record a GDPR Article 17 deletion event (Right to Erasure).
+
+        This method creates a compliance audit record for user data deletion.
+        Must be called after successfully deleting user data.
+
+        Args:
+            user_id: User identifier whose data was deleted
+            workspace_id: Workspace context for the deletion
+            items_deleted: Dict mapping category to count of deleted items
+                          e.g., {"conversations": 5, "knowledge": 2}
+            timestamp: When the deletion occurred
+
+        Example:
+            logger.log_gdpr_deletion(
+                user_id="user-123",
+                workspace_id="ws-456",
+                items_deleted={
+                    "conversation_context": 5,
+                    "org_knowledge": 2,
+                    "meetings": 1,
+                    "usage_metrics": 10
+                },
+                timestamp=datetime.now()
+            )
+
+        Note:
+            - Do NOT include PII in the log (only counts and IDs)
+            - This audit record must be retained for compliance
+            - Added in version 1.1.0 (Issue #73)
+        """
+        ...
+
+    def log_gdpr_export(
+        self,
+        user_id: str,
+        workspace_id: str,
+        total_items: int,
+        timestamp: datetime,
+    ) -> None:
+        """
+        Record a GDPR Article 20 export event (Data Portability).
+
+        This method creates a compliance audit record for user data export.
+        Must be called after successfully exporting user data.
+
+        Args:
+            user_id: User identifier whose data was exported
+            workspace_id: Workspace context for the export
+            total_items: Total number of items exported
+            timestamp: When the export occurred
+
+        Example:
+            logger.log_gdpr_export(
+                user_id="user-123",
+                workspace_id="ws-456",
+                total_items=18,
+                timestamp=datetime.now()
+            )
+
+        Note:
+            - Do NOT include exported data in the log
+            - This audit record must be retained for compliance
+            - Added in version 1.1.0 (Issue #73)
         """
         ...
 
@@ -564,3 +658,149 @@ class ChatbotAccessController(Protocol):
             implementations may choose to allow all channels by default.
         """
         ...
+
+
+# =============================================================================
+# Context Store Protocol (ADR-007)
+# =============================================================================
+
+
+@runtime_checkable
+class ContextStore(Protocol):
+    """
+    Extension point for conversation context persistence.
+
+    Implementations provide persistent storage for conversation contexts,
+    enabling context recovery and long-term storage.
+
+    OSS Behavior: Not registered; contexts are in-memory only.
+    Cloud Behavior: Persists to Pixeltable with tenant isolation.
+
+    Version: 1.0.0
+
+    Related: ADR-006 Chatbot Platform Integrations, ADR-003 Pixeltable Patterns
+    """
+
+    async def save(self, thread_id: str, context_data: dict) -> None:
+        """
+        Save context data to persistent storage.
+
+        Args:
+            thread_id: Unique thread identifier
+            context_data: Serialized context data (from to_dict)
+        """
+        ...
+
+    async def load(self, thread_id: str) -> Optional[dict]:
+        """
+        Load context data from persistent storage.
+
+        Args:
+            thread_id: Unique thread identifier
+
+        Returns:
+            Context data dict if found, None otherwise
+        """
+        ...
+
+    async def delete(self, thread_id: str) -> None:
+        """
+        Delete context from persistent storage.
+
+        Args:
+            thread_id: Unique thread identifier
+        """
+        ...
+
+    async def cleanup_expired(self, ttl_days: int = 90) -> int:
+        """
+        Remove contexts older than TTL.
+
+        Args:
+            ttl_days: Days after which contexts expire
+
+        Returns:
+            Number of contexts deleted
+        """
+        ...
+
+
+# =============================================================================
+# Response Filtering Protocol (ADR-007)
+# =============================================================================
+
+
+@runtime_checkable
+class ResponseFilter(Protocol):
+    """
+    Extension point for filtering LLM responses.
+
+    Implementations can filter sensitive data from responses based on
+    channel visibility, apply content policies, or modify responses
+    for compliance requirements.
+
+    Version: 1.0.0
+
+    Example:
+        class CloudResponseFilter:
+            def filter_response(
+                self,
+                query: str,
+                response: str,
+                is_public_channel: bool,
+            ) -> str:
+                if is_public_channel and contains_pii(response):
+                    return "[Sensitive data redacted]"
+                return response
+
+        registry = ExtensionRegistry.get()
+        registry.response_filter = CloudResponseFilter()
+    """
+
+    def filter_response(
+        self,
+        query: str,
+        response: str,
+        is_public_channel: bool,
+    ) -> str:
+        """
+        Filter an LLM response based on channel visibility and content.
+
+        Args:
+            query: The original user query
+            response: The LLM response to filter
+            is_public_channel: Whether this is a public channel
+
+        Returns:
+            The filtered response (may be original or modified)
+        """
+        ...
+
+
+# =============================================================================
+# Exports
+# =============================================================================
+
+__all__ = [
+    # Version constants
+    "TENANT_PROVIDER_VERSION",
+    "USAGE_TRACKER_VERSION",
+    "AUDIT_LOGGER_VERSION",
+    "CHATBOT_AUTH_PROVIDER_VERSION",
+    "CHATBOT_RATE_LIMITER_VERSION",
+    "CHATBOT_ACCESS_CONTROLLER_VERSION",
+    "CONTEXT_STORE_VERSION",
+    "RESPONSE_FILTER_VERSION",
+    # Core protocols
+    "TenantProvider",
+    "UsageTracker",
+    "AuditLogger",
+    # Chatbot protocols (ADR-006)
+    "ChatbotAuthProvider",
+    "ChatbotRateLimiter",
+    "ChatbotAccessController",
+    # Context protocol (ADR-007)
+    "ContextStore",
+    # Response filtering protocol (ADR-007)
+    "ResponseFilter",
+]

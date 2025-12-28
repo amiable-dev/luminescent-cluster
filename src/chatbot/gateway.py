@@ -332,8 +332,14 @@ class ChatbotGateway:
                     )
                     return None
             except Exception as e:
-                # Fail-open: allow request if access control raises an exception
-                logger.warning(f"Access control check failed, allowing request: {e}")
+                # Fail-closed: deny request if access control raises an exception
+                # This is a security requirement per ADR-007 Section 1b
+                logger.error(f"Access control check failed, denying request: {e}")
+                return GatewayResponse(
+                    content="Access denied due to system error. Please try again later.",
+                    tokens_used=0,
+                    error="access_control_error",
+                )
 
         # Check rate limits
         if self.rate_limiter:
@@ -406,8 +412,41 @@ class ChatbotGateway:
 
             latency_ms = (time.time() - start_time) * 1000
 
+            # Track usage for billing/quotas if configured (ADR-007)
+            if registry.usage_tracker:
+                try:
+                    registry.usage_tracker.track(
+                        operation="chatbot_response",
+                        tokens=llm_response.tokens_used,
+                        metadata={
+                            "user_id": message.author.id,
+                            "workspace_id": request.workspace_id or "",
+                            "channel_id": message.channel_id,
+                            "platform": request.platform,
+                            "model": str(llm_response.model) if llm_response.model else "",
+                            "latency_ms": latency_ms,
+                        },
+                    )
+                except Exception as e:
+                    logger.warning(f"Usage tracking failed: {e}")
+                    # Don't fail the request due to tracking errors
+
+            # Apply response filtering if configured (ADR-007)
+            response_content = llm_response.content
+            if registry.response_filter:
+                try:
+                    is_public_channel = not message.is_direct_message
+                    response_content = registry.response_filter.filter_response(
+                        query=content,
+                        response=llm_response.content,
+                        is_public_channel=is_public_channel,
+                    )
+                except Exception as e:
+                    logger.warning(f"Response filter failed, using original: {e}")
+                    # Fall back to original response on filter failure
+
             return GatewayResponse(
-                content=llm_response.content,
+                content=response_content,
                 tokens_used=llm_response.tokens_used,
                 model=llm_response.model,
                 latency_ms=latency_ms,

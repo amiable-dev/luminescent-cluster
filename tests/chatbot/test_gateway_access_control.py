@@ -503,14 +503,15 @@ class TestAccessControlErrorHandling:
     """Tests for error handling in access control."""
 
     @pytest.mark.asyncio
-    async def test_access_control_exception_allows_through(
+    async def test_access_control_exception_denies_request(
         self, gateway, mock_llm_provider, clean_registry
     ):
         """
-        If access control raises an exception, gateway should allow the request.
+        If access control raises an exception, gateway should deny the request.
 
-        Fail-open behavior: we don't want to block users due to access control bugs.
-        This can be made configurable in the future if strict mode is needed.
+        Fail-closed behavior (ADR-007 Section 1b): security requires denying
+        requests when access control cannot be verified. This prevents
+        unauthorized access during SSO/database outages.
         """
         # Create a controller that raises an exception
         controller = MockAccessController()
@@ -525,6 +526,7 @@ class TestAccessControlErrorHandling:
         # Act
         response = await gateway.process(request)
 
-        # Assert: Should fail-open and process the message
+        # Assert: Should fail-closed and deny the message
         assert response is not None
-        mock_llm_provider.chat.assert_called_once()
+        assert response.error == "access_control_error"
+        mock_llm_provider.chat.assert_not_called()

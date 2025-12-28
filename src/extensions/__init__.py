@@ -26,16 +26,36 @@ Usage (Cloud - with extensions):
 """
 
 from .protocols import (
+    # Version constants (ADR-007)
+    TENANT_PROVIDER_VERSION,
+    USAGE_TRACKER_VERSION,
+    AUDIT_LOGGER_VERSION,
+    CHATBOT_AUTH_PROVIDER_VERSION,
+    CHATBOT_RATE_LIMITER_VERSION,
+    CHATBOT_ACCESS_CONTROLLER_VERSION,
+    CONTEXT_STORE_VERSION,
+    # Core protocols
     TenantProvider,
     UsageTracker,
     AuditLogger,
+    # Chatbot protocols (ADR-006)
     ChatbotAuthProvider,
     ChatbotRateLimiter,
     ChatbotAccessController,
+    # Context protocol (ADR-007)
+    ContextStore,
 )
 from .registry import ExtensionRegistry
 
 __all__ = [
+    # Version constants (ADR-007)
+    "TENANT_PROVIDER_VERSION",
+    "USAGE_TRACKER_VERSION",
+    "AUDIT_LOGGER_VERSION",
+    "CHATBOT_AUTH_PROVIDER_VERSION",
+    "CHATBOT_RATE_LIMITER_VERSION",
+    "CHATBOT_ACCESS_CONTROLLER_VERSION",
+    "CONTEXT_STORE_VERSION",
     # Core protocols
     "TenantProvider",
     "UsageTracker",
@@ -44,6 +64,8 @@ __all__ = [
     "ChatbotAuthProvider",
     "ChatbotRateLimiter",
     "ChatbotAccessController",
+    # Context protocol (ADR-007)
+    "ContextStore",
     # Registry
     "ExtensionRegistry",
 ]

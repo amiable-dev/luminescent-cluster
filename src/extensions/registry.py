@@ -43,6 +43,8 @@ if TYPE_CHECKING:
         ChatbotAuthProvider,
         ChatbotRateLimiter,
         ChatbotAccessController,
+        ContextStore,
+        ResponseFilter,
     )
 
 
@@ -69,6 +71,7 @@ class ExtensionRegistry:
         chatbot_auth_provider: Chatbot platform authentication (ADR-006)
         chatbot_rate_limiter: Chatbot rate limiting (ADR-006)
         chatbot_access_controller: Chatbot access control (ADR-006)
+        context_store: Conversation context persistence (ADR-007)
     """
 
     # Extension implementations (all optional, default None)
@@ -80,6 +83,12 @@ class ExtensionRegistry:
     chatbot_auth_provider: Optional["ChatbotAuthProvider"] = None
     chatbot_rate_limiter: Optional["ChatbotRateLimiter"] = None
     chatbot_access_controller: Optional["ChatbotAccessController"] = None
+
+    # Context extension (ADR-007)
+    context_store: Optional["ContextStore"] = None
+
+    # Response filtering extension (ADR-007)
+    response_filter: Optional["ResponseFilter"] = None
 
     # Singleton management (ClassVars are not dataclass fields)
     _instance: ClassVar[Optional["ExtensionRegistry"]] = None
@@ -207,6 +216,8 @@ class ExtensionRegistry:
             "chatbot_auth_provider": self.chatbot_auth_provider is not None,
             "chatbot_rate_limiter": self.chatbot_rate_limiter is not None,
             "chatbot_access_controller": self.chatbot_access_controller is not None,
+            "context_store": self.context_store is not None,
+            "response_filter": self.response_filter is not None,
             "mode": "cloud" if has_core else "oss",
             "chatbot_mode": "cloud" if has_chatbot else "oss",
         }
