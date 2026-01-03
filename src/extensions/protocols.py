@@ -52,6 +52,7 @@ CHATBOT_RATE_LIMITER_VERSION = "1.0.0"
 CHATBOT_ACCESS_CONTROLLER_VERSION = "1.0.0"
 CONTEXT_STORE_VERSION = "1.0.0"
 RESPONSE_FILTER_VERSION = "1.0.0"
+MEMORY_PROVIDER_VERSION = "1.0.0"  # ADR-003 Memory Architecture
 
 
 class TenantProvider(Protocol):
@@ -778,6 +779,154 @@ class ResponseFilter(Protocol):
 
 
 # =============================================================================
+# Memory Provider Protocol (ADR-003)
+# =============================================================================
+
+
+@runtime_checkable
+class MemoryProvider(Protocol):
+    """
+    Extension point for user memory storage and retrieval.
+
+    Implementations provide persistent storage for AI memory systems,
+    enabling long-term context preservation across sessions.
+
+    OSS Behavior: Not registered; memory is ephemeral.
+    Cloud Behavior: Persists to Pixeltable with tenant isolation.
+
+    Version: 1.0.0
+
+    Related: ADR-003 Project Intent, ADR-007 Cross-ADR Integration
+
+    Example:
+        class LocalMemoryProvider:
+            async def store(self, memory: Memory, context: dict) -> str:
+                memory_id = str(uuid.uuid4())
+                await self.db.insert(memory_id, memory.model_dump())
+                return memory_id
+
+        registry = ExtensionRegistry.get()
+        registry.memory_provider = LocalMemoryProvider()
+    """
+
+    async def store(self, memory: Any, context: dict) -> str:
+        """
+        Store a memory in persistent storage.
+
+        Args:
+            memory: Memory object to store (from memory.schemas.Memory)
+            context: Request context (may contain tenant_id, user_id, etc.)
+
+        Returns:
+            Unique memory_id for the stored memory.
+
+        Example:
+            memory_id = await provider.store(
+                memory=Memory(
+                    user_id="user-123",
+                    content="Prefers tabs over spaces",
+                    memory_type=MemoryType.PREFERENCE,
+                    source="conversation",
+                ),
+                context={"tenant_id": "acme-corp"}
+            )
+        """
+        ...
+
+    async def retrieve(
+        self,
+        query: str,
+        user_id: str,
+        limit: int = 5,
+    ) -> list[Any]:
+        """
+        Retrieve memories by semantic search.
+
+        Args:
+            query: Natural language query for semantic search
+            user_id: User ID to scope the search
+            limit: Maximum number of memories to return
+
+        Returns:
+            List of Memory objects matching the query, ranked by relevance.
+
+        Example:
+            memories = await provider.retrieve(
+                query="coding style preferences",
+                user_id="user-123",
+                limit=5
+            )
+        """
+        ...
+
+    async def get_by_id(self, memory_id: str) -> Optional[Any]:
+        """
+        Get a specific memory by ID.
+
+        Args:
+            memory_id: Unique memory identifier
+
+        Returns:
+            Memory object if found, None otherwise.
+
+        Example:
+            memory = await provider.get_by_id("mem-abc-123")
+            if memory:
+                print(memory.content)
+        """
+        ...
+
+    async def delete(self, memory_id: str) -> bool:
+        """
+        Delete a memory by ID.
+
+        Args:
+            memory_id: Unique memory identifier
+
+        Returns:
+            True if deleted, False if not found.
+
+        Note:
+            Implementations should verify user ownership before deleting.
+
+        Example:
+            deleted = await provider.delete("mem-abc-123")
+            if deleted:
+                print("Memory deleted")
+        """
+        ...
+
+    async def search(
+        self,
+        user_id: str,
+        filters: dict,
+        limit: int = 10,
+    ) -> list[Any]:
+        """
+        Search memories with filters.
+
+        Args:
+            user_id: User ID to scope the search
+            filters: Filter criteria (memory_type, min_confidence, created_after, etc.)
+            limit: Maximum number of memories to return
+
+        Returns:
+            List of Memory objects matching the filters.
+
+        Example:
+            memories = await provider.search(
+                user_id="user-123",
+                filters={
+                    "memory_type": "preference",
+                    "min_confidence": 0.8,
+                },
+                limit=10
+            )
+        """
+        ...
+
+
+# =============================================================================
 # Exports
 # =============================================================================
 
@@ -791,6 +940,7 @@ __all__ = [
     "CHATBOT_ACCESS_CONTROLLER_VERSION",
     "CONTEXT_STORE_VERSION",
     "RESPONSE_FILTER_VERSION",
+    "MEMORY_PROVIDER_VERSION",
     # Core protocols
     "TenantProvider",
     "UsageTracker",
@@ -803,4 +953,6 @@ __all__ = [
     "ContextStore",
     # Response filtering protocol (ADR-007)
     "ResponseFilter",
+    # Memory protocol (ADR-003)
+    "MemoryProvider",
 ]

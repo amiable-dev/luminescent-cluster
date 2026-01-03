@@ -20,8 +20,10 @@ Provides fast access to hot context for AI coding assistants:
 - Active files being edited
 - Open pull requests
 - Current task context
+- Persistent user memory (ADR-003)
 
 This is Tier 1 memory - ephemeral, fast, session-scoped.
+Integrates with ADR-003 Memory Architecture for persistent context.
 """
 
 from mcp.server import Server
@@ -33,6 +35,32 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 import json
 from datetime import datetime, timedelta
+
+# Import memory module tools (ADR-003)
+from src.memory.mcp import (
+    create_memory,
+    get_memories,
+    get_memory_by_id,
+    search_memories,
+    delete_memory,
+    update_memory,
+    invalidate_memory,
+    get_memory_provenance,
+)
+
+# Import extraction pipeline (ADR-003 Phase 1b)
+from src.memory.extraction import ExtractionPipeline
+
+# Shared extraction pipeline instance
+_extraction_pipeline = None
+
+
+def _get_extraction_pipeline() -> ExtractionPipeline:
+    """Get the shared extraction pipeline instance."""
+    global _extraction_pipeline
+    if _extraction_pipeline is None:
+        _extraction_pipeline = ExtractionPipeline()
+    return _extraction_pipeline
 
 
 class SessionMemoryServer:
@@ -339,6 +367,207 @@ async def serve():
                     "type": "object",
                     "properties": {}
                 }
+            ),
+            # ADR-003 Memory Tools
+            Tool(
+                name="create_user_memory",
+                description=(
+                    "Create a new persistent memory for the user. "
+                    "Stores preferences, facts, or decisions that persist across sessions."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "user_id": {
+                            "type": "string",
+                            "description": "User who owns this memory"
+                        },
+                        "content": {
+                            "type": "string",
+                            "description": "The memory content"
+                        },
+                        "memory_type": {
+                            "type": "string",
+                            "enum": ["preference", "fact", "decision"],
+                            "description": "Type of memory"
+                        },
+                        "source": {
+                            "type": "string",
+                            "description": "Where this memory came from",
+                            "default": "conversation"
+                        },
+                        "confidence": {
+                            "type": "number",
+                            "description": "Confidence score (0.0-1.0)",
+                            "default": 1.0
+                        }
+                    },
+                    "required": ["user_id", "content", "memory_type"]
+                }
+            ),
+            Tool(
+                name="get_user_memories",
+                description=(
+                    "Retrieve memories matching a query for a user. "
+                    "Uses semantic search to find relevant memories."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Search query"
+                        },
+                        "user_id": {
+                            "type": "string",
+                            "description": "User ID to filter memories"
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum results (default: 5)",
+                            "default": 5
+                        }
+                    },
+                    "required": ["query", "user_id"]
+                }
+            ),
+            Tool(
+                name="search_user_memories",
+                description=(
+                    "Search memories with filters. "
+                    "Filter by memory type, source, or confidence threshold."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "user_id": {
+                            "type": "string",
+                            "description": "User ID to filter memories"
+                        },
+                        "memory_type": {
+                            "type": "string",
+                            "enum": ["preference", "fact", "decision"],
+                            "description": "Filter by memory type"
+                        },
+                        "source": {
+                            "type": "string",
+                            "description": "Filter by source"
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum results (default: 10)",
+                            "default": 10
+                        }
+                    },
+                    "required": ["user_id"]
+                }
+            ),
+            Tool(
+                name="update_user_memory",
+                description=(
+                    "Update an existing memory's content. "
+                    "Tracks update history for provenance."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "memory_id": {
+                            "type": "string",
+                            "description": "Memory ID to update"
+                        },
+                        "content": {
+                            "type": "string",
+                            "description": "New memory content"
+                        },
+                        "source": {
+                            "type": "string",
+                            "description": "Source of this update"
+                        }
+                    },
+                    "required": ["memory_id", "content", "source"]
+                }
+            ),
+            Tool(
+                name="invalidate_user_memory",
+                description=(
+                    "Mark a memory as invalid with a reason. "
+                    "Invalidated memories are excluded from retrieval."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "memory_id": {
+                            "type": "string",
+                            "description": "Memory ID to invalidate"
+                        },
+                        "reason": {
+                            "type": "string",
+                            "description": "Reason for invalidation"
+                        }
+                    },
+                    "required": ["memory_id", "reason"]
+                }
+            ),
+            Tool(
+                name="get_memory_provenance",
+                description=(
+                    "Get the full provenance (history) of a memory. "
+                    "Shows creation, updates, and invalidation events."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "memory_id": {
+                            "type": "string",
+                            "description": "Memory ID to get provenance for"
+                        }
+                    },
+                    "required": ["memory_id"]
+                }
+            ),
+            Tool(
+                name="delete_user_memory",
+                description=(
+                    "Permanently delete a memory. "
+                    "Use invalidate_user_memory for soft delete."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "memory_id": {
+                            "type": "string",
+                            "description": "Memory ID to delete"
+                        }
+                    },
+                    "required": ["memory_id"]
+                }
+            ),
+            Tool(
+                name="extract_memories_from_conversation",
+                description=(
+                    "Extract memories from a conversation text. "
+                    "Runs async extraction pipeline to find preferences, facts, and decisions. "
+                    "Use after response is sent for non-blocking extraction."
+                ),
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "conversation": {
+                            "type": "string",
+                            "description": "The conversation text to extract memories from"
+                        },
+                        "user_id": {
+                            "type": "string",
+                            "description": "User ID for the extracted memories"
+                        },
+                        "source": {
+                            "type": "string",
+                            "description": "Source of the conversation",
+                            "default": "conversation"
+                        }
+                    },
+                    "required": ["conversation", "user_id"]
+                }
             )
         ]
     
@@ -376,6 +605,65 @@ async def serve():
                 )
             elif name == "get_task_context":
                 result = await session_memory.get_task_context()
+            # ADR-003 Memory Tools
+            elif name == "create_user_memory":
+                result = await create_memory(
+                    user_id=arguments["user_id"],
+                    content=arguments["content"],
+                    memory_type=arguments["memory_type"],
+                    source=arguments.get("source", "conversation"),
+                    confidence=arguments.get("confidence", 1.0),
+                )
+            elif name == "get_user_memories":
+                result = await get_memories(
+                    query=arguments["query"],
+                    user_id=arguments["user_id"],
+                    limit=arguments.get("limit", 5),
+                )
+            elif name == "search_user_memories":
+                result = await search_memories(
+                    user_id=arguments["user_id"],
+                    memory_type=arguments.get("memory_type"),
+                    source=arguments.get("source"),
+                    limit=arguments.get("limit", 10),
+                )
+            elif name == "update_user_memory":
+                result = await update_memory(
+                    memory_id=arguments["memory_id"],
+                    content=arguments["content"],
+                    source=arguments["source"],
+                )
+            elif name == "invalidate_user_memory":
+                result = await invalidate_memory(
+                    memory_id=arguments["memory_id"],
+                    reason=arguments["reason"],
+                )
+            elif name == "get_memory_provenance":
+                result = await get_memory_provenance(
+                    memory_id=arguments["memory_id"],
+                )
+            elif name == "delete_user_memory":
+                result = await delete_memory(
+                    memory_id=arguments["memory_id"],
+                )
+            elif name == "extract_memories_from_conversation":
+                pipeline = _get_extraction_pipeline()
+                extractions = await pipeline.process(
+                    conversation=arguments["conversation"],
+                    user_id=arguments["user_id"],
+                    source=arguments.get("source", "conversation"),
+                )
+                result = {
+                    "extracted_count": len(extractions),
+                    "memories": [
+                        {
+                            "content": e.content,
+                            "memory_type": e.memory_type,
+                            "confidence": e.confidence,
+                        }
+                        for e in extractions
+                    ],
+                }
             else:
                 raise ValueError(f"Unknown tool: {name}")
             

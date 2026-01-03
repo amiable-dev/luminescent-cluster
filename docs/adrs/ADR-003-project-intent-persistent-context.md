@@ -1035,22 +1035,39 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 
 | Phase | Component | Status | Notes |
 |-------|-----------|--------|-------|
-| **Phase 0** | Evaluation Harness | 📝 Not Started | Fixed task set + automated scoring |
-| Phase 0 | Memory Schema & Lifecycle | 📝 Not Started | TTL policies, versioning |
-| Phase 0 | Governance & Observability | 📝 Not Started | Tracing, audit logs |
+| **Phase 0** | Evaluation Harness | ✅ Complete | `src/memory/evaluation/` - 28 tests |
+| Phase 0 | Golden Dataset | ✅ Complete | `tests/memory/golden_dataset.json` - 50 questions |
+| Phase 0 | Memory Schema & Lifecycle | ✅ Complete | `src/memory/schemas/`, `src/memory/lifecycle/` - 36 tests |
+| Phase 0 | Governance & Observability | ✅ Complete | `src/memory/observability/` - 27 tests |
+| Phase 0 | MemoryProvider Protocol | ✅ Complete | `src/memory/protocols.py` - ADR-007 compliant |
 | **Phase 1** | Session Memory MCP | ✅ Complete | `session_memory_server.py` - 45 tests |
 | Phase 1 | Pixeltable MCP | ✅ Complete | `pixeltable_mcp_server.py` - 62 tests |
-| Phase 1a | Hot Memory Storage | 📝 Not Started | user_memory, conversation_memory tables |
-| Phase 1b | Async Extraction | 📝 Not Started | LLM UDF with small model |
-| Phase 1c | Retrieval & Ranking | 📝 Not Started | Query rewriting, scope-aware |
-| Phase 1d | Janitor Process | 📝 Not Started | Nightly consolidation |
+| Phase 1a | Hot Memory Storage | ✅ Complete | `src/memory/storage/`, `src/memory/providers/local.py` - 27 tests |
+| Phase 1a | Memory MCP Tools | ✅ Complete | `src/memory/mcp/tools.py` - 21 tests |
+| Phase 1a | Hot Memory Latency | ✅ Complete | <50ms p95 target met - 6 tests |
+| Phase 1b | Async Extraction | ✅ Complete | `src/memory/extraction/` - 36 tests |
+| Phase 1b | Extraction Precision | ✅ Complete | >85% target met (100% achieved) - 5 tests |
+| Phase 1c | Retrieval & Ranking | ✅ Complete | `src/memory/retrieval/` - 31 tests |
+| Phase 1c | Query Rewriting | ✅ Complete | Synonym expansion for better recall |
+| Phase 1c | Scope-Aware Retrieval | ✅ Complete | user > project > global hierarchy |
+| Phase 1c | Retrieval Latency | ✅ Complete | <200ms p95 target met - 6 tests |
+| Phase 1d | Janitor Process | ✅ Complete | `src/memory/janitor/` - 24 tests |
+| Phase 1d | Deduplication | ✅ Complete | >85% similarity threshold |
+| Phase 1d | Contradiction Handling | ✅ Complete | "newer wins" with flagging |
+| Phase 1d | Expiration Cleanup | ✅ Complete | TTL-based expiration |
+| Phase 1d | Janitor Performance | ✅ Complete | <10 min for 10k target met - 5 tests |
+| **CI/Security** | Memory Isolation | ✅ Complete | Zero cross-user leakage - 8 tests |
+| CI/Security | Protocol Compliance | ✅ Complete | Three-layer testing - 23 tests |
+| CI/Security | CI Workflow | ✅ Complete | `.github/workflows/memory-evaluation.yml` |
 | **Phase 2** | Memory Blocks Architecture | 📝 Not Started | Context Engineering |
 | Phase 2 | Provenance Tracking | 🔄 Partial | Via AuditLogger protocol (ADR-007) |
-| Phase 2 | Temporal Decay | 📝 Not Started | Relevance scoring |
+| Phase 2 | Temporal Decay | ✅ Complete | Integrated in retrieval ranking |
 | **Phase 3** | Knowledge Graph | 📝 Not Started | HybridRAG |
 | Phase 3 | Entity Extraction | 📝 Not Started | Async pipeline |
 | **Phase 4** | Hindsight Integration | 📝 Not Started | Conditional on Phase 3 |
 | Phase 4 | MaaS Architecture | 📝 Not Started | Multi-agent support |
+
+**Test Summary**: 304 tests passing (as of 2025-12-28)
 
 **Legend**: ✅ Complete | 🔄 Partial | 📝 Not Started | ❌ Blocked
 

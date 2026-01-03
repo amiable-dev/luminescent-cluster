@@ -1,0 +1,117 @@
+# Memory Evaluation CI Workflow
+# Runs Golden Dataset evaluation on every PR
+#
+# Related GitHub Issues:
+# - #107: Memory Evaluation CI Workflow
+#
+# ADR Reference: ADR-003 Memory Architecture (Exit Criteria)
+
+name: Memory Evaluation
+
+on:
+  pull_request:
+    paths:
+      - 'src/memory/**'
+      - 'tests/memory/**'
+  push:
+    branches: [main]
+    paths:
+      - 'src/memory/**'
+      - 'tests/memory/**'
+
+jobs:
+  memory-tests:
+    runs-on: ubuntu-latest
+    name: Memory Tests & Evaluation
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run memory unit tests
+        run: |
+          uv run pytest tests/memory/ \
+            --ignore=tests/memory/benchmarks/ \
+            -v --tb=short \
+            --junitxml=test-results/memory-tests.xml
+
+      - name: Run extraction precision tests (Exit Criteria)
+        run: |
+          uv run pytest tests/memory/test_extraction_precision.py \
+            -v --tb=short \
+            --junitxml=test-results/extraction-precision.xml
+
+      - name: Run memory isolation tests (Security Exit Criteria)
+        run: |
+          uv run pytest tests/memory/security/ \
+            -v --tb=short \
+            --junitxml=test-results/security-tests.xml
+
+      - name: Run protocol compliance tests
+        run: |
+          uv run pytest tests/memory/test_provider_compliance.py \
+            -v --tb=short \
+            --junitxml=test-results/compliance-tests.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: memory-test-results
+          path: test-results/
+
+  memory-benchmarks:
+    runs-on: ubuntu-latest
+    name: Memory Benchmarks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run hot memory latency benchmark
+        run: |
+          uv run pytest tests/memory/benchmarks/test_hot_memory_latency.py \
+            -v --tb=short \
+            --junitxml=benchmark-results/hot-memory.xml
+
+      - name: Run retrieval latency benchmark
+        run: |
+          uv run pytest tests/memory/benchmarks/test_retrieval_latency.py \
+            -v --tb=short \
+            --junitxml=benchmark-results/retrieval.xml
+
+      - name: Run janitor performance benchmark
+        run: |
+          uv run pytest tests/memory/benchmarks/test_janitor_performance.py \
+            -v --tb=short \
+            --junitxml=benchmark-results/janitor.xml
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: memory-benchmark-results
+          path: benchmark-results/

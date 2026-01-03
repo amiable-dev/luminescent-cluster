@@ -1,0 +1,414 @@
+{
+  "version": "1.0.0",
+  "description": "Golden Dataset for Memory Evaluation - 50 static questions for regression testing",
+  "adr_reference": "ADR-003 Memory Architecture, Phase 0",
+  "categories": {
+    "factual_recall": "Questions about facts stored in memory (20 questions)",
+    "preference_recall": "Questions about user/team preferences (10 questions)",
+    "decision_recall": "Questions about past decisions and rationale (10 questions)",
+    "temporal_query": "Questions with temporal context (5 questions)",
+    "cross_context": "Questions spanning multiple projects/contexts (5 questions)"
+  },
+  "questions": [
+    {
+      "id": "factual-001",
+      "category": "factual_recall",
+      "question": "What database do we use for the main application?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "adr"
+    },
+    {
+      "id": "factual-002",
+      "category": "factual_recall",
+      "question": "What is the API versioning strategy?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "documentation"
+    },
+    {
+      "id": "factual-003",
+      "category": "factual_recall",
+      "question": "What authentication method does the auth-service use?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "code"
+    },
+    {
+      "id": "factual-004",
+      "category": "factual_recall",
+      "question": "What message queue is used for async processing?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "adr"
+    },
+    {
+      "id": "factual-005",
+      "category": "factual_recall",
+      "question": "What is the default port for the API server?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "code"
+    },
+    {
+      "id": "factual-006",
+      "category": "factual_recall",
+      "question": "What testing framework do we use?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "code"
+    },
+    {
+      "id": "factual-007",
+      "category": "factual_recall",
+      "question": "What is the cache TTL for user sessions?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "code"
+    },
+    {
+      "id": "factual-008",
+      "category": "factual_recall",
+      "question": "What embedding model is used for semantic search?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "code"
+    },
+    {
+      "id": "factual-009",
+      "category": "factual_recall",
+      "question": "What is the rate limit for API requests?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "documentation"
+    },
+    {
+      "id": "factual-010",
+      "category": "factual_recall",
+      "question": "What logging format do we use?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "code"
+    },
+    {
+      "id": "factual-011",
+      "category": "factual_recall",
+      "question": "What Python version is required?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "documentation"
+    },
+    {
+      "id": "factual-012",
+      "category": "factual_recall",
+      "question": "What is the maximum file upload size?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "code"
+    },
+    {
+      "id": "factual-013",
+      "category": "factual_recall",
+      "question": "What CI/CD platform do we use?",
+      "expected_memory_type": "fact",
+      "expected_scope": "global",
+      "expected_source": "documentation"
+    },
+    {
+      "id": "factual-014",
+      "category": "factual_recall",
+      "question": "What container orchestration platform do we use?",
+      "expected_memory_type": "fact",
+      "expected_scope": "global",
+      "expected_source": "adr"
+    },
+    {
+      "id": "factual-015",
+      "category": "factual_recall",
+      "question": "What error tracking service do we use?",
+      "expected_memory_type": "fact",
+      "expected_scope": "global",
+      "expected_source": "documentation"
+    },
+    {
+      "id": "factual-016",
+      "category": "factual_recall",
+      "question": "What is the connection pool size for database?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "code"
+    },
+    {
+      "id": "factual-017",
+      "category": "factual_recall",
+      "question": "What HTTP client library do we use?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "code"
+    },
+    {
+      "id": "factual-018",
+      "category": "factual_recall",
+      "question": "What serialization format is used for API responses?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "documentation"
+    },
+    {
+      "id": "factual-019",
+      "category": "factual_recall",
+      "question": "What is the default pagination limit?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "code"
+    },
+    {
+      "id": "factual-020",
+      "category": "factual_recall",
+      "question": "What monitoring stack do we use?",
+      "expected_memory_type": "fact",
+      "expected_scope": "global",
+      "expected_source": "documentation"
+    },
+    {
+      "id": "preference-001",
+      "category": "preference_recall",
+      "question": "Should I use tabs or spaces for indentation?",
+      "expected_memory_type": "preference",
+      "expected_scope": "project",
+      "expected_source": "manual"
+    },
+    {
+      "id": "preference-002",
+      "category": "preference_recall",
+      "question": "What is the preferred code review style?",
+      "expected_memory_type": "preference",
+      "expected_scope": "global",
+      "expected_source": "manual"
+    },
+    {
+      "id": "preference-003",
+      "category": "preference_recall",
+      "question": "Should I use async or sync patterns by default?",
+      "expected_memory_type": "preference",
+      "expected_scope": "project",
+      "expected_source": "manual"
+    },
+    {
+      "id": "preference-004",
+      "category": "preference_recall",
+      "question": "What naming convention should I use for functions?",
+      "expected_memory_type": "preference",
+      "expected_scope": "project",
+      "expected_source": "documentation"
+    },
+    {
+      "id": "preference-005",
+      "category": "preference_recall",
+      "question": "Should I prefer composition or inheritance?",
+      "expected_memory_type": "preference",
+      "expected_scope": "project",
+      "expected_source": "manual"
+    },
+    {
+      "id": "preference-006",
+      "category": "preference_recall",
+      "question": "What commit message format should I use?",
+      "expected_memory_type": "preference",
+      "expected_scope": "global",
+      "expected_source": "documentation"
+    },
+    {
+      "id": "preference-007",
+      "category": "preference_recall",
+      "question": "Should I write tests before or after implementation?",
+      "expected_memory_type": "preference",
+      "expected_scope": "project",
+      "expected_source": "manual"
+    },
+    {
+      "id": "preference-008",
+      "category": "preference_recall",
+      "question": "What error handling style is preferred?",
+      "expected_memory_type": "preference",
+      "expected_scope": "project",
+      "expected_source": "documentation"
+    },
+    {
+      "id": "preference-009",
+      "category": "preference_recall",
+      "question": "Should I use type hints in Python code?",
+      "expected_memory_type": "preference",
+      "expected_scope": "project",
+      "expected_source": "manual"
+    },
+    {
+      "id": "preference-010",
+      "category": "preference_recall",
+      "question": "What documentation style is preferred for docstrings?",
+      "expected_memory_type": "preference",
+      "expected_scope": "project",
+      "expected_source": "documentation"
+    },
+    {
+      "id": "decision-001",
+      "category": "decision_recall",
+      "question": "Why did we reject MongoDB for the main database?",
+      "expected_memory_type": "decision",
+      "expected_scope": "project",
+      "expected_source": "adr"
+    },
+    {
+      "id": "decision-002",
+      "category": "decision_recall",
+      "question": "Why did we choose FastAPI over Django?",
+      "expected_memory_type": "decision",
+      "expected_scope": "project",
+      "expected_source": "adr"
+    },
+    {
+      "id": "decision-003",
+      "category": "decision_recall",
+      "question": "Why did we decide to use Pixeltable for embeddings?",
+      "expected_memory_type": "decision",
+      "expected_scope": "project",
+      "expected_source": "adr"
+    },
+    {
+      "id": "decision-004",
+      "category": "decision_recall",
+      "question": "Why did we choose MCP over a custom API?",
+      "expected_memory_type": "decision",
+      "expected_scope": "project",
+      "expected_source": "adr"
+    },
+    {
+      "id": "decision-005",
+      "category": "decision_recall",
+      "question": "Why did we implement tenant isolation at the database level?",
+      "expected_memory_type": "decision",
+      "expected_scope": "global",
+      "expected_source": "adr"
+    },
+    {
+      "id": "decision-006",
+      "category": "decision_recall",
+      "question": "Why did we reject Mem0 integration in favor of building on Pixeltable?",
+      "expected_memory_type": "decision",
+      "expected_scope": "project",
+      "expected_source": "adr"
+    },
+    {
+      "id": "decision-007",
+      "category": "decision_recall",
+      "question": "Why did we choose the Extension Registry pattern?",
+      "expected_memory_type": "decision",
+      "expected_scope": "project",
+      "expected_source": "adr"
+    },
+    {
+      "id": "decision-008",
+      "category": "decision_recall",
+      "question": "Why did we implement async extraction after response?",
+      "expected_memory_type": "decision",
+      "expected_scope": "project",
+      "expected_source": "adr"
+    },
+    {
+      "id": "decision-009",
+      "category": "decision_recall",
+      "question": "Why did we use sentence-transformers for embeddings?",
+      "expected_memory_type": "decision",
+      "expected_scope": "project",
+      "expected_source": "adr"
+    },
+    {
+      "id": "decision-010",
+      "category": "decision_recall",
+      "question": "Why did we implement the dual-repo pattern?",
+      "expected_memory_type": "decision",
+      "expected_scope": "global",
+      "expected_source": "adr"
+    },
+    {
+      "id": "temporal-001",
+      "category": "temporal_query",
+      "question": "What did we discuss about caching in the last meeting?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "conversation"
+    },
+    {
+      "id": "temporal-002",
+      "category": "temporal_query",
+      "question": "What changes were made to the auth module last week?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "conversation"
+    },
+    {
+      "id": "temporal-003",
+      "category": "temporal_query",
+      "question": "What was the outcome of the performance review last month?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "conversation"
+    },
+    {
+      "id": "temporal-004",
+      "category": "temporal_query",
+      "question": "What incidents occurred in the past quarter?",
+      "expected_memory_type": "fact",
+      "expected_scope": "global",
+      "expected_source": "incident"
+    },
+    {
+      "id": "temporal-005",
+      "category": "temporal_query",
+      "question": "What features were released in the last sprint?",
+      "expected_memory_type": "fact",
+      "expected_scope": "project",
+      "expected_source": "documentation"
+    },
+    {
+      "id": "cross-001",
+      "category": "cross_context",
+      "question": "What projects use the auth-service?",
+      "expected_memory_type": "fact",
+      "expected_scope": "global",
+      "expected_source": "code"
+    },
+    {
+      "id": "cross-002",
+      "category": "cross_context",
+      "question": "Which services were affected by the database migration?",
+      "expected_memory_type": "fact",
+      "expected_scope": "global",
+      "expected_source": "incident"
+    },
+    {
+      "id": "cross-003",
+      "category": "cross_context",
+      "question": "What shared libraries are used across all services?",
+      "expected_memory_type": "fact",
+      "expected_scope": "global",
+      "expected_source": "code"
+    },
+    {
+      "id": "cross-004",
+      "category": "cross_context",
+      "question": "Which teams contributed to the payment module?",
+      "expected_memory_type": "fact",
+      "expected_scope": "global",
+      "expected_source": "conversation"
+    },
+    {
+      "id": "cross-005",
+      "category": "cross_context",
+      "question": "What dependencies are shared between luminescent-cluster and luminescent-cloud?",
+      "expected_memory_type": "fact",
+      "expected_scope": "global",
+      "expected_source": "code"
+    }
+  ]
+}

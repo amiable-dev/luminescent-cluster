@@ -45,6 +45,7 @@ if TYPE_CHECKING:
         ChatbotAccessController,
         ContextStore,
         ResponseFilter,
+        MemoryProvider,
     )
 
 
@@ -72,6 +73,7 @@ class ExtensionRegistry:
         chatbot_rate_limiter: Chatbot rate limiting (ADR-006)
         chatbot_access_controller: Chatbot access control (ADR-006)
         context_store: Conversation context persistence (ADR-007)
+        memory_provider: User memory storage and retrieval (ADR-003)
     """
 
     # Extension implementations (all optional, default None)
@@ -89,6 +91,9 @@ class ExtensionRegistry:
 
     # Response filtering extension (ADR-007)
     response_filter: Optional["ResponseFilter"] = None
+
+    # Memory extension (ADR-003)
+    memory_provider: Optional["MemoryProvider"] = None
 
     # Singleton management (ClassVars are not dataclass fields)
     _instance: ClassVar[Optional["ExtensionRegistry"]] = None
@@ -181,6 +186,18 @@ class ExtensionRegistry:
             self.chatbot_access_controller,
         ])
 
+    def has_memory_provider(self) -> bool:
+        """
+        Check if memory provider is registered.
+
+        Returns:
+            True if a MemoryProvider is registered.
+
+        Note:
+            Without a memory provider, memory is ephemeral (OSS mode).
+        """
+        return self.memory_provider is not None
+
     def get_status(self) -> dict:
         """
         Get status of all registered extensions.
@@ -218,6 +235,7 @@ class ExtensionRegistry:
             "chatbot_access_controller": self.chatbot_access_controller is not None,
             "context_store": self.context_store is not None,
             "response_filter": self.response_filter is not None,
+            "memory_provider": self.memory_provider is not None,
             "mode": "cloud" if has_core else "oss",
             "chatbot_mode": "cloud" if has_chatbot else "oss",
         }
