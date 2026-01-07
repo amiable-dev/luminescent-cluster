@@ -1067,7 +1067,7 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 | **Phase 4** | Hindsight Integration | 📝 Not Started | Conditional on Phase 3 |
 | Phase 4 | MaaS Architecture | 📝 Not Started | Multi-agent support |
 
-**Test Summary**: 304 tests passing (as of 2025-12-28)
+**Test Summary**: 330 tests passing (as of 2026-01-07)
 
 **Legend**: ✅ Complete | 🔄 Partial | 📝 Not Started | ❌ Blocked
 
@@ -1188,22 +1188,65 @@ The following questions have been investigated and resolved:
 
 ## Council Review Summary
 
-**Review Date**: 2025-12-22
+### Design Review (2025-12-22)
+
 **Council Configuration**: High confidence (all 4 models)
 **Models**: Gemini-3-Pro, Claude Opus 4.5, Grok-4, GPT-5.2-Pro
 
-### Unanimous Recommendations (All 4 Models)
+#### Unanimous Recommendations (All 4 Models)
 1. Add Phase 0 for foundations, evaluation, and governance
 2. Reorder roadmap: Mem0 before HybridRAG
 3. Add quantified success metrics
 4. Add provenance/governance as core requirement
 5. Include context caching for cost optimization
 
-### Key Insights by Model
+#### Key Insights by Model
 - **Gemini**: "Optimization before Foundation" is the core flaw
 - **Claude**: "Wrong context is worse than no context"
 - **Grok**: Emphasized bias prevention in knowledge graphs
 - **GPT**: Highlighted need for "Phase 0" evaluation harness
+
+---
+
+### Implementation Verification (2026-01-07)
+
+**Council Configuration**: High confidence (all 4 models)
+**Models**: GPT-5.2-Pro, Gemini-3-Pro, Claude Opus 4.5, Grok-4
+**Transcripts**: `.council/logs/2026-01-07T21-25-55-87316c79/`, `2026-01-07T21-41-43-284ed67c/`, `2026-01-07T21-49-29-4db02c46/`
+
+#### Round 1 (Commit 0c8c41a) - REJECTED
+| Issue | Severity | Fix Applied |
+|-------|----------|-------------|
+| `EvaluationHarness` defaulted `success=True` when no `evaluate_fn` | Critical | Changed to `success=False` |
+| Precision/recall/F1 aliased to accuracy (not calculated) | Critical | Now uses `metrics.py` functions |
+| O(N²) janitor complexity | High | Documented as known trade-off (meets <10min target) |
+| Silent exception swallowing | High | Added error collection and reporting |
+
+#### Round 2 (Commit e448f22) - REJECTED
+| Issue | Severity | Fix Applied |
+|-------|----------|-------------|
+| Janitor fallback modified metadata but didn't persist | Critical | Removed broken fallback, use invalidate/delete only |
+| FP/FN indistinguishable (both set to `failed`) | Critical | Now tracks by `retrieved_memories` presence |
+| `invalidated` count incremented without action | Critical | Only increment on successful operation |
+
+#### Round 3 (Commit 720a61b) - UNCLEAR (Confidence 0.54)
+| Remaining Concern | Status | Rationale |
+|-------------------|--------|-----------|
+| O(N²) complexity | Acceptable | Meets ADR-003 target (<10min for 10k memories, actual: <3s) |
+| `resolve_duplicates` unused | By Design | Used internally by `find_duplicates` workflow |
+| Keyword-based contradiction detection | Phase 1 Scope | Semantic analysis deferred to Phase 2 |
+| Hard-coded `limit=10000` | Acceptable | Documented limitation for Phase 1 |
+
+#### Final Scores
+- Accuracy: 10.0/10
+- Completeness: 6.1/10
+- Clarity: 6.8/10
+
+#### Split Decision
+- GPT-5.2-Pro: **REJECTED** (strictest interpretation)
+- Gemini-3-Pro: **REJECTED** (completeness concerns)
+- Claude Opus 4.5: **NEEDS REVIEW** (acceptable for Phase 1)
+- Grok-4: **APPROVED** (most lenient)
 
 ## Related Decisions
 
@@ -1224,3 +1267,4 @@ The following questions have been investigated and resolved:
 | 4.0 | 2025-12-22 | **Council Review #2**: Rejected Mem0 integration in favor of Pixeltable-native memory. Added "Build vs Integrate" decision section with code examples. Updated Phase 1 to Pixeltable Native approach. Added reference to ADR-004 (Monetization). |
 | 4.1 | 2025-12-23 | **Council Validation**: Extended Phase 1 to 8 weeks. Added "Janitor" (Hot/Warm/Cold) architecture for async extraction. Added Golden Dataset requirement. Added validation metrics and decision reversal triggers. |
 | 4.2 | 2025-12-28 | **Cross-ADR Synchronization**: Added ADR-006 and ADR-007 to Related Decisions. Updated Non-Goals to reflect multi-tenancy via Extension Registry. Added Interface Contract admonition linking to consolidated protocols. Marked Open Questions as resolved with references. Added Implementation Tracker section. Added tier constraints note to Roadmap. Council review (Grok-4, GPT-4o). |
+| 4.3 | 2026-01-07 | **Implementation Verification**: Council reviewed Phase 0-1d implementation across 3 rounds. Fixed critical bugs in EvaluationHarness (metrics calculation) and Janitor (persistence, error handling). Added dry-run mode and soft-delete to janitor. Updated test count to 330. Added Implementation Verification section with Council transcripts. Phase 2+ remains NOT STARTED. |
