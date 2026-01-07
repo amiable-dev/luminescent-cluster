@@ -1,0 +1,12 @@
+{
+  "snapshot_id": "720a61b",
+  "target_paths": [
+    "src/memory/evaluation/harness.py",
+    "src/memory/janitor/deduplication.py",
+    "src/memory/janitor/contradiction.py"
+  ],
+  "rubric_focus": "completeness",
+  "confidence_threshold": 0.7,
+  "context_id": "de5a520f-0f73-461e-8343-35a7aa164b2a",
+  "timestamp": "2026-01-07T21:49:29.717126"
+}
