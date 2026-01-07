@@ -111,20 +111,27 @@ class Deduplicator:
 
         return to_keep, to_remove
 
-    async def run(self, provider: Any, user_id: str) -> dict[str, Any]:
+    async def run(
+        self, provider: Any, user_id: str, dry_run: bool = False
+    ) -> dict[str, Any]:
         """Run deduplication on all memories for a user.
 
         Args:
             provider: Memory provider.
             user_id: User ID to deduplicate.
+            dry_run: If True, only report what would be done without making changes.
 
         Returns:
             Statistics about the deduplication run.
+
+        Note:
+            Council Review: Uses soft-delete (invalidate) by default instead of
+            hard-delete to prevent data loss. Memories can be recovered.
         """
         # Get all memories for user
         all_memories = await provider.search(user_id, filters={}, limit=10000)
         processed = len(all_memories)
-        removed = 0
+        invalidated = 0
 
         # Group memories by type for more efficient comparison
         by_type: dict[str, List[Memory]] = {}
@@ -134,31 +141,61 @@ class Deduplicator:
                 by_type[mem_type] = []
             by_type[mem_type].append(memory)
 
-        # Find and remove duplicates within each type
-        memories_to_remove: Set[str] = set()
+        # Find duplicates within each type
+        memories_to_invalidate: Set[str] = set()
+        would_invalidate: List[dict] = []
 
         for mem_type, memories in by_type.items():
             duplicates = self.find_duplicates(memories)
 
-            for m1, m2, _ in duplicates:
-                # Keep higher confidence, remove lower
+            for m1, m2, similarity in duplicates:
+                # Keep higher confidence, invalidate lower
                 if m1.confidence >= m2.confidence:
                     if hasattr(m2, 'id') and m2.id:
-                        memories_to_remove.add(m2.id)
+                        memories_to_invalidate.add(m2.id)
+                        would_invalidate.append({
+                            'id': m2.id,
+                            'content': m2.content[:50],
+                            'reason': f'Duplicate of higher confidence memory (similarity: {similarity:.2f})',
+                        })
                 else:
                     if hasattr(m1, 'id') and m1.id:
-                        memories_to_remove.add(m1.id)
+                        memories_to_invalidate.add(m1.id)
+                        would_invalidate.append({
+                            'id': m1.id,
+                            'content': m1.content[:50],
+                            'reason': f'Duplicate of higher confidence memory (similarity: {similarity:.2f})',
+                        })
 
-        # Remove duplicates
-        for memory_id in memories_to_remove:
+        if dry_run:
+            return {
+                'processed': processed,
+                'dry_run': True,
+                'would_invalidate': would_invalidate,
+                'duplicates_found': len(memories_to_invalidate),
+            }
+
+        # Soft-delete (invalidate) duplicates instead of hard-delete
+        for memory_id in memories_to_invalidate:
             try:
-                await provider.delete(memory_id)
-                removed += 1
+                # Use invalidate if available, otherwise update metadata
+                if hasattr(provider, 'invalidate'):
+                    await provider.invalidate(memory_id, reason="Duplicate detected by janitor")
+                elif hasattr(provider, 'update'):
+                    await provider.update(memory_id, None, "janitor-dedup")
+                    # Mark as invalid via metadata
+                    memory = await provider.get_by_id(memory_id)
+                    if memory and hasattr(memory, 'metadata'):
+                        memory.metadata = memory.metadata or {}
+                        memory.metadata['is_valid'] = False
+                        memory.metadata['invalidation_reason'] = "Duplicate detected by janitor"
+                invalidated += 1
             except Exception:
                 pass
 
         return {
             'processed': processed,
-            'removed': removed,
-            'duplicates_found': len(memories_to_remove),
+            'invalidated': invalidated,
+            'removed': invalidated,  # For backward compatibility
+            'duplicates_found': len(memories_to_invalidate),
         }

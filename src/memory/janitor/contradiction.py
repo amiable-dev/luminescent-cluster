@@ -124,21 +124,30 @@ class ContradictionHandler:
             'suggested_resolution': 'newer_wins',
         }
 
-    async def run(self, provider: Any, user_id: str) -> Dict[str, Any]:
+    async def run(
+        self, provider: Any, user_id: str, dry_run: bool = False
+    ) -> Dict[str, Any]:
         """Run contradiction resolution on all memories for a user.
 
         Args:
             provider: Memory provider.
             user_id: User ID to process.
+            dry_run: If True, only report what would be done without making changes.
 
         Returns:
             Statistics about the resolution run.
+
+        Note:
+            Council Review: Uses soft-delete (invalidate) by default instead of
+            hard-delete to prevent data loss. Contradicting memories are preserved
+            but marked as invalid.
         """
         # Get all memories for user
         all_memories = await provider.search(user_id, filters={}, limit=10000)
         processed = len(all_memories)
-        resolved = 0
+        invalidated = 0
         flagged: List[Dict[str, Any]] = []
+        would_invalidate: List[Dict[str, Any]] = []
 
         # Group by type for comparison
         by_type: Dict[str, List[Memory]] = {}
@@ -149,7 +158,7 @@ class ContradictionHandler:
             by_type[mem_type].append(memory)
 
         # Find contradictions within each type
-        memories_to_remove: Set[str] = set()
+        memories_to_invalidate: Set[str] = set()
 
         for mem_type, memories in by_type.items():
             n = len(memories)
@@ -161,22 +170,47 @@ class ContradictionHandler:
                         loser = memories[j] if winner == memories[i] else memories[i]
 
                         if hasattr(loser, 'id') and loser.id:
-                            memories_to_remove.add(loser.id)
+                            memories_to_invalidate.add(loser.id)
+                            would_invalidate.append({
+                                'id': loser.id,
+                                'content': loser.content[:50],
+                                'reason': f'Contradiction resolved: newer wins (winner: {winner.content[:30]}...)',
+                            })
 
                         # Flag for review if high confidence contradiction
                         if memories[i].confidence > 0.8 and memories[j].confidence > 0.8:
                             flagged.append(self.flag_for_review(memories[i], memories[j]))
 
-        # Remove contradicting memories
-        for memory_id in memories_to_remove:
+        if dry_run:
+            return {
+                'processed': processed,
+                'dry_run': True,
+                'would_invalidate': would_invalidate,
+                'would_resolve': len(memories_to_invalidate),
+                'flagged_for_review': flagged,
+            }
+
+        # Soft-delete (invalidate) contradicting memories instead of hard-delete
+        for memory_id in memories_to_invalidate:
             try:
-                await provider.delete(memory_id)
-                resolved += 1
+                # Use invalidate if available, otherwise update metadata
+                if hasattr(provider, 'invalidate'):
+                    await provider.invalidate(memory_id, reason="Contradiction resolved by janitor (newer wins)")
+                elif hasattr(provider, 'update'):
+                    await provider.update(memory_id, None, "janitor-contradiction")
+                    # Mark as invalid via metadata
+                    memory = await provider.get_by_id(memory_id)
+                    if memory and hasattr(memory, 'metadata'):
+                        memory.metadata = memory.metadata or {}
+                        memory.metadata['is_valid'] = False
+                        memory.metadata['invalidation_reason'] = "Contradiction resolved by janitor"
+                invalidated += 1
             except Exception:
                 pass
 
         return {
             'processed': processed,
-            'resolved': resolved,
+            'invalidated': invalidated,
+            'resolved': invalidated,  # For backward compatibility
             'flagged_for_review': flagged,
         }

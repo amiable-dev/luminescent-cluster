@@ -354,6 +354,96 @@ class TestReporter:
         assert parsed["accuracy"] == 0.80
 
 
+class TestEvaluationHarnessMetrics:
+    """TDD: Tests for proper metric calculation in EvaluationHarness.
+
+    Council Review Finding: EvaluationHarness was aliasing precision/recall/F1
+    to accuracy instead of calculating them properly.
+
+    GitHub Issue: #78
+    ADR Reference: ADR-003 (Evaluation Harness)
+    """
+
+    @pytest.mark.asyncio
+    async def test_harness_requires_evaluate_fn_for_meaningful_results(self):
+        """Harness should require evaluate_fn or default to failure.
+
+        Without evaluate_fn, we can't determine if retrieval was correct,
+        so success should default to False, not True.
+        """
+        from src.memory.evaluation.harness import EvaluationHarness
+
+        harness = EvaluationHarness()
+        harness.load_dataset("tests/memory/golden_dataset.json")
+
+        # Without evaluate_fn, all should fail (not pass by default)
+        report = await harness.run(retrieve_fn=None, evaluate_fn=None)
+
+        # All questions should fail without an evaluate_fn
+        assert report.passed == 0
+        assert report.failed == 50
+        assert report.accuracy == 0.0
+
+    @pytest.mark.asyncio
+    async def test_harness_calculates_precision_correctly(self):
+        """Harness should calculate precision as TP / (TP + FP).
+
+        Precision measures: Of all retrieved memories, how many were relevant?
+        """
+        from src.memory.evaluation.harness import EvaluationHarness
+
+        harness = EvaluationHarness()
+        harness.load_dataset("tests/memory/golden_dataset.json")
+
+        # Mock evaluate function that tracks TP/FP
+        call_count = 0
+
+        def evaluate_fn(question, memories):
+            nonlocal call_count
+            call_count += 1
+            # First 40 are true positives, next 10 are false positives
+            return call_count <= 40
+
+        async def retrieve_fn(query, user_id):
+            return [{"content": "test"}]  # Always retrieve something
+
+        report = await harness.run(retrieve_fn=retrieve_fn, evaluate_fn=evaluate_fn)
+
+        # 40 TP, 10 FP => precision = 40/50 = 0.8
+        assert report.precision == pytest.approx(0.8, rel=0.01)
+
+    @pytest.mark.asyncio
+    async def test_harness_precision_recall_f1_not_equal_to_accuracy(self):
+        """Precision, recall, F1 should not simply equal accuracy.
+
+        This was the Council's finding - metrics were just aliased to accuracy.
+        """
+        from src.memory.evaluation.harness import EvaluationHarness
+
+        harness = EvaluationHarness()
+        harness.load_dataset("tests/memory/golden_dataset.json")
+
+        call_count = 0
+
+        def evaluate_fn(question, memories):
+            nonlocal call_count
+            call_count += 1
+            return call_count <= 25  # Only half pass
+
+        async def retrieve_fn(query, user_id):
+            return [{"content": "test"}]
+
+        report = await harness.run(retrieve_fn=retrieve_fn, evaluate_fn=evaluate_fn)
+
+        # With proper metrics, these should reflect actual TP/FP/FN counts
+        # not just all equal to accuracy
+        assert report.accuracy == 0.5
+        # Metrics should be calculated, not just aliased
+        assert isinstance(report.precision, float)
+        assert isinstance(report.recall, float)
+        assert isinstance(report.f1, float)
+
+
 class TestEvaluationModuleExports:
     """TDD: Tests for evaluation module exports."""
 

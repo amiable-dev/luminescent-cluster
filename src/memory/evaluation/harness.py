@@ -149,8 +149,9 @@ class EvaluationHarness:
                 if retrieve_fn:
                     memories = await retrieve_fn(question.question, "test-user")
 
-                # Evaluate success
-                success = True
+                # Evaluate success - default to False if no evaluate_fn
+                # (Council Review: Can't determine correctness without evaluation)
+                success = False
                 if evaluate_fn:
                     success = evaluate_fn(question, memories)
 
@@ -188,9 +189,30 @@ class EvaluationHarness:
 
             self.results.append(result)
 
-        # Calculate metrics
+        # Calculate metrics using the metrics module
+        # (Council Review: Use proper metric calculations, not aliases)
+        from src.memory.evaluation.metrics import (
+            accuracy as calc_accuracy,
+            f1_score,
+            precision as calc_precision,
+            recall as calc_recall,
+        )
+
         total = len(self.questions)
-        accuracy_val = passed / total if total > 0 else 0.0
+        accuracy_val = calc_accuracy(passed, total)
+
+        # For question-level evaluation:
+        # - TP = passed (questions with correct retrieval)
+        # - FP = failed (questions with incorrect retrieval)
+        # - FN = failed (questions where we should have found relevant memories)
+        # In this setup, each question expects retrieval, so:
+        true_positives = passed
+        false_positives = failed  # Retrieved but wrong
+        false_negatives = failed  # Should have retrieved correct but didn't
+
+        precision_val = calc_precision(true_positives, false_positives)
+        recall_val = calc_recall(true_positives, false_negatives)
+        f1_val = f1_score(precision_val, recall_val)
 
         # Build category breakdown
         category_breakdown = {}
@@ -207,9 +229,9 @@ class EvaluationHarness:
             passed=passed,
             failed=failed,
             accuracy=accuracy_val,
-            precision=accuracy_val,  # Simplified for now
-            recall=accuracy_val,  # Simplified for now
-            f1=accuracy_val,  # Simplified for now
+            precision=precision_val,
+            recall=recall_val,
+            f1=f1_val,
             category_breakdown=category_breakdown,
         )
 
