@@ -191,6 +191,7 @@ class EvaluationHarness:
 
         # Calculate metrics using the metrics module
         # (Council Review: Use proper metric calculations, not aliases)
+        # (Council Review 2: Properly distinguish FP vs FN)
         from src.memory.evaluation.metrics import (
             accuracy as calc_accuracy,
             f1_score,
@@ -201,14 +202,20 @@ class EvaluationHarness:
         total = len(self.questions)
         accuracy_val = calc_accuracy(passed, total)
 
-        # For question-level evaluation:
-        # - TP = passed (questions with correct retrieval)
-        # - FP = failed (questions with incorrect retrieval)
-        # - FN = failed (questions where we should have found relevant memories)
-        # In this setup, each question expects retrieval, so:
+        # Count true positives, false positives, false negatives from results
+        # - TP: passed (evaluate_fn returned True, memories were correct)
+        # - FP: failed WITH non-empty retrieval (got wrong results)
+        # - FN: failed WITH empty retrieval (missed relevant results)
         true_positives = passed
-        false_positives = failed  # Retrieved but wrong
-        false_negatives = failed  # Should have retrieved correct but didn't
+        false_positives = 0
+        false_negatives = 0
+
+        for result in self.results:
+            if not result.success:
+                if result.retrieved_memories:
+                    false_positives += 1  # Retrieved but wrong
+                else:
+                    false_negatives += 1  # Should have retrieved but didn't
 
         precision_val = calc_precision(true_positives, false_positives)
         recall_val = calc_recall(true_positives, false_negatives)

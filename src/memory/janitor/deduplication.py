@@ -176,26 +176,26 @@ class Deduplicator:
             }
 
         # Soft-delete (invalidate) duplicates instead of hard-delete
+        errors: List[str] = []
         for memory_id in memories_to_invalidate:
             try:
-                # Use invalidate if available, otherwise update metadata
+                # Use invalidate if available (preferred)
                 if hasattr(provider, 'invalidate'):
                     await provider.invalidate(memory_id, reason="Duplicate detected by janitor")
-                elif hasattr(provider, 'update'):
-                    await provider.update(memory_id, None, "janitor-dedup")
-                    # Mark as invalid via metadata
-                    memory = await provider.get_by_id(memory_id)
-                    if memory and hasattr(memory, 'metadata'):
-                        memory.metadata = memory.metadata or {}
-                        memory.metadata['is_valid'] = False
-                        memory.metadata['invalidation_reason'] = "Duplicate detected by janitor"
-                invalidated += 1
-            except Exception:
-                pass
+                    invalidated += 1
+                # Fallback: use delete (hard delete) if no invalidate method
+                elif hasattr(provider, 'delete'):
+                    await provider.delete(memory_id)
+                    invalidated += 1
+                else:
+                    errors.append(f"No invalidate or delete method for {memory_id}")
+            except Exception as e:
+                errors.append(f"Failed to invalidate {memory_id}: {str(e)}")
 
         return {
             'processed': processed,
             'invalidated': invalidated,
             'removed': invalidated,  # For backward compatibility
             'duplicates_found': len(memories_to_invalidate),
+            'errors': errors if errors else None,
         }
