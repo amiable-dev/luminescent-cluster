@@ -1237,12 +1237,27 @@ The following questions have been investigated and resolved:
 | Keyword-based contradiction detection | Phase 1 Scope | Semantic analysis deferred to Phase 2 |
 | Hard-coded `limit=10000` | Acceptable | Documented limitation for Phase 1 |
 
-#### Final Scores
-- Accuracy: 10.0/10
-- Completeness: 6.1/10
-- Clarity: 6.8/10
+#### Round 4 (Commit 0efa8a2) - UNCLEAR (Confidence 0.61, No Blocking Issues)
+**Focus**: ADR-005 Dual-Repo Compliance Fix
 
-#### Split Decision
+| Issue | Severity | Fix Applied |
+|-------|----------|-------------|
+| `MemoryProvider` not exported from `extensions` module | Critical | Added to `__init__.py` imports and `__all__` |
+| `ResponseFilter` not exported | Critical | Added to `__init__.py` imports and `__all__` |
+| `MEMORY_PROVIDER_VERSION` not exported | Critical | Added to `__init__.py` imports and `__all__` |
+| Misleading docstring import path | Medium | Fixed to use `src.extensions` |
+| Brittle `_is_runtime_protocol` check | Medium | Changed to `isinstance()` test |
+
+**Outcome**: No blocking issues. Rationale "approved" at 0.9 confidence.
+**Transcript**: `.council/logs/2026-01-07T22-43-42-b3f93afd/`
+
+#### Final Scores (Round 4)
+- Accuracy: 10.0/10
+- Completeness: 6.3/10
+- Clarity: 7.0/10
+- Blocking Issues: None
+
+#### Split Decision (Rounds 1-3)
 - GPT-5.2-Pro: **REJECTED** (strictest interpretation)
 - Gemini-3-Pro: **REJECTED** (completeness concerns)
 - Claude Opus 4.5: **NEEDS REVIEW** (acceptable for Phase 1)
@@ -1268,3 +1283,4 @@ The following questions have been investigated and resolved:
 | 4.1 | 2025-12-23 | **Council Validation**: Extended Phase 1 to 8 weeks. Added "Janitor" (Hot/Warm/Cold) architecture for async extraction. Added Golden Dataset requirement. Added validation metrics and decision reversal triggers. |
 | 4.2 | 2025-12-28 | **Cross-ADR Synchronization**: Added ADR-006 and ADR-007 to Related Decisions. Updated Non-Goals to reflect multi-tenancy via Extension Registry. Added Interface Contract admonition linking to consolidated protocols. Marked Open Questions as resolved with references. Added Implementation Tracker section. Added tier constraints note to Roadmap. Council review (Grok-4, GPT-4o). |
 | 4.3 | 2026-01-07 | **Implementation Verification**: Council reviewed Phase 0-1d implementation across 3 rounds. Fixed critical bugs in EvaluationHarness (metrics calculation) and Janitor (persistence, error handling). Added dry-run mode and soft-delete to janitor. Updated test count to 330. Added Implementation Verification section with Council transcripts. Phase 2+ remains NOT STARTED. |
+| 4.4 | 2026-01-07 | **ADR-005 Compliance Fix**: Exported `MemoryProvider`, `ResponseFilter`, `MEMORY_PROVIDER_VERSION` from `src/extensions/__init__.py`. Council Round 4: No blocking issues, 10.0/10 accuracy. Fixed #117, unblocked #114. Test count: 1008 total (336 memory-specific). |

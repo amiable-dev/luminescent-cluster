@@ -1,0 +1,11 @@
+{
+  "snapshot_id": "40463b9",
+  "target_paths": [
+    "src/extensions/__init__.py",
+    "tests/extensions/test_memory_protocol.py"
+  ],
+  "rubric_focus": null,
+  "confidence_threshold": 0.7,
+  "context_id": "8b70816b-73fd-43ad-865d-0a4063fb332b",
+  "timestamp": "2026-01-07T22:37:30.534804"
+}
