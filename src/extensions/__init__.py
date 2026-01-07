@@ -9,7 +9,7 @@ See ADR-005: Repository Organization Strategy for design rationale.
 
 Usage (OSS - standalone):
     # Core code checks registry, gets None, continues without extension
-    from extensions.registry import ExtensionRegistry
+    from src.extensions import ExtensionRegistry
     registry = ExtensionRegistry.get()
     if registry.tenant_provider:
         # Multi-tenancy logic (never runs in OSS)
@@ -34,6 +34,7 @@ from .protocols import (
     CHATBOT_RATE_LIMITER_VERSION,
     CHATBOT_ACCESS_CONTROLLER_VERSION,
     CONTEXT_STORE_VERSION,
+    MEMORY_PROVIDER_VERSION,
     # Core protocols
     TenantProvider,
     UsageTracker,
@@ -44,6 +45,9 @@ from .protocols import (
     ChatbotAccessController,
     # Context protocol (ADR-007)
     ContextStore,
+    # Memory protocols (ADR-003)
+    MemoryProvider,
+    ResponseFilter,
 )
 from .registry import ExtensionRegistry
 
@@ -56,6 +60,7 @@ __all__ = [
     "CHATBOT_RATE_LIMITER_VERSION",
     "CHATBOT_ACCESS_CONTROLLER_VERSION",
     "CONTEXT_STORE_VERSION",
+    "MEMORY_PROVIDER_VERSION",
     # Core protocols
     "TenantProvider",
     "UsageTracker",
@@ -66,6 +71,9 @@ __all__ = [
     "ChatbotAccessController",
     # Context protocol (ADR-007)
     "ContextStore",
+    # Memory protocols (ADR-003)
+    "MemoryProvider",
+    "ResponseFilter",
     # Registry
     "ExtensionRegistry",
 ]

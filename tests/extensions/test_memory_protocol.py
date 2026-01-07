@@ -66,14 +66,19 @@ class TestMemoryProviderProtocolDefinition:
         GitHub Issue: #80
         ADR Reference: ADR-007 (Extension Patterns)
         """
-        from typing import runtime_checkable
-
         from src.extensions.protocols import MemoryProvider
 
-        # Check it's decorated with @runtime_checkable
-        assert hasattr(MemoryProvider, "__protocol_attrs__") or hasattr(
-            MemoryProvider, "_is_runtime_protocol"
-        )
+        # Test runtime checkability by verifying isinstance() works
+        # This only succeeds if @runtime_checkable decorator is applied
+        class MinimalProvider:
+            async def store(self, memory, context): pass
+            async def retrieve(self, query, user_id, limit=5): pass
+            async def get_by_id(self, memory_id): pass
+            async def delete(self, memory_id): pass
+            async def search(self, user_id, filters, limit=10): pass
+
+        # isinstance() with Protocol raises TypeError if not @runtime_checkable
+        assert isinstance(MinimalProvider(), MemoryProvider)
 
     def test_memory_provider_has_store_method(self):
         """MemoryProvider should define store method.
@@ -255,3 +260,70 @@ class TestMemoryProviderExports:
         from src.extensions import protocols
 
         assert "MEMORY_PROVIDER_VERSION" in protocols.__all__
+
+
+class TestMemoryProviderModuleExports:
+    """TDD: Tests for module-level exports from src.extensions (ADR-005 dual-repo)."""
+
+    def test_memory_provider_importable_from_extensions(self):
+        """MemoryProvider should be importable from src.extensions module.
+
+        This is required for the dual-repo pattern (ADR-005) so that
+        luminescent-cloud can import from the public extensions API.
+
+        GitHub Issue: #114
+        ADR Reference: ADR-005 (Dual-Repo Pattern)
+        """
+        from src.extensions import MemoryProvider
+
+        assert MemoryProvider is not None
+
+    def test_memory_provider_version_importable_from_extensions(self):
+        """MEMORY_PROVIDER_VERSION should be importable from src.extensions module.
+
+        GitHub Issue: #114
+        ADR Reference: ADR-005 (Dual-Repo Pattern)
+        """
+        from src.extensions import MEMORY_PROVIDER_VERSION
+
+        assert MEMORY_PROVIDER_VERSION == "1.0.0"
+
+    def test_response_filter_importable_from_extensions(self):
+        """ResponseFilter should be importable from src.extensions module.
+
+        GitHub Issue: #114
+        ADR Reference: ADR-005 (Dual-Repo Pattern)
+        """
+        from src.extensions import ResponseFilter
+
+        assert ResponseFilter is not None
+
+    def test_memory_provider_in_extensions_all(self):
+        """MemoryProvider should be in extensions.__all__.
+
+        GitHub Issue: #114
+        ADR Reference: ADR-005 (Module Exports)
+        """
+        import src.extensions as extensions
+
+        assert "MemoryProvider" in extensions.__all__
+
+    def test_response_filter_in_extensions_all(self):
+        """ResponseFilter should be in extensions.__all__.
+
+        GitHub Issue: #114
+        ADR Reference: ADR-005 (Module Exports)
+        """
+        import src.extensions as extensions
+
+        assert "ResponseFilter" in extensions.__all__
+
+    def test_memory_provider_version_in_extensions_all(self):
+        """MEMORY_PROVIDER_VERSION should be in extensions.__all__.
+
+        GitHub Issue: #114
+        ADR Reference: ADR-005 (Module Exports)
+        """
+        import src.extensions as extensions
+
+        assert "MEMORY_PROVIDER_VERSION" in extensions.__all__
