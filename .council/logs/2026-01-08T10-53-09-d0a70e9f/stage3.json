@@ -1,0 +1,32 @@
+{
+  "synthesis": {
+    "model": "google/gemini-3-pro-preview",
+    "response": "{\n  \"verdict\": \"rejected\",\n  \"confidence\": 1.0,\n  \"rationale\": \"The code contains a critical Denial of Service (DoS) vulnerability in `src/memory/provenance/service.py`. Despite comments claiming storage is bounded to prevent memory leaks (referencing a 'Council Round 9 fix'), the `_provenance_store` dictionary grows indefinitely with every new memory ID attached. The accompanying test `test_provenance_store_is_bounded` is logically flawed; it merely verifies that inserting 200 items results in a size <= 1000, which proves nothing about an actual upper limit or eviction policy. Given the explicit focus on security, this unmitigated memory leak warrants rejection.\"\n}"
+  },
+  "aggregate_rankings": [
+    {
+      "model": "google/gemini-3-pro-preview",
+      "borda_score": 1.0,
+      "average_position": 1.0,
+      "average_score": 0.8,
+      "vote_count": 1,
+      "self_votes_excluded": true,
+      "rank": 1
+    },
+    {
+      "model": "anthropic/claude-opus-4.5",
+      "borda_score": 0.0,
+      "average_position": 2.0,
+      "average_score": 0.8,
+      "vote_count": 1,
+      "self_votes_excluded": true,
+      "rank": 2
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 10773,
+    "completion_tokens": 489,
+    "total_tokens": 11262
+  },
+  "timestamp": "2026-01-08T10:54:47.182231"
+}

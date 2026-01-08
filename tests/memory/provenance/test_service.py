@@ -310,9 +310,14 @@ class TestMemoryBoundedStorage:
 
     @pytest.mark.asyncio
     async def test_provenance_store_is_bounded(self, service):
-        """Provenance store should have a maximum size."""
-        # Attach many provenance records
-        for i in range(200):
+        """Provenance store should enforce MAX_PROVENANCE_ENTRIES limit with LRU eviction."""
+        from src.memory.provenance.service import ProvenanceService
+
+        # Create service with smaller limit for testing
+        service.MAX_PROVENANCE_ENTRIES = 100
+
+        # Attach more entries than the limit
+        for i in range(150):
             prov = await service.create_provenance(
                 source_id=f"src-{i}",
                 source_type="memory",
@@ -320,6 +325,50 @@ class TestMemoryBoundedStorage:
             )
             await service.attach_to_memory(f"mem-{i}", prov)
 
-        # Check that the store doesn't grow unbounded
-        # This is a sanity check - in practice we'd use LRU eviction
-        assert len(service._provenance_store) <= 1000, "Provenance store should be bounded"
+        # Should be bounded to MAX_PROVENANCE_ENTRIES
+        assert len(service._provenance_store) == 100, "Provenance store should enforce bound"
+
+        # Oldest entries (mem-0 through mem-49) should be evicted
+        oldest_evicted = await service.get_provenance("mem-0")
+        assert oldest_evicted is None, "Oldest entries should be evicted"
+
+        # Newest entries should still be present
+        newest = await service.get_provenance("mem-149")
+        assert newest is not None, "Newest entries should be present"
+
+    @pytest.mark.asyncio
+    async def test_provenance_store_lru_updates_on_access(self, service):
+        """Accessing provenance should update LRU order to prevent eviction."""
+        from src.memory.provenance.service import ProvenanceService
+
+        # Create service with smaller limit for testing
+        service.MAX_PROVENANCE_ENTRIES = 5
+
+        # Attach 5 entries
+        for i in range(5):
+            prov = await service.create_provenance(
+                source_id=f"src-{i}",
+                source_type="memory",
+                confidence=0.95,
+            )
+            await service.attach_to_memory(f"mem-{i}", prov)
+
+        # Access mem-0 to make it recently used
+        await service.get_provenance("mem-0")
+
+        # Add 3 more entries (should evict mem-1, mem-2, mem-3)
+        for i in range(5, 8):
+            prov = await service.create_provenance(
+                source_id=f"src-{i}",
+                source_type="memory",
+                confidence=0.95,
+            )
+            await service.attach_to_memory(f"mem-{i}", prov)
+
+        # mem-0 should still be present (was accessed)
+        mem_0 = await service.get_provenance("mem-0")
+        assert mem_0 is not None, "Recently accessed entry should not be evicted"
+
+        # mem-1 should be evicted (oldest non-accessed)
+        mem_1 = await service.get_provenance("mem-1")
+        assert mem_1 is None, "Oldest non-accessed entry should be evicted"

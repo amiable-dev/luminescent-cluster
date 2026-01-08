@@ -1,0 +1,13 @@
+{
+  "snapshot_id": "34c986a",
+  "target_paths": [
+    "src/memory/blocks/compressor.py",
+    "src/memory/provenance/service.py",
+    "tests/memory/blocks/test_compressor.py",
+    "tests/memory/provenance/test_service.py"
+  ],
+  "rubric_focus": "security",
+  "confidence_threshold": 0.7,
+  "context_id": "0ca06485-0f23-4b7b-b697-d34f7a40dfc6",
+  "timestamp": "2026-01-08T10:53:09.772895"
+}
