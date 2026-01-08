@@ -69,6 +69,14 @@ class ProvenanceService:
     # Prevents DoS by checking bounds before json.dumps serialization
     MAX_METADATA_KEYS = 100
 
+    # Maximum metadata nesting depth (Council Round 14 fix)
+    # Prevents DoS via deeply nested structures
+    MAX_METADATA_DEPTH = 5
+
+    # Maximum total elements in metadata (Council Round 14 fix)
+    # Prevents DoS via wide nested structures
+    MAX_METADATA_ELEMENTS = 500
+
     def __init__(self) -> None:
         """Initialize the provenance service with bounded in-memory storage."""
         # Map of memory_id -> Provenance (LRU bounded)
@@ -98,10 +106,11 @@ class ProvenanceService:
 
     def _validate_metadata_bounds(self, metadata: dict[str, Any]) -> None:
         """
-        Validate metadata bounds before serialization (Council Round 13 fix).
+        Validate metadata bounds before serialization (Council Round 13/14 fix).
 
         Checks metadata structure bounds BEFORE calling json.dumps to prevent
-        DoS via massive object serialization.
+        DoS via massive object serialization. Recursively validates nested
+        structures to prevent deep nesting and wide element attacks.
 
         Args:
             metadata: Metadata dict to validate
@@ -120,19 +129,72 @@ class ProvenanceService:
                 f"({self.MAX_METADATA_KEYS})"
             )
 
-        # Check individual key and value string lengths
-        for key, value in metadata.items():
-            if len(str(key)) > self.MAX_STRING_ID_LENGTH:
+        # Recursively validate all elements (Council Round 14 fix)
+        element_count = self._count_and_validate_elements(metadata, depth=0)
+        if element_count > self.MAX_METADATA_ELEMENTS:
+            raise ValueError(
+                f"Metadata total element count ({element_count}) exceeds limit "
+                f"({self.MAX_METADATA_ELEMENTS})"
+            )
+
+    def _count_and_validate_elements(
+        self, obj: Any, depth: int
+    ) -> int:
+        """
+        Recursively count and validate elements in metadata (Council Round 14 fix).
+
+        Prevents DoS via deeply nested or wide structures that would cause
+        json.dumps to consume excessive memory/CPU before size check.
+
+        Args:
+            obj: Object to validate (dict, list, or primitive)
+            depth: Current nesting depth
+
+        Returns:
+            Total element count
+
+        Raises:
+            ValueError: If depth exceeds MAX_METADATA_DEPTH or element too large
+        """
+        # Check depth limit
+        if depth > self.MAX_METADATA_DEPTH:
+            raise ValueError(
+                f"Metadata nesting depth ({depth}) exceeds limit "
+                f"({self.MAX_METADATA_DEPTH})"
+            )
+
+        element_count = 1  # Count this element
+
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                # Validate key length
+                if len(str(key)) > self.MAX_STRING_ID_LENGTH:
+                    raise ValueError(
+                        f"Metadata key length ({len(str(key))}) exceeds limit "
+                        f"({self.MAX_STRING_ID_LENGTH})"
+                    )
+                # Recursively count nested elements
+                element_count += self._count_and_validate_elements(value, depth + 1)
+
+        elif isinstance(obj, (list, tuple)):
+            for item in obj:
+                element_count += self._count_and_validate_elements(item, depth + 1)
+
+        elif isinstance(obj, str):
+            # Check string length
+            if len(obj) > self.MAX_METADATA_SIZE_BYTES:
                 raise ValueError(
-                    f"Metadata key length ({len(str(key))}) exceeds limit "
-                    f"({self.MAX_STRING_ID_LENGTH})"
-                )
-            # For string values, check length directly
-            if isinstance(value, str) and len(value) > self.MAX_METADATA_SIZE_BYTES:
-                raise ValueError(
-                    f"Metadata value length ({len(value)}) exceeds limit "
+                    f"Metadata string value length ({len(obj)}) exceeds limit "
                     f"({self.MAX_METADATA_SIZE_BYTES})"
                 )
+
+        elif isinstance(obj, bytes):
+            # Reject bytes (not JSON serializable, could be large)
+            raise ValueError("Metadata cannot contain bytes values")
+
+        # Primitives (int, float, bool, None) are safe
+
+        return element_count
 
     async def create_provenance(
         self,

@@ -567,3 +567,169 @@ class TestMetadataBoundsValidation:
         assert result is not None
         assert result.metadata is not None
         assert len(result.metadata) == 50
+
+
+class TestNestedMetadataValidation:
+    """TDD: Tests for nested metadata structure validation.
+
+    Council Round 14: Identified that shallow validation allows nested
+    structures (lists, dicts) to bypass bounds checks, enabling DoS via
+    deeply nested or wide structures.
+    """
+
+    @pytest.fixture
+    def service(self):
+        """Create a fresh ProvenanceService for each test."""
+        from src.memory.provenance.service import ProvenanceService
+
+        return ProvenanceService()
+
+    @pytest.mark.asyncio
+    async def test_deeply_nested_dict_rejected(self, service):
+        """Deeply nested dicts should be rejected to prevent DoS."""
+        # Create deeply nested structure exceeding MAX_METADATA_DEPTH (5)
+        nested = {"level": "bottom"}
+        for i in range(10):  # Creates 10 levels of nesting
+            nested = {"level": nested}
+
+        with pytest.raises(ValueError, match="Metadata nesting depth .* exceeds limit"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=nested,
+            )
+
+    @pytest.mark.asyncio
+    async def test_deeply_nested_list_rejected(self, service):
+        """Deeply nested lists should be rejected to prevent DoS."""
+        # Create deeply nested list structure
+        nested = ["bottom"]
+        for i in range(10):
+            nested = [nested]
+
+        metadata = {"data": nested}
+
+        with pytest.raises(ValueError, match="Metadata nesting depth .* exceeds limit"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
+
+    @pytest.mark.asyncio
+    async def test_wide_nested_structure_rejected(self, service):
+        """Wide nested structures exceeding element limit should be rejected."""
+        # Create a structure with many elements (exceeding MAX_METADATA_ELEMENTS = 500)
+        # Use nested lists to bypass simple key count check
+        wide_list = list(range(600))  # 600 elements
+        metadata = {"data": wide_list}
+
+        with pytest.raises(ValueError, match="Metadata total element count .* exceeds limit"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
+
+    @pytest.mark.asyncio
+    async def test_bytes_in_metadata_rejected(self, service):
+        """Bytes values in metadata should be rejected (not JSON serializable)."""
+        metadata = {"data": b"binary data"}
+
+        with pytest.raises(ValueError, match="Metadata cannot contain bytes"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
+
+    @pytest.mark.asyncio
+    async def test_nested_bytes_rejected(self, service):
+        """Bytes nested in structures should also be rejected."""
+        metadata = {"outer": {"inner": [b"nested bytes"]}}
+
+        with pytest.raises(ValueError, match="Metadata cannot contain bytes"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
+
+    @pytest.mark.asyncio
+    async def test_oversized_string_in_nested_structure_rejected(self, service):
+        """Oversized strings in nested structures should be rejected."""
+        # MAX_METADATA_SIZE_BYTES is 10000
+        oversized_string = "x" * 20000
+        metadata = {"outer": {"inner": oversized_string}}
+
+        with pytest.raises(ValueError, match="Metadata string value length .* exceeds limit"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
+
+    @pytest.mark.asyncio
+    async def test_valid_nested_structure_accepted(self, service):
+        """Valid nested structures within bounds should be accepted."""
+        # Create a valid nested structure within all limits
+        metadata = {
+            "level1": {
+                "level2": {
+                    "level3": {
+                        "values": [1, 2, 3, "test"]
+                    }
+                }
+            },
+            "simple": "value",
+            "list": [{"nested": "dict"}, "string", 42]
+        }
+
+        result = await service.create_provenance(
+            source_id="mem-123",
+            source_type="memory",
+            confidence=0.95,
+            metadata=metadata,
+        )
+
+        assert result is not None
+        assert result.metadata is not None
+        assert result.metadata["level1"]["level2"]["level3"]["values"] == [1, 2, 3, "test"]
+
+    @pytest.mark.asyncio
+    async def test_tuple_handled_like_list(self, service):
+        """Tuples should be validated like lists."""
+        # Deeply nested tuples
+        nested = ("bottom",)
+        for i in range(10):
+            nested = (nested,)
+
+        metadata = {"data": nested}
+
+        with pytest.raises(ValueError, match="Metadata nesting depth .* exceeds limit"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
+
+    @pytest.mark.asyncio
+    async def test_nested_key_length_validation(self, service):
+        """Keys in nested dicts should also be length-validated."""
+        oversized_key = "k" * 500
+        metadata = {"outer": {oversized_key: "value"}}
+
+        with pytest.raises(ValueError, match="Metadata key length .* exceeds limit"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
