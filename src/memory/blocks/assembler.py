@@ -41,6 +41,9 @@ class BlockAssembler:
     five distinct block types, each with its own token budget and priority.
     """
 
+    # Approximate tokens for XML wrapper per block (tag + newlines)
+    XML_OVERHEAD_PER_BLOCK = 15
+
     def __init__(
         self,
         token_budget: int = 5000,
@@ -51,10 +54,13 @@ class BlockAssembler:
 
         Args:
             token_budget: Total token budget for all blocks
-            block_budgets: Optional custom budgets per block type
+            block_budgets: Optional custom budgets per block type (merged with defaults)
         """
         self.token_budget = token_budget
-        self.block_budgets = block_budgets or DEFAULT_TOKEN_BUDGETS.copy()
+        # Merge provided budgets with defaults to handle partial budgets safely
+        self.block_budgets = DEFAULT_TOKEN_BUDGETS.copy()
+        if block_budgets:
+            self.block_budgets.update(block_budgets)
         self._compressor = HistoryCompressor()
 
     def _count_tokens(self, text: str) -> int:
@@ -282,20 +288,39 @@ class BlockAssembler:
         # Sort by priority (lower number = higher priority)
         blocks.sort(key=lambda b: b.priority)
 
-        # Ensure total is within budget
-        total_tokens = sum(b.token_count for b in blocks)
+        # Calculate total including XML overhead for non-empty blocks
+        total_tokens = self._calculate_total_with_overhead(blocks)
         if total_tokens > self.token_budget:
             # Trim lower priority blocks first
             blocks = self._trim_to_budget(blocks)
 
         return blocks
 
+    def _calculate_total_with_overhead(self, blocks: list[MemoryBlock]) -> int:
+        """
+        Calculate total tokens including XML wrapper overhead.
+
+        Args:
+            blocks: List of blocks to calculate
+
+        Returns:
+            Total token count including XML overhead for non-empty blocks
+        """
+        total = 0
+        for block in blocks:
+            total += block.token_count
+            # Add XML overhead for non-empty blocks (they get wrapped in to_prompt)
+            if block.content:
+                total += self.XML_OVERHEAD_PER_BLOCK
+        return total
+
     def _trim_to_budget(self, blocks: list[MemoryBlock]) -> list[MemoryBlock]:
         """
         Trim blocks to fit within total token budget.
 
         Trims lower priority blocks first. Preserves line structure
-        by truncating at line boundaries when possible.
+        by truncating at line boundaries when possible. Accounts for
+        XML wrapper overhead.
 
         Args:
             blocks: List of blocks sorted by priority
@@ -308,26 +333,33 @@ class BlockAssembler:
         remaining_budget = self.token_budget
 
         for block in blocks:
-            if block.token_count <= remaining_budget:
+            # Calculate cost including XML overhead for non-empty blocks
+            block_cost = block.token_count
+            if block.content:
+                block_cost += self.XML_OVERHEAD_PER_BLOCK
+
+            if block_cost <= remaining_budget:
                 result.append(block)
-                remaining_budget -= block.token_count
-            elif remaining_budget > 0:
-                # Partial inclusion - truncate by lines to preserve formatting
+                remaining_budget -= block_cost
+            elif remaining_budget > self.XML_OVERHEAD_PER_BLOCK:
+                # Partial inclusion - reserve XML overhead, truncate content
+                content_budget = remaining_budget - self.XML_OVERHEAD_PER_BLOCK
                 truncated_content = self._truncate_preserving_format(
-                    block.content, remaining_budget
+                    block.content, content_budget
                 )
                 truncated_tokens = self._count_tokens(truncated_content)
 
-                result.append(
-                    MemoryBlock(
-                        block_type=block.block_type,
-                        content=truncated_content,
-                        token_count=truncated_tokens,
-                        priority=block.priority,
-                        metadata={**block.metadata, "truncated": True},
-                        provenance=block.provenance,
+                if truncated_content:  # Only add if we have content after truncation
+                    result.append(
+                        MemoryBlock(
+                            block_type=block.block_type,
+                            content=truncated_content,
+                            token_count=truncated_tokens,
+                            priority=block.priority,
+                            metadata={**block.metadata, "truncated": True},
+                            provenance=block.provenance,
+                        )
                     )
-                )
                 remaining_budget = 0
 
         return result

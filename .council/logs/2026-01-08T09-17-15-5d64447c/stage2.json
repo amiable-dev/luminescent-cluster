@@ -1,0 +1,82 @@
+{
+  "rankings": [
+    {
+      "model": "openai/gpt-5.2-pro",
+      "ranking": "## Response A \u2014 Critique\n\n**What it does well**\n- Follows the requested structure (Summary \u2192 Quality \u2192 Issues \u2192 Recommendations \u2192 Verdict).\n- Identifies a real **correctness bug**: `BlockAssembler.__init__` uses `block_budgets or DEFAULT...`, so a *partial* dict override can lead to `KeyError` later when indexing missing `BlockType` keys (in `build_system_block`, `build_task_block`, etc.). This is one of the most actionable issues in the diff.\n- Correctly flags a likely integration risk in `rank_with_provenance()` assuming the `Memory` schema supports a `provenance` field and `model_copy()`.\n- Recommendations are concrete and minimal (merge dicts; update schema).\n\n**What it does poorly**\n- Misses several other important correctness gaps, notably:\n  - **Per-block budgets not enforced** for `build_project_block()` and `build_knowledge_block()` (they never truncate to block budget).\n  - **End-to-end budget mismatch**: token counts are computed on raw content, but `to_prompt()` adds wrapper tags and escapes content; assembled blocks may \u201cfit\u201d but the final prompt could exceed the budget.\n  - **Token undercounting** due to flooring (`int(len(words)*1.3)`), which can systematically under-enforce budgets.\n- Line-number citation is a bit hand-wavy (\u201c:46\u201d) and not clearly mapped to the provided snippet; still, it\u2019s at least attempting to locate issues.\n\n**Overall**: Solid and mostly accurate, but incomplete on correctness given the \u201ctoken budget constraints\u201d claim in the docs.\n\n---\n\n## Response B \u2014 Critique\n\n**What it does well**\n- Uses the requested headings and provides a broad scan across modules.\n- Correctly points out the **Memory schema/provenance assumption** in `rank_with_provenance()` as a potential runtime issue.\n- Notes missing validations (confidence range; negative/zero `max_tokens`)\u2014these are reasonable correctness hardening suggestions even if not currently exploited.\n\n**What it does poorly**\n- The \u201ctoken counting inconsistency due to newline\u201d issue is effectively **incorrect** here: `count_tokens()` uses `text.split()` so adding `\"\\n\"` does not create additional \u201cwords,\u201d making the newline-based overcount concern largely unfounded.\n- The \u201cempty query creates invalid provenance / provenance requirement not met\u201d point is muddled:\n  - The early return happens when `query` is empty (so nothing was retrieved); it\u2019s not clearly a correctness violation of \u201cprovenance for retrieved items.\u201d\n- Misses bigger correctness issues that directly impact the stated goal (\u201cwithin token budget constraints\u201d):\n  - No mention that `build_project_block()` / `build_knowledge_block()` don\u2019t enforce their budgets.\n  - No mention that `to_prompt()` overhead/escaping isn\u2019t included in token budgeting.\n\n**Overall**: Decent breadth, but includes at least one materially wrong \u201ccritical issue\u201d and misses more central correctness problems.\n\n---\n\n## Response C \u2014 Critique\n\n**What it does well**\n- Strong focus on the requested **correctness** angle, and it finds the most consequential issues:\n  - **Per-block budget enforcement gaps**: `build_project_block()` and `build_knowledge_block()` don\u2019t truncate to their respective block budgets.\n  - **End-to-end token-budget incorrectness**: budgeting is done on raw content, ignoring `to_prompt()` wrapper-tag overhead and XML escaping expansion.\n  - **Systematic undercounting** risk due to flooring in token approximation (`int(...)`), which undermines \u201cstrict\u201d budgeting.\n  - **Partial `block_budgets` causes `KeyError`**: accurate and actionable.\n  - **`decay_half_life_days=0` division by zero**: real edge case in `calculate_recency()`.\n  - Correctly highlights brittle assumptions about Pydantic v2 (`model_copy`) and `metadata` presence.\n- Provides clear, prioritized recommendations aligned with the issues.\n- The verdict (\u201cREJECTED\u201d) is defensible given the mismatch between documented constraints and actual enforcement.\n\n**What it does poorly**\n- A couple points could be framed more precisely (e.g., \u201ctoken budgeting not correct end-to-end\u201d is true, but the system uses an approximation anyway; still, given the stated \u201cstrict token budget constraints,\u201d the critique is fair).\n- Line numbers are approximate (\u201c~lines\u201d), but at least consistently presented and mapped to specific functions/paths.\n\n**Overall**: Most accurate, most complete, and best aligned to the prompt\u2019s correctness focus.\n\n---\n\n## Response D \u2014 Critique\n\n**What it does well**\n- Clear structure and readable prose; covers most modules.\n- Correctly flags the `rank_with_provenance()` dependency on `model_copy()` / Memory being Pydantic.\n- Mentions the partial XML escaping limitation (quotes), which is a reasonable \u201cfuture footgun\u201d note.\n\n**What it does poorly**\n- Contains notable inaccuracies:\n  - Claims \u201cinconsistent compressor usage\u201d because `HistoryCompressor(max_tokens=...)` differs from `self._compressor` without `max_tokens`. But `max_tokens` **does not affect `count_tokens()`**, so this isn\u2019t actually an inconsistency in token estimation.\n  - References `_truncate_to_tokens` as if it exists in `assembler.py` (it\u2019s in `compressor.py`), and several line references are unreliable.\n  - Suggests setting `attach_provenance=True` by default in ranker, but it\u2019s **already the default**.\n- Misses key correctness issues:\n  - No callout that project/knowledge blocks don\u2019t enforce per-block budgets.\n  - No mention of prompt-wrapping overhead not being counted toward the total budget.\n\n**Overall**: Well-written but meaningfully less reliable due to factual mistakes and missed core correctness issues.\n\n---\n\n```json\n{\n  \"ranking\": [\"Response C\", \"Response A\", \"Response B\", \"Response D\"],\n  \"scores\": {\n    \"Response C\": 9,\n    \"Response A\": 7,\n    \"Response B\": 6,\n    \"Response D\": 4\n  }\n}\n```",
+      "parsed_ranking": {
+        "ranking": [
+          "Response C",
+          "Response A",
+          "Response B",
+          "Response D"
+        ],
+        "scores": {
+          "Response C": 9,
+          "Response A": 7,
+          "Response B": 6,
+          "Response D": 4
+        }
+      }
+    },
+    {
+      "model": "google/gemini-3-pro-preview",
+      "ranking": "Here is the evaluation of the candidate responses.\n\n### Response A\n**Strengths:**\n- Correctly identifies the **critical initialization bug** in `BlockAssembler` where providing a partial `block_budgets` dictionary results in a `KeyError` later in execution. This is the most significant correctness issue in the code, as it causes a crash upon legitimate usage modification.\n- Correctly identifies the integration risk in `MemoryRanker` regarding the `model_copy` and schema dependency.\n- Recommendations are precise and directly address the bugs found.\n\n**Weaknesses:**\n- Misses the structural defect identified by other reviewers regarding token budgeting: the assembler counts tokens on raw content but wraps them in XML tags during `to_prompt`, meaning the final output likely exceeds the strict budget.\n- Misses the inconsistency where `build_project_block` ignores its specific block budget.\n\n**Verdict:** Excellent focus on functional correctness and runtime stability.\n\n### Response B\n**Strengths:**\n- Identifies the off-by-one/newline discrepancy in token counting during truncation strategies.\n- Identifies the missing budget enforcement in `build_project_block` (though labeled somewhat confusingly as \"Unused Parameter\" initially).\n- Points out race conditions in the in-memory service, which is valid for async code.\n\n**Weaknesses:**\n- **Misses the critical initialization bug** (`KeyError` on partial budgets), which is a major oversight for a correctness review.\n- Incorrectly claims `user_id` is an \"Unused Parameter\" in `build_project_block` when it is used in the f-string.\n- Focuses heavily on minor issues like validation and magic numbers while missing the main crash vector.\n\n**Verdict:** Good breadth, but missed the most critical bug.\n\n### Response C\n**Strengths:**\n- **Most comprehensive analysis.** Identifies the critical initialization bug (`KeyError`).\n- Identifies a **deep structural flaw**: The total budget enforcement ignores the overhead of XML tags added in `to_prompt()`, meaning the system fails its core requirement of strictly adhering to the token limit.\n- Correctly points out the inconsistency where `Project` and `Knowledge` blocks fail to enforce their specific budgets locally, relying only on the global trimmer.\n- Notes the contradiction between the \"SYSTEM never truncate\" comment and the code that actually truncates it.\n- Correctly identifies the `ZeroDivisionError` risk in the ranker.\n\n**Weaknesses:**\n- None significant. The review covers logic, architecture, and safety extremely well.\n\n**Verdict:** The best response. It found the crash bug, the schema bug, and the architectural inconsistencies that others missed.\n\n### Response D\n**Strengths:**\n- Identifies the potential for `AttributeError` in the ranker due to schema assumptions.\n- Notes security concerns regarding XML attribute injection (missing quote escaping).\n\n**Weaknesses:**\n- **Misses the critical initialization bug.**\n- Misses the budget enforcement inconsistencies.\n- Focuses heavily on the \"approximation\" of token counting. While valid, the code acknowledges this as a placeholder, making it less of a \"correctness\" bug and more of a \"maturity\" issue.\n- The verdict is a bit lenient given the potential for crashes.\n\n**Verdict:** Acceptable, but the least insightful regarding the specific logic flaws present in this commit.\n\n---\n\n### Final Ranking and Scores\n\n```json\n{\n  \"ranking\": [\"Response C\", \"Response A\", \"Response B\", \"Response D\"],\n  \"scores\": {\n    \"Response C\": 10,\n    \"Response A\": 8,\n    \"Response B\": 6,\n    \"Response D\": 5\n  }\n}\n```",
+      "parsed_ranking": {
+        "ranking": [
+          "Response C",
+          "Response A",
+          "Response B",
+          "Response D"
+        ],
+        "scores": {
+          "Response C": 10,
+          "Response A": 8,
+          "Response B": 6,
+          "Response D": 5
+        }
+      }
+    },
+    {
+      "model": "anthropic/claude-opus-4.5",
+      "ranking": "# Evaluation of Code Review Responses\n\n## Response A Analysis\n\n**Strengths:**\n- Clear, well-organized structure with numbered sections\n- Correctly identifies the fragile budget initialization issue (partial dict causing KeyError)\n- Points out the Memory model provenance field assumption correctly\n- Good practical recommendations with code examples\n- Appropriate verdict of NEEDS REVIEW with clear reasoning\n\n**Weaknesses:**\n- Misses several important correctness issues (e.g., token counting in final prompt doesn't account for XML wrapping overhead)\n- Doesn't identify that `build_project_block` and `build_knowledge_block` don't enforce their token budgets\n- The async concern is relatively minor compared to other issues not mentioned\n- Doesn't note the SYSTEM block \"never truncate\" contradiction\n\n## Response B Analysis\n\n**Strengths:**\n- Comprehensive issue identification with specific file paths and line numbers\n- Correctly identifies the token counting inconsistency in truncation\n- Good catch on the empty query provenance issue\n- Identifies race condition in ProvenanceService\n- Notes the incomplete XML escaping\n- Well-structured with severity levels (Critical, Moderate, Minor)\n\n**Weaknesses:**\n- The \"Critical\" token counting inconsistency issue (Issue #1) is actually a minor edge case - counting newlines slightly differently isn't as severe as claimed\n- Misses the bigger issue that `build_project_block` and `build_knowledge_block` don't enforce their per-block budgets at all\n- Doesn't identify that the final prompt generation (with XML tags) could exceed the budget\n- The verdict reasoning focuses on less critical issues while missing more fundamental budget enforcement problems\n\n## Response C Analysis\n\n**Strengths:**\n- Excellent identification of the most critical correctness issue: token budget enforcement is not actually correct end-to-end\n- Correctly identifies that project and knowledge blocks ignore their per-block budgets\n- Properly notes that prompt formatting/escaping overhead isn't accounted for in budget calculations\n- Identifies the token counting undercount issue with flooring\n- Correctly points out the SYSTEM \"never truncate\" contradiction\n- Good catch on the partial block_budgets KeyError issue\n- Notes the division by zero risk in recency decay\n- Strong technical analysis overall\n\n**Weaknesses:**\n- Some recommendations could be more specific with code examples\n- The metadata inconsistency issue (retrieval_count: 0) is relatively minor\n- Could have organized issues more clearly by severity\n\n## Response D Analysis\n\n**Strengths:**\n- Very thorough and detailed analysis\n- Good identification of the inconsistent compressor usage issue\n- Correctly notes token counting inaccuracy concerns\n- Identifies the provenance attachment Pydantic assumption\n- Comprehensive coverage of multiple issue types\n\n**Weaknesses:**\n- The analysis is somewhat verbose and harder to parse quickly\n- Some issues are flagged that are actually by design (e.g., summary logic extracting first sentence is intentional for a simple implementation)\n- Misses the key issue that `build_project_block` doesn't enforce its budget\n- The claim about truncation logic \"breaking structure\" is overstated - the code explicitly tries to preserve formatting\n- Some concerns are speculative (e.g., timestamp clock skew is edge-case speculation)\n- Verdict reasoning is less focused on the most critical issues\n\n## Comparative Assessment\n\nResponse C stands out for correctly identifying the **most critical correctness bug**: the token budget enforcement is fundamentally broken because two block builders don't enforce their budgets at all, and the final prompt output (with XML wrapping) isn't accounted for in budget calculations. This is the core correctness issue that could cause real production problems.\n\nResponse B provides good structure and identifies several valid issues but overweights some minor issues while missing the bigger budget enforcement gaps.\n\nResponse A is competent but misses too many important issues to be considered thorough.\n\nResponse D is comprehensive but somewhat unfocused, treating minor issues with similar weight to critical ones.\n\nThe key differentiator is that Response C correctly identifies the most impactful correctness bugs and provides the strongest justification for rejection, which is the appropriate verdict given the fundamental budget enforcement issues.\n\n```json\n{\n  \"ranking\": [\"Response C\", \"Response B\", \"Response D\", \"Response A\"],\n  \"scores\": {\n    \"Response A\": 6,\n    \"Response B\": 7,\n    \"Response C\": 9,\n    \"Response D\": 6\n  }\n}\n```",
+      "parsed_ranking": {
+        "ranking": [
+          "Response C",
+          "Response B",
+          "Response D",
+          "Response A"
+        ],
+        "scores": {
+          "Response A": 6,
+          "Response B": 7,
+          "Response C": 9,
+          "Response D": 6
+        }
+      }
+    }
+  ],
+  "label_to_model": {
+    "Response A": {
+      "model": "google/gemini-3-pro-preview",
+      "display_index": 0
+    },
+    "Response B": {
+      "model": "anthropic/claude-opus-4.5",
+      "display_index": 1
+    },
+    "Response C": {
+      "model": "openai/gpt-5.2-pro",
+      "display_index": 2
+    },
+    "Response D": {
+      "model": "x-ai/grok-4",
+      "display_index": 3
+    }
+  },
+  "usage": {
+    "prompt_tokens": 52497,
+    "completion_tokens": 7621,
+    "total_tokens": 60118
+  },
+  "timestamp": "2026-01-08T09:24:03.408703"
+}

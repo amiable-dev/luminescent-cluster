@@ -96,6 +96,24 @@ class TestBlockBudgets:
         assert assembler.block_budgets[BlockType.SYSTEM] == 200
         assert assembler.block_budgets[BlockType.KNOWLEDGE] == 1000
 
+    def test_partial_block_budgets_merged_with_defaults(self):
+        """BlockAssembler should merge partial budgets with defaults."""
+        from src.memory.blocks.assembler import BlockAssembler
+        from src.memory.blocks.schemas import DEFAULT_TOKEN_BUDGETS, BlockType
+
+        # Only provide one budget - others should use defaults
+        partial_budgets = {BlockType.SYSTEM: 250}
+
+        assembler = BlockAssembler(block_budgets=partial_budgets)
+
+        # Custom budget should be used
+        assert assembler.block_budgets[BlockType.SYSTEM] == 250
+        # Other budgets should use defaults (not KeyError)
+        assert assembler.block_budgets[BlockType.PROJECT] == DEFAULT_TOKEN_BUDGETS[BlockType.PROJECT]
+        assert assembler.block_budgets[BlockType.TASK] == DEFAULT_TOKEN_BUDGETS[BlockType.TASK]
+        assert assembler.block_budgets[BlockType.HISTORY] == DEFAULT_TOKEN_BUDGETS[BlockType.HISTORY]
+        assert assembler.block_budgets[BlockType.KNOWLEDGE] == DEFAULT_TOKEN_BUDGETS[BlockType.KNOWLEDGE]
+
 
 class TestBuildSystemBlock:
     """TDD: Tests for system block building."""
