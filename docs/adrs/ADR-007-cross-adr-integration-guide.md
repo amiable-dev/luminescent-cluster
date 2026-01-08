@@ -500,7 +500,7 @@ Unified status format across ADRs:
 | ADR-006 | CloudAccessController | Implemented | 18 | 96% | Validated | `cloud/chatbot/access_controller.py` |
 | ADR-006 | GDPRService | Implemented | 19 | 94% | Validated | `cloud/chatbot/gdpr_service.py` |
 
-**Total Tests**: 509 (414 cluster + 95 cloud)
+**Total Tests**: 1303 (1168 cluster + 135 cloud)
 
 ---
 
@@ -690,7 +690,8 @@ The Council finds ADR-007 **fundamentally sound and highly effective** at resolv
 |---------|------|---------|
 | 1.0 | 2025-12-28 | Initial draft: Integration map, protocol consolidation, phase alignment, compliance matrix |
 | 1.1 | 2025-12-28 | **Council Validated**: Added Security Overlay (1a), Error Handling & Resilience (1b), Migration Strategy (1c). Updated Phase Matrix with explicit dependencies. Added Protocol Versioning (SemVer). Added GDPR auto-deletion policy by tier. Updated status tracking with hybrid approach. Resolved all 4 open questions. |
-| 1.2 | 2025-12-28 | **Implementation Complete**: All protocol layer changes (OSS) and cloud implementations (Private) completed via TDD. 655+ OSS tests, 135 cloud tests. All issues closed. |
+| 1.2 | 2025-12-28 | **Implementation Complete**: All protocol layer changes (OSS) and cloud implementations (Private) completed via TDD. All issues closed. |
+| 1.3 | 2026-01-08 | **Maintenance**: Updated test counts (1168 OSS, 135 cloud). Consolidated duplicate MemoryProvider to single source in extensions. |
 
 ---
 
@@ -707,7 +708,7 @@ The Council finds ADR-007 **fundamentally sound and highly effective** at resolv
 | #75 | Add Usage Tracking | ✅ Complete | 7 | usage_tracker.track() in gateway |
 | #76 | Fix Gateway Fail-Closed | ✅ Complete | 6 | CRITICAL security fix |
 
-**Total OSS Tests**: 655+ (all passing)
+**Total OSS Tests**: 1168 (all passing)
 
 ### luminescent-cloud (Private)
 
