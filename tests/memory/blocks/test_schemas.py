@@ -286,9 +286,16 @@ class TestBlockTypeDefaults:
         for block_type in BlockType:
             assert block_type in DEFAULT_TOKEN_BUDGETS
 
-    def test_total_default_budget_is_5000(self):
-        """Total default token budget should be ~5000."""
+    def test_total_default_budget_fits_5000_with_overhead(self):
+        """Content budgets + XML overhead should fit within 5000 total budget."""
+        from src.memory.blocks.assembler import BlockAssembler
         from src.memory.blocks.schemas import DEFAULT_TOKEN_BUDGETS
 
-        total = sum(DEFAULT_TOKEN_BUDGETS.values())
-        assert total == 5000
+        # Content budgets sum to 4925
+        content_total = sum(DEFAULT_TOKEN_BUDGETS.values())
+        assert content_total == 4925
+
+        # With XML overhead (15 tokens per block * 5 blocks = 75), total is ~5000
+        xml_overhead = BlockAssembler.XML_OVERHEAD_PER_BLOCK * len(DEFAULT_TOKEN_BUDGETS)
+        total_with_overhead = content_total + xml_overhead
+        assert total_with_overhead == 5000

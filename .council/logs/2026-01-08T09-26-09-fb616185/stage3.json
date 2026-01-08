@@ -1,0 +1,50 @@
+{
+  "synthesis": {
+    "model": "google/gemini-3-pro-preview",
+    "response": "{\n  \"verdict\": \"rejected\",\n  \"confidence\": 1.0,\n  \"rationale\": \"The code contains critical correctness issues that corrupt data. Specifically, `HistoryCompressor._truncate_to_tokens` destroys whitespace and indentation (critical for code context) by splitting on whitespace and re-joining. Additionally, the compressor mishandles dictionary-based messages (common in LLM stacks) by defaulting to `str(d)`, resulting in noisy context. Finally, the token budget logic ensures unintended truncation because block defaults plus wrapper overhead exceed the total budget.\"\n}"
+  },
+  "aggregate_rankings": [
+    {
+      "model": "openai/gpt-5.2-pro",
+      "borda_score": 1.0,
+      "average_position": 1.0,
+      "average_score": 0.9,
+      "vote_count": 2,
+      "self_votes_excluded": true,
+      "rank": 1
+    },
+    {
+      "model": "google/gemini-3-pro-preview",
+      "borda_score": 0.5,
+      "average_position": 2.5,
+      "average_score": 0.65,
+      "vote_count": 2,
+      "self_votes_excluded": true,
+      "rank": 2
+    },
+    {
+      "model": "x-ai/grok-4",
+      "borda_score": 0.222,
+      "average_position": 3.33,
+      "average_score": 0.6,
+      "vote_count": 3,
+      "self_votes_excluded": true,
+      "rank": 3
+    },
+    {
+      "model": "anthropic/claude-opus-4.5",
+      "borda_score": 0.0,
+      "average_position": 4.0,
+      "average_score": 0.3,
+      "vote_count": 2,
+      "self_votes_excluded": true,
+      "rank": 4
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 14411,
+    "completion_tokens": 1040,
+    "total_tokens": 15451
+  },
+  "timestamp": "2026-01-08T09:32:33.955307"
+}

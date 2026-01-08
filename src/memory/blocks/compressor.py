@@ -138,11 +138,11 @@ class HistoryCompressor:
         # Simple summarization: extract key points
         points = []
         for msg in messages:
-            content = getattr(msg, "content", str(msg))
-            role = getattr(msg, "role", "unknown")
+            content = self._get_content(msg)
+            role = self._get_role(msg)
 
             # Extract first sentence or first 50 chars
-            first_sentence = content.split(".")[0]
+            first_sentence = content.split(".")[0] if content else ""
             if len(first_sentence) > 50:
                 first_sentence = first_sentence[:50]
 
@@ -154,17 +154,50 @@ class HistoryCompressor:
         """Format messages as readable text."""
         lines = []
         for msg in messages:
-            content = getattr(msg, "content", str(msg))
-            role = getattr(msg, "role", "unknown")
+            content = self._get_content(msg)
+            role = self._get_role(msg)
             lines.append(f"{role}: {content}")
         return "\n".join(lines)
 
-    def _truncate_to_tokens(self, text: str, max_tokens: int) -> str:
-        """Truncate text to fit within token budget."""
-        words = text.split()
-        max_words = int(max_tokens / 1.3)  # Reverse the token approximation
+    def _get_content(self, msg: Any) -> str:
+        """Extract content from message, handling dict and object types."""
+        if isinstance(msg, dict):
+            return msg.get("content", "")
+        return getattr(msg, "content", str(msg) if msg else "")
 
-        if len(words) <= max_words:
+    def _get_role(self, msg: Any) -> str:
+        """Extract role from message, handling dict and object types."""
+        if isinstance(msg, dict):
+            return msg.get("role", "unknown")
+        return getattr(msg, "role", "unknown")
+
+    def _truncate_to_tokens(self, text: str, max_tokens: int) -> str:
+        """
+        Truncate text to fit within token budget.
+
+        Preserves whitespace and indentation by truncating at line
+        boundaries rather than splitting on whitespace.
+        """
+        if self.count_tokens(text) <= max_tokens:
             return text
 
-        return " ".join(words[:max_words])
+        # Try line-by-line truncation to preserve formatting
+        lines = text.split("\n")
+        result_lines = []
+        current_tokens = 0
+
+        for line in lines:
+            line_tokens = self.count_tokens(line + "\n")
+            if current_tokens + line_tokens <= max_tokens:
+                result_lines.append(line)
+                current_tokens += line_tokens
+            else:
+                break
+
+        if result_lines:
+            return "\n".join(result_lines)
+
+        # Fallback: character truncation if even first line is too long
+        # Preserve the text character-by-character (not word-split)
+        max_chars = int(max_tokens * 4)  # ~4 chars per token approximation
+        return text[:max_chars] if max_chars > 0 else ""

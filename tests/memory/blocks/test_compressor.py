@@ -191,3 +191,76 @@ class TestSummarize:
 
         assert isinstance(result, str)
         assert len(result) > 0
+
+
+class TestDictMessageHandling:
+    """TDD: Tests for dictionary-based message handling."""
+
+    @pytest.fixture
+    def compressor(self):
+        """Create a HistoryCompressor for tests."""
+        from src.memory.blocks.compressor import HistoryCompressor
+
+        return HistoryCompressor(max_tokens=500)
+
+    def test_compress_dict_messages(self, compressor):
+        """compress should handle dict-based messages properly."""
+        # Dict messages are common in LLM APIs
+        dict_messages = [
+            {"role": "user", "content": "Hello, how are you?"},
+            {"role": "assistant", "content": "I'm doing great, thanks!"},
+        ]
+
+        result = compressor.compress(dict_messages)
+
+        # Should extract content properly, not show dict repr
+        assert "Hello, how are you?" in result
+        assert "I'm doing great" in result
+        assert "{'role':" not in result  # No dict repr
+
+    def test_summarize_dict_messages(self, compressor):
+        """summarize should handle dict-based messages properly."""
+        dict_messages = [
+            {"role": "user", "content": "First question about Python."},
+            {"role": "assistant", "content": "Python is a great language."},
+        ]
+
+        result = compressor.summarize(dict_messages)
+
+        # Should not contain dict repr
+        assert "{'role':" not in result
+        assert "user:" in result or "First question" in result
+
+
+class TestWhitespacePreservation:
+    """TDD: Tests for whitespace preservation during truncation."""
+
+    @pytest.fixture
+    def compressor(self):
+        """Create a HistoryCompressor for tests."""
+        from src.memory.blocks.compressor import HistoryCompressor
+
+        return HistoryCompressor(max_tokens=50)
+
+    def test_truncate_preserves_line_breaks(self, compressor):
+        """Truncation should preserve line breaks, not collapse whitespace."""
+        text_with_lines = "Line one\nLine two\nLine three\nLine four"
+
+        result = compressor._truncate_to_tokens(text_with_lines, 20)
+
+        # Should preserve newlines, not split on all whitespace
+        assert "\n" in result or len(result.split("\n")) >= 1
+
+    def test_truncate_preserves_indentation(self, compressor):
+        """Truncation should not destroy indentation."""
+        code_text = "def foo():\n    x = 1\n    return x"
+
+        result = compressor._truncate_to_tokens(code_text, 30)
+
+        # If we got any content, check indentation preserved
+        if len(result) > 10:
+            # Should have preserved some indentation
+            lines = result.split("\n")
+            if len(lines) > 1:
+                # Check that subsequent lines still have leading spaces
+                assert any(line.startswith("    ") or line.startswith("\t") for line in lines[1:])

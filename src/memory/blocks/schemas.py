@@ -128,11 +128,12 @@ DEFAULT_BLOCK_PRIORITIES: dict[BlockType, int] = {
 }
 
 # Default token budgets for each block type
-# Total: 5000 tokens (adjustable per model context window)
+# Total: ~4925 tokens (leaves room for ~75 tokens XML wrapper overhead)
+# Combined with XML_OVERHEAD_PER_BLOCK (~15/block), fits within default 5000 budget
 DEFAULT_TOKEN_BUDGETS: dict[BlockType, int] = {
-    BlockType.SYSTEM: 500,  # Core instructions
-    BlockType.PROJECT: 1000,  # Project context
-    BlockType.TASK: 500,  # Active task
-    BlockType.HISTORY: 1000,  # Compressed history
-    BlockType.KNOWLEDGE: 2000,  # Retrieved memories
+    BlockType.SYSTEM: 485,  # Core instructions
+    BlockType.PROJECT: 985,  # Project context
+    BlockType.TASK: 485,  # Active task
+    BlockType.HISTORY: 985,  # Compressed history
+    BlockType.KNOWLEDGE: 1985,  # Retrieved memories
 }
