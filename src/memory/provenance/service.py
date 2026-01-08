@@ -19,6 +19,7 @@ Related GitHub Issues:
 ADR Reference: ADR-003 Memory Architecture, Phase 2 (Context Engineering)
 """
 
+from collections import OrderedDict
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -56,18 +57,11 @@ class ProvenanceService:
     # Uses LRU eviction to prevent unbounded memory growth
     MAX_PROVENANCE_ENTRIES = 10000
 
-    # Maximum total retrieval history entries across all memories (Council Round 11 fix)
-    # Prevents orphan entries from causing unbounded growth
-    MAX_TOTAL_RETRIEVAL_HISTORY = 100000
-
     def __init__(self) -> None:
         """Initialize the provenance service with bounded in-memory storage."""
         # Map of memory_id -> Provenance (LRU bounded)
-        # Using OrderedDict would be more elegant but dict insertion order
-        # is preserved in Python 3.7+ so we track access manually
-        self._provenance_store: dict[str, Provenance] = {}
-        # Track access order for LRU eviction
-        self._provenance_access_order: list[str] = []
+        # Using OrderedDict for O(1) move_to_end LRU operations (Council Round 12 fix)
+        self._provenance_store: OrderedDict[str, Provenance] = OrderedDict()
         # Map of memory_id -> list of RetrievalEvents (bounded)
         self._retrieval_history: dict[str, list[RetrievalEvent]] = {}
 
@@ -108,23 +102,23 @@ class ProvenanceService:
         Attach provenance to a memory by ID.
 
         Uses LRU eviction when MAX_PROVENANCE_ENTRIES is exceeded.
+        OrderedDict provides O(1) move_to_end for LRU tracking.
 
         Args:
             memory_id: ID of the memory to attach provenance to
             provenance: Provenance record to attach
         """
-        # Update access order (move to end if exists, or add)
-        if memory_id in self._provenance_access_order:
-            self._provenance_access_order.remove(memory_id)
-        self._provenance_access_order.append(memory_id)
+        # Remove if exists (will re-add at end for LRU ordering)
+        if memory_id in self._provenance_store:
+            del self._provenance_store[memory_id]
 
+        # Add at end (most recently used)
         self._provenance_store[memory_id] = provenance
 
         # Enforce LRU bound (Council Round 10 fix)
         while len(self._provenance_store) > self.MAX_PROVENANCE_ENTRIES:
-            # Evict least recently used (first in access order)
-            lru_key = self._provenance_access_order.pop(0)
-            self._provenance_store.pop(lru_key, None)
+            # Evict least recently used (first item in OrderedDict)
+            lru_key, _ = self._provenance_store.popitem(last=False)
             # Also clean up retrieval history for evicted entries
             self._retrieval_history.pop(lru_key, None)
 
@@ -135,7 +129,7 @@ class ProvenanceService:
         """
         Get provenance for a memory by ID.
 
-        Updates access order for LRU tracking.
+        Updates access order for LRU tracking using OrderedDict.move_to_end (O(1)).
 
         Args:
             memory_id: ID of the memory to get provenance for
@@ -145,10 +139,8 @@ class ProvenanceService:
         """
         result = self._provenance_store.get(memory_id)
         if result is not None:
-            # Update access order (move to end for LRU)
-            if memory_id in self._provenance_access_order:
-                self._provenance_access_order.remove(memory_id)
-                self._provenance_access_order.append(memory_id)
+            # Update access order (move to end for LRU) - O(1) operation
+            self._provenance_store.move_to_end(memory_id)
         return result
 
     async def track_retrieval(
@@ -183,10 +175,8 @@ class ProvenanceService:
         updated = replace(existing, retrieval_score=retrieval_score)
         self._provenance_store[memory_id] = updated
 
-        # Update access order for LRU (accessing = recently used)
-        if memory_id in self._provenance_access_order:
-            self._provenance_access_order.remove(memory_id)
-            self._provenance_access_order.append(memory_id)
+        # Update access order for LRU (accessing = recently used) - O(1) operation
+        self._provenance_store.move_to_end(memory_id)
 
         # Record retrieval event in history
         event = RetrievalEvent(
