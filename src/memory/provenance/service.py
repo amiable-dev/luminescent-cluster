@@ -167,10 +167,16 @@ class ProvenanceService:
 
         if isinstance(obj, dict):
             for key, value in obj.items():
-                # Validate key length
-                if len(str(key)) > self.MAX_STRING_ID_LENGTH:
+                # Keys must be strings (Council Round 16 fix)
+                # Prevents CPU exhaustion via expensive __str__ on non-string keys
+                if not isinstance(key, str):
                     raise ValueError(
-                        f"Metadata key length ({len(str(key))}) exceeds limit "
+                        f"Metadata dict keys must be strings, got {type(key).__name__}"
+                    )
+                # Validate key length
+                if len(key) > self.MAX_STRING_ID_LENGTH:
+                    raise ValueError(
+                        f"Metadata key length ({len(key)}) exceeds limit "
                         f"({self.MAX_STRING_ID_LENGTH})"
                     )
                 # Recursively count nested elements
@@ -192,7 +198,17 @@ class ProvenanceService:
             # Reject bytes (not JSON serializable, could be large)
             raise ValueError("Metadata cannot contain bytes values")
 
-        # Primitives (int, float, bool, None) are safe
+        elif isinstance(obj, (int, float, bool)) or obj is None:
+            # JSON-safe primitives - allowed
+            pass
+
+        else:
+            # Reject unknown types (Council Round 16 fix)
+            # Ensures strict type safety - only JSON-serializable types allowed
+            raise ValueError(
+                f"Metadata contains unsupported type: {type(obj).__name__}. "
+                "Only dict, list, tuple, str, int, float, bool, None are allowed."
+            )
 
         return element_count
 
@@ -279,6 +295,16 @@ class ProvenanceService:
         self._validate_string_id(provenance.source_type, "provenance.source_type")
         if provenance.metadata is not None:
             self._validate_metadata_bounds(provenance.metadata)
+
+            # Check total serialized size (Council Round 16 fix)
+            # Ensures parity with create_provenance's size check
+            import json
+            metadata_size = len(json.dumps(provenance.metadata))
+            if metadata_size > self.MAX_METADATA_SIZE_BYTES:
+                raise ValueError(
+                    f"Provenance metadata size ({metadata_size} bytes) exceeds limit "
+                    f"({self.MAX_METADATA_SIZE_BYTES} bytes)"
+                )
 
         # Remove if exists (will re-add at end for LRU ordering)
         if memory_id in self._provenance_store:

@@ -849,3 +849,138 @@ class TestProvenanceBypassPrevention:
         retrieved = await service.get_provenance("mem-123")
         assert retrieved is not None
         assert retrieved.source_id == "src-123"
+
+    @pytest.mark.asyncio
+    async def test_attach_validates_provenance_metadata_total_size(self, service):
+        """attach_to_memory should validate total metadata size (Council Round 16)."""
+        from datetime import datetime, timezone
+        from src.memory.blocks.schemas import Provenance
+
+        # Create fewer keys with larger values that together exceed size limit
+        # MAX_METADATA_SIZE_BYTES is 10000, MAX_METADATA_KEYS is 100
+        # Use 50 keys with 300 chars each = ~15KB total (after JSON encoding)
+        large_metadata = {f"key_{i}": "v" * 300 for i in range(50)}
+
+        malicious_prov = Provenance(
+            source_id="src-123",
+            source_type="memory",
+            confidence=0.95,
+            created_at=datetime.now(timezone.utc),
+            retrieval_score=None,
+            metadata=large_metadata,
+        )
+
+        with pytest.raises(ValueError, match="metadata size .* exceeds limit"):
+            await service.attach_to_memory("mem-123", malicious_prov)
+
+
+class TestStrictTypeSafety:
+    """TDD: Tests for strict type safety in metadata validation.
+
+    Council Round 16: Identified lack of strict type safety for JSON serialization.
+    """
+
+    @pytest.fixture
+    def service(self):
+        """Create a fresh ProvenanceService for each test."""
+        from src.memory.provenance.service import ProvenanceService
+
+        return ProvenanceService()
+
+    @pytest.mark.asyncio
+    async def test_non_string_dict_keys_rejected(self, service):
+        """Metadata dict keys must be strings."""
+        # Use integer keys (Python allows, JSON doesn't)
+        metadata = {123: "value"}  # type: ignore
+
+        with pytest.raises(ValueError, match="Metadata dict keys must be strings"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
+
+    @pytest.mark.asyncio
+    async def test_nested_non_string_keys_rejected(self, service):
+        """Nested dict keys must also be strings."""
+        metadata = {"outer": {456: "value"}}  # type: ignore
+
+        with pytest.raises(ValueError, match="Metadata dict keys must be strings"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
+
+    @pytest.mark.asyncio
+    async def test_unsupported_types_rejected(self, service):
+        """Unsupported types in metadata should be rejected."""
+        # datetime is not JSON serializable
+        from datetime import datetime
+        metadata = {"timestamp": datetime.now()}
+
+        with pytest.raises(ValueError, match="Metadata contains unsupported type"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
+
+    @pytest.mark.asyncio
+    async def test_custom_objects_rejected(self, service):
+        """Custom objects in metadata should be rejected."""
+        class CustomClass:
+            def __str__(self):
+                # Expensive __str__ - this is the DoS vector
+                return "x" * 1000000
+
+        metadata = {"custom": CustomClass()}
+
+        with pytest.raises(ValueError, match="Metadata contains unsupported type"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
+
+    @pytest.mark.asyncio
+    async def test_nested_unsupported_types_rejected(self, service):
+        """Unsupported types nested in structures should be rejected."""
+        from datetime import datetime
+        metadata = {"outer": {"inner": [datetime.now()]}}
+
+        with pytest.raises(ValueError, match="Metadata contains unsupported type"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
+
+    @pytest.mark.asyncio
+    async def test_all_json_primitives_accepted(self, service):
+        """All valid JSON primitives should be accepted."""
+        metadata = {
+            "string": "text",
+            "integer": 42,
+            "float": 3.14,
+            "boolean": True,
+            "null": None,
+            "list": [1, "two", 3.0, True, None],
+            "nested_dict": {"key": "value"},
+            "mixed": [{"a": 1}, [2, 3], "str"],
+        }
+
+        result = await service.create_provenance(
+            source_id="mem-123",
+            source_type="memory",
+            confidence=0.95,
+            metadata=metadata,
+        )
+
+        assert result is not None
+        assert result.metadata == metadata
