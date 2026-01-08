@@ -15,9 +15,12 @@ ADR Reference: ADR-003 Memory Architecture, Phase 0 (Foundations)
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
+
+if TYPE_CHECKING:
+    from src.memory.blocks.schemas import Provenance
 
 
 class MemoryType(str, Enum):
@@ -93,6 +96,10 @@ class Memory(BaseModel):
     metadata: dict[str, Any] = Field(
         default_factory=dict,
         description="Flexible metadata (scope, project_id, etc.)",
+    )
+    provenance: Optional[Any] = Field(
+        default=None,
+        description="Source attribution and retrieval tracking (ADR-003 Phase 2)",
     )
 
     @field_validator("confidence")

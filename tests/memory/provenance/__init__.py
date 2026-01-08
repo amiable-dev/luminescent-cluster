@@ -1,4 +1,4 @@
 # Copyright 2024-2025 Amiable Development
 # SPDX-License-Identifier: Apache-2.0
 
-"""Benchmark tests for memory system exit criteria."""
+"""Tests for memory provenance module (ADR-003 Phase 2)."""

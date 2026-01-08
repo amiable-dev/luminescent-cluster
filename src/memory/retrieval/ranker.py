@@ -16,6 +16,7 @@ import math
 from datetime import datetime, timezone
 from typing import List, Tuple
 
+from src.memory.blocks.schemas import Provenance
 from src.memory.schemas import Memory
 
 
@@ -176,6 +177,61 @@ class MemoryRanker:
 
         # Score each memory
         scored = [(memory, self.calculate_score(query, memory)) for memory in memories]
+
+        # Sort by score descending
+        scored.sort(key=lambda x: x[1], reverse=True)
+
+        # Apply limit
+        if limit is not None:
+            scored = scored[:limit]
+
+        return scored
+
+    def rank_with_provenance(
+        self,
+        query: str,
+        memories: List[Memory],
+        limit: int | None = None,
+        attach_provenance: bool = True,
+    ) -> List[Tuple[Memory, float]]:
+        """Rank memories by relevance to query with provenance tracking.
+
+        ADR-003 Phase 2: Attaches provenance with retrieval scores to each memory.
+
+        Args:
+            query: Search query.
+            memories: List of memories to rank.
+            limit: Maximum number of results to return.
+            attach_provenance: Whether to attach provenance to memories.
+
+        Returns:
+            List of (memory, score) tuples sorted by score descending.
+            Memories have provenance attached if attach_provenance=True.
+        """
+        if not memories:
+            return []
+
+        # Score and attach provenance to each memory
+        scored = []
+        for memory in memories:
+            score = self.calculate_score(query, memory)
+
+            if attach_provenance:
+                # Create provenance record with retrieval metadata
+                provenance = Provenance(
+                    source_id=memory.metadata.get("memory_id", "unknown"),
+                    source_type="memory",
+                    confidence=memory.confidence,
+                    created_at=memory.created_at,
+                    retrieval_score=score,
+                )
+                # Attach provenance to memory (using model_copy for Pydantic)
+                memory_with_provenance = memory.model_copy(
+                    update={"provenance": provenance}
+                )
+                scored.append((memory_with_provenance, score))
+            else:
+                scored.append((memory, score))
 
         # Sort by score descending
         scored.sort(key=lambda x: x[1], reverse=True)

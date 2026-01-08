@@ -26,6 +26,37 @@ from src.memory.schemas import Memory, MemoryType
 _local_provider: Optional[LocalMemoryProvider] = None
 
 
+def _log_audit_event(
+    actor: str,
+    resource: str,
+    action: str,
+    outcome: str,
+    details: Optional[dict[str, Any]] = None,
+) -> None:
+    """Log an audit event if audit logger is configured.
+
+    This is a no-op in OSS mode. In cloud mode, logs to the configured
+    audit logger for compliance (SOC2, HIPAA).
+
+    Args:
+        actor: Who performed the action (user_id)
+        resource: What was acted upon (memory ID or query)
+        action: What was done (create, read, delete, etc.)
+        outcome: Result ("success", "failure")
+        details: Additional context
+    """
+    registry = ExtensionRegistry.get()
+    if registry.audit_logger is not None:
+        registry.audit_logger.log_event(
+            event_type="memory_operation",
+            actor=actor,
+            resource=resource,
+            action=action,
+            outcome=outcome,
+            details=details,
+        )
+
+
 def _get_provider() -> LocalMemoryProvider:
     """Get the memory provider instance.
 
@@ -101,6 +132,15 @@ async def create_memory(
     provider = _get_provider()
     memory_id = await provider.store(memory, {})
 
+    # Audit log the creation
+    _log_audit_event(
+        actor=user_id,
+        resource=f"memory:{memory_id}",
+        action="create",
+        outcome="success",
+        details={"memory_type": memory_type, "source": source},
+    )
+
     return {
         "memory_id": memory_id,
         "message": f"Memory created successfully",
@@ -135,6 +175,15 @@ async def get_memories(
     """
     provider = _get_provider()
     memories = await provider.retrieve(query, user_id, limit=limit)
+
+    # Audit log the retrieval
+    _log_audit_event(
+        actor=user_id,
+        resource=f"memories:search",
+        action="read",
+        outcome="success",
+        details={"query": query, "results_count": len(memories), "limit": limit},
+    )
 
     return {
         "memories": [_memory_to_dict(m) for m in memories],
@@ -240,6 +289,15 @@ async def delete_memory(memory_id: str) -> dict[str, Any]:
     provider = _get_provider()
     success = await provider.delete(memory_id)
 
+    # Audit log the deletion
+    _log_audit_event(
+        actor="system",  # Delete doesn't have user_id in signature
+        resource=f"memory:{memory_id}",
+        action="delete",
+        outcome="success" if success else "failure",
+        details={"memory_id": memory_id},
+    )
+
     return {
         "success": success,
         "memory_id": memory_id,
@@ -289,10 +347,26 @@ async def update_memory(
     })
 
     if updated is None:
+        _log_audit_event(
+            actor="system",
+            resource=f"memory:{memory_id}",
+            action="update",
+            outcome="failure",
+            details={"memory_id": memory_id, "source": source},
+        )
         return {
             "success": False,
             "error": f"Failed to update memory: {memory_id}",
         }
+
+    # Audit log the update
+    _log_audit_event(
+        actor="system",
+        resource=f"memory:{memory_id}",
+        action="update",
+        outcome="success",
+        details={"memory_id": memory_id, "source": source},
+    )
 
     return {
         "success": True,
@@ -446,6 +520,73 @@ def _memory_to_dict(memory: Memory) -> dict[str, Any]:
         result["invalidation_reason"] = memory.metadata["invalidation_reason"]
 
     return result
+
+
+async def assemble_context(
+    user_id: str,
+    query: Optional[str] = None,
+    task_context: Optional[str] = None,
+    max_tokens: int = 5000,
+) -> dict[str, Any]:
+    """Assemble context blocks for LLM consumption.
+
+    MCP Tool for structured context assembly using Memory Blocks architecture.
+    ADR-003 Phase 2: Context Engineering
+
+    Args:
+        user_id: User ID for personalized context.
+        query: Optional search query for knowledge retrieval.
+        task_context: Optional current task description.
+        max_tokens: Maximum total tokens (default 5000).
+
+    Returns:
+        Dict with assembled blocks, total tokens, and provenance.
+
+    Example:
+        >>> result = await assemble_context(
+        ...     user_id="user-123",
+        ...     query="authentication patterns",
+        ...     task_context="Implementing OAuth2"
+        ... )
+        >>> print(result["total_tokens"])
+    """
+    from src.memory.blocks.assembler import BlockAssembler
+    from src.memory.evaluation.token_efficiency import TokenEfficiencyMetric
+
+    assembler = BlockAssembler(token_budget=max_tokens)
+    blocks = await assembler.assemble(
+        user_id=user_id,
+        query=query,
+        task_context=task_context,
+    )
+
+    # Calculate efficiency metrics
+    metric = TokenEfficiencyMetric(baseline_tokens=max_tokens)
+    efficiency = metric.calculate_efficiency(blocks)
+
+    # Audit log the assembly
+    _log_audit_event(
+        actor=user_id,
+        resource="context:assembly",
+        action="assemble",
+        outcome="success",
+        details={
+            "total_tokens": efficiency["total_tokens"],
+            "block_count": len(blocks),
+            "query": query,
+        },
+    )
+
+    return {
+        "blocks": [block.to_dict() for block in blocks],
+        "total_tokens": efficiency["total_tokens"],
+        "efficiency": efficiency,
+        "provenance": [
+            block.provenance.to_dict()
+            for block in blocks
+            if block.provenance is not None
+        ],
+    }
 
 
 def reset_provider() -> None:

@@ -165,6 +165,28 @@ class TestMemoryRanker:
         score = ranker.calculate_score("tabs", memory)
         assert 0.0 <= score <= 1.0
 
+    def test_rank_with_provenance_returns_results(self, ranker, sample_memories):
+        """rank_with_provenance should return results with provenance."""
+        ranked = ranker.rank_with_provenance("tabs", sample_memories)
+        assert len(ranked) > 0
+
+    def test_rank_with_provenance_attaches_provenance(self, ranker, sample_memories):
+        """rank_with_provenance should attach provenance to memories."""
+        ranked = ranker.rank_with_provenance("tabs", sample_memories)
+        for memory, score in ranked:
+            assert memory.provenance is not None
+            assert memory.provenance.retrieval_score == score
+
+    def test_rank_with_provenance_empty_memories(self, ranker):
+        """rank_with_provenance should handle empty memory list."""
+        ranked = ranker.rank_with_provenance("query", [])
+        assert ranked == []
+
+    def test_rank_with_provenance_respects_limit(self, ranker, sample_memories):
+        """rank_with_provenance should respect limit parameter."""
+        ranked = ranker.rank_with_provenance("code", sample_memories, limit=2)
+        assert len(ranked) <= 2
+
 
 class TestQueryRewriter:
     """Tests for query rewriting and expansion."""
