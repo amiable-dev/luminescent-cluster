@@ -221,18 +221,29 @@ class MemoryRanker:
             score = self.calculate_score(query, memory)
 
             if attach_provenance:
-                # Create provenance record with retrieval metadata
-                provenance = Provenance(
-                    source_id=memory.metadata.get("memory_id", "unknown"),
-                    source_type="memory",
-                    confidence=memory.confidence,
-                    created_at=memory.created_at,
-                    retrieval_score=score,
-                )
-                # Attach provenance to memory (using model_copy for Pydantic)
-                memory_with_provenance = memory.model_copy(
-                    update={"provenance": provenance}
-                )
+                # Preserve existing provenance if present, just add retrieval_score
+                if memory.provenance is not None:
+                    # Update existing provenance with retrieval score
+                    from dataclasses import replace
+
+                    updated_provenance = replace(
+                        memory.provenance, retrieval_score=score
+                    )
+                    memory_with_provenance = memory.model_copy(
+                        update={"provenance": updated_provenance}
+                    )
+                else:
+                    # Create new provenance record with retrieval metadata
+                    provenance = Provenance(
+                        source_id=memory.metadata.get("memory_id", "unknown"),
+                        source_type="memory",
+                        confidence=memory.confidence,
+                        created_at=memory.created_at,
+                        retrieval_score=score,
+                    )
+                    memory_with_provenance = memory.model_copy(
+                        update={"provenance": provenance}
+                    )
                 scored.append((memory_with_provenance, score))
             else:
                 scored.append((memory, score))

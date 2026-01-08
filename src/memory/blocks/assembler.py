@@ -117,7 +117,13 @@ class BlockAssembler:
         # For now, create a placeholder
         content = f"Project context for user {user_id}."
 
+        # Enforce budget constraint
+        budget = self.block_budgets[BlockType.PROJECT]
         token_count = self._count_tokens(content)
+
+        if token_count > budget:
+            content = self._truncate_preserving_format(content, budget)
+            token_count = self._count_tokens(content)
 
         return MemoryBlock(
             block_type=BlockType.PROJECT,
