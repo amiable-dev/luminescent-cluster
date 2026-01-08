@@ -667,7 +667,7 @@ class TestNestedMetadataValidation:
         oversized_string = "x" * 20000
         metadata = {"outer": {"inner": oversized_string}}
 
-        with pytest.raises(ValueError, match="Metadata string value length .* exceeds limit"):
+        with pytest.raises(ValueError, match="Metadata string byte size .* exceeds limit"):
             await service.create_provenance(
                 source_id="mem-123",
                 source_type="memory",
@@ -1090,6 +1090,101 @@ class TestScoreRangeValidation:
 
         with pytest.raises(ValueError, match="confidence must be in range"):
             await service.attach_to_memory("mem-123", invalid_prov)
+
+
+class TestCyclicReferenceDetection:
+    """TDD: Tests for cyclic reference detection.
+
+    Council Round 19: Identified that cyclic structures could cause infinite
+    recursion during validation.
+    """
+
+    @pytest.fixture
+    def service(self):
+        """Create a fresh ProvenanceService for each test."""
+        from src.memory.provenance.service import ProvenanceService
+
+        return ProvenanceService()
+
+    @pytest.mark.asyncio
+    async def test_cyclic_dict_rejected(self, service):
+        """Cyclic dict references should be rejected."""
+        cyclic_dict: dict = {"key": "value"}
+        cyclic_dict["self"] = cyclic_dict  # Create cycle
+
+        with pytest.raises(ValueError, match="cyclic reference"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=cyclic_dict,
+            )
+
+    @pytest.mark.asyncio
+    async def test_cyclic_list_rejected(self, service):
+        """Cyclic list references should be rejected."""
+        cyclic_list: list = [1, 2, 3]
+        cyclic_list.append(cyclic_list)  # Create cycle
+
+        metadata = {"data": cyclic_list}
+
+        with pytest.raises(ValueError, match="cyclic reference"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
+
+
+class TestUTF8ByteSize:
+    """TDD: Tests for UTF-8 byte size validation.
+
+    Council Round 19: Identified that character length != byte length for
+    multibyte UTF-8 characters (emojis, CJK), allowing size limit bypass.
+    """
+
+    @pytest.fixture
+    def service(self):
+        """Create a fresh ProvenanceService for each test."""
+        from src.memory.provenance.service import ProvenanceService
+
+        return ProvenanceService()
+
+    @pytest.mark.asyncio
+    async def test_multibyte_string_counts_bytes_not_chars(self, service):
+        """Multibyte characters should be counted by byte size, not char count."""
+        # Emoji: 4 bytes each in UTF-8
+        # 2500 emojis = 2500 chars but 10000 bytes (at limit)
+        # 2501 emojis = 2501 chars but 10004 bytes (over limit)
+        emoji_string = "😀" * 2501  # 2501 chars, 10004 bytes
+        metadata = {"emojis": emoji_string}
+
+        with pytest.raises(ValueError, match="Metadata string byte size .* exceeds limit"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
+
+    @pytest.mark.asyncio
+    async def test_multibyte_within_limit_accepted(self, service):
+        """Multibyte strings within byte limit should be accepted."""
+        # Use moderate number of emojis that won't exceed JSON serialization limit
+        # 500 emojis = 2000 UTF-8 bytes (well within 10000 limit)
+        emoji_string = "😀" * 500
+        metadata = {"emojis": emoji_string}
+
+        result = await service.create_provenance(
+            source_id="mem-123",
+            source_type="memory",
+            confidence=0.95,
+            metadata=metadata,
+        )
+
+        assert result is not None
+        assert len(result.metadata["emojis"]) == 500
 
 
 class TestTOCTOUPrevention:

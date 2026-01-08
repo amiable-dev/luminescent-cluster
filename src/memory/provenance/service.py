@@ -130,28 +130,38 @@ class ProvenanceService:
             )
 
         # Recursively validate all elements with early termination (Council Round 17 fix)
-        # Pass a mutable counter to enable immediate termination when limit exceeded
+        # Pass a mutable counter and seen set to enable cycle detection and early termination
         counter = [0]  # Use list for mutability in nested calls
-        self._count_and_validate_elements(metadata, depth=0, counter=counter)
+        seen: set[int] = set()  # Track object ids for cycle detection (Council Round 19 fix)
+        self._count_and_validate_elements(metadata, depth=0, counter=counter, seen=seen)
 
     def _count_and_validate_elements(
-        self, obj: Any, depth: int, counter: list[int]
+        self, obj: Any, depth: int, counter: list[int], seen: set[int]
     ) -> None:
         """
-        Recursively count and validate elements in metadata (Council Round 14/17 fix).
+        Recursively count and validate elements in metadata (Council Round 14/17/19 fix).
 
-        Prevents DoS via deeply nested or wide structures. Council Round 17 fix:
-        Uses early termination - checks bounds during traversal, not after,
-        to prevent CPU exhaustion from large structures.
+        Prevents DoS via deeply nested, wide, or cyclic structures.
+        - Council Round 17: Early termination on element count limit
+        - Council Round 19: Cycle detection via object id tracking
 
         Args:
             obj: Object to validate (dict, list, or primitive)
             depth: Current nesting depth
             counter: Mutable counter [count] for tracking across recursive calls
+            seen: Set of object ids already visited (for cycle detection)
 
         Raises:
-            ValueError: If depth/count exceeds limits or element invalid
+            ValueError: If depth/count exceeds limits, cycle detected, or element invalid
         """
+        # Check for cyclic references (Council Round 19 fix)
+        # Only track containers (dict/list/tuple) as primitives can't create cycles
+        obj_id = id(obj)
+        if isinstance(obj, (dict, list, tuple)):
+            if obj_id in seen:
+                raise ValueError("Metadata contains cyclic reference (not JSON-safe)")
+            seen.add(obj_id)
+
         # Check depth limit immediately
         if depth > self.MAX_METADATA_DEPTH:
             raise ValueError(
@@ -182,18 +192,21 @@ class ProvenanceService:
                         f"Metadata key length ({len(key)}) exceeds limit "
                         f"({self.MAX_STRING_ID_LENGTH})"
                     )
-                # Recursively validate nested elements (passes counter for early termination)
-                self._count_and_validate_elements(value, depth + 1, counter)
+                # Recursively validate nested elements (passes counter and seen for early termination and cycle detection)
+                self._count_and_validate_elements(value, depth + 1, counter, seen)
 
         elif isinstance(obj, (list, tuple)):
             for item in obj:
-                self._count_and_validate_elements(item, depth + 1, counter)
+                self._count_and_validate_elements(item, depth + 1, counter, seen)
 
         elif isinstance(obj, str):
-            # Check string length
-            if len(obj) > self.MAX_METADATA_SIZE_BYTES:
+            # Check string byte size (Council Round 19 fix)
+            # Use UTF-8 encoded bytes, not character count, for accurate size limits
+            # Multibyte chars (emojis, CJK) could bypass char-based limits
+            byte_size = len(obj.encode("utf-8"))
+            if byte_size > self.MAX_METADATA_SIZE_BYTES:
                 raise ValueError(
-                    f"Metadata string value length ({len(obj)}) exceeds limit "
+                    f"Metadata string byte size ({byte_size}) exceeds limit "
                     f"({self.MAX_METADATA_SIZE_BYTES})"
                 )
 
