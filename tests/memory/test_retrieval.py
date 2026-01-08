@@ -480,3 +480,23 @@ class TestMemoryDecayIntegration:
         rare_score = ranker.calculate_score("fact", rarely_accessed)
 
         assert frequent_score > rare_score
+
+    def test_zero_half_life_does_not_crash(self):
+        """Zero half-life should not cause ZeroDivisionError."""
+        from src.memory.retrieval.ranker import MemoryRanker
+
+        now = datetime.now(timezone.utc)
+        ranker = MemoryRanker(decay_half_life_days=0)
+
+        memory = Memory(
+            user_id="user-1",
+            content="Test memory",
+            memory_type=MemoryType.FACT,
+            confidence=0.9,
+            source="test",
+            last_accessed_at=now - timedelta(days=10),
+        )
+
+        # Should not raise ZeroDivisionError
+        score = ranker.calculate_recency(memory.last_accessed_at)
+        assert score == 0.0  # Returns 0.0 for invalid half-life

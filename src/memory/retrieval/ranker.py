@@ -129,6 +129,10 @@ class MemoryRanker:
             # Simple linear decay over 90 days
             return max(0.0, 1.0 - (age_days / 90))
 
+        # Guard against zero half-life (would cause ZeroDivisionError)
+        if self.decay_half_life_days <= 0:
+            return 0.0
+
         # Exponential decay: score = 0.5 ^ (age / half_life)
         decay_score = math.pow(0.5, age_days / self.decay_half_life_days)
 
