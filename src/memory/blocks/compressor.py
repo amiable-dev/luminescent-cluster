@@ -141,12 +141,13 @@ class HistoryCompressor:
             content = self._get_content(msg)
             role = self._get_role(msg)
 
-            # Extract first sentence or first 50 chars
-            first_sentence = content.split(".")[0] if content else ""
-            if len(first_sentence) > 50:
-                first_sentence = first_sentence[:50]
+            # Extract first sentence (improved handling)
+            # Avoid splitting on periods in URLs, abbreviations, numbers
+            first_part = self._extract_first_sentence(content)
+            if len(first_part) > 50:
+                first_part = first_part[:50]
 
-            points.append(f"{role}: {first_sentence}")
+            points.append(f"{role}: {first_part}")
 
         return "; ".join(points)
 
@@ -170,6 +171,35 @@ class HistoryCompressor:
         if isinstance(msg, dict):
             return msg.get("role", "unknown")
         return getattr(msg, "role", "unknown")
+
+    def _extract_first_sentence(self, text: str) -> str:
+        """
+        Extract first sentence from text with improved handling.
+
+        Avoids splitting on periods in:
+        - URLs (http://example.com)
+        - Abbreviations (Dr., Mr., etc.)
+        - Numbers (3.14)
+        """
+        if not text:
+            return ""
+
+        # Simple heuristic: find first period followed by space and capital
+        # or end of string
+        import re
+
+        # Pattern: period followed by whitespace and capital letter or end
+        match = re.search(r"\.\s+[A-Z]", text)
+        if match:
+            return text[: match.start() + 1]
+
+        # If no match, try simple split but avoid very short results
+        parts = text.split(".")
+        if parts and len(parts[0]) > 3:
+            return parts[0]
+
+        # Fallback: return first 100 chars
+        return text[:100] if len(text) > 100 else text
 
     def _truncate_to_tokens(self, text: str, max_tokens: int) -> str:
         """
