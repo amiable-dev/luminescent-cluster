@@ -57,6 +57,10 @@ class ProvenanceService:
     # Uses LRU eviction to prevent unbounded memory growth
     MAX_PROVENANCE_ENTRIES = 10000
 
+    # Maximum metadata size in bytes (Council Round 12 fix)
+    # Prevents DoS via oversized metadata payloads
+    MAX_METADATA_SIZE_BYTES = 10000
+
     def __init__(self) -> None:
         """Initialize the provenance service with bounded in-memory storage."""
         # Map of memory_id -> Provenance (LRU bounded)
@@ -79,11 +83,24 @@ class ProvenanceService:
             source_id: Unique identifier of the source
             source_type: Type of source ("memory", "adr", "conversation", etc.)
             confidence: Confidence score (0.0-1.0)
-            metadata: Optional additional metadata
+            metadata: Optional additional metadata (size-limited)
 
         Returns:
             New Provenance instance with created_at timestamp and metadata
+
+        Raises:
+            ValueError: If metadata exceeds MAX_METADATA_SIZE_BYTES
         """
+        # Validate metadata size (Council Round 12 fix - DoS prevention)
+        if metadata is not None:
+            import json
+            metadata_size = len(json.dumps(metadata, default=str))
+            if metadata_size > self.MAX_METADATA_SIZE_BYTES:
+                raise ValueError(
+                    f"Metadata size ({metadata_size} bytes) exceeds limit "
+                    f"({self.MAX_METADATA_SIZE_BYTES} bytes)"
+                )
+
         return Provenance(
             source_id=source_id,
             source_type=source_type,

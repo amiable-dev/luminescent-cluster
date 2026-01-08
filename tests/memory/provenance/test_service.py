@@ -93,6 +93,26 @@ class TestCreateProvenance:
         assert result.metadata["adr_id"] == "003"
         assert result.metadata["version"] == "4.4"
 
+    @pytest.mark.asyncio
+    async def test_create_provenance_rejects_oversized_metadata(self):
+        """create_provenance should reject metadata exceeding size limit.
+
+        Council Round 12: Prevents DoS via oversized metadata payloads.
+        """
+        from src.memory.provenance.service import ProvenanceService
+
+        service = ProvenanceService()
+        # Create metadata that exceeds the limit
+        oversized_metadata = {"data": "x" * 20000}
+
+        with pytest.raises(ValueError, match="Metadata size .* exceeds limit"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=oversized_metadata,
+            )
+
 
 class TestAttachProvenance:
     """TDD: Tests for attaching provenance to memories."""

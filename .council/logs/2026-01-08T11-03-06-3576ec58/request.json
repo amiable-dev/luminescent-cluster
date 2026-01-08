@@ -1,0 +1,11 @@
+{
+  "snapshot_id": "2ea5184",
+  "target_paths": [
+    "src/memory/blocks/compressor.py",
+    "src/memory/provenance/service.py"
+  ],
+  "rubric_focus": "security",
+  "confidence_threshold": 0.7,
+  "context_id": "8b9cb891-867e-4502-b71a-c12fe95bdf44",
+  "timestamp": "2026-01-08T11:03:06.509344"
+}
