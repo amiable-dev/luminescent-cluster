@@ -984,3 +984,171 @@ class TestStrictTypeSafety:
 
         assert result is not None
         assert result.metadata == metadata
+
+
+class TestScoreRangeValidation:
+    """TDD: Tests for score range validation.
+
+    Council Round 18: Identified lack of validation for float inputs
+    (confidence/scores).
+    """
+
+    @pytest.fixture
+    def service(self):
+        """Create a fresh ProvenanceService for each test."""
+        from src.memory.provenance.service import ProvenanceService
+
+        return ProvenanceService()
+
+    @pytest.mark.asyncio
+    async def test_confidence_below_zero_rejected(self, service):
+        """Confidence below 0.0 should be rejected."""
+        with pytest.raises(ValueError, match="confidence must be in range"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=-0.1,
+            )
+
+    @pytest.mark.asyncio
+    async def test_confidence_above_one_rejected(self, service):
+        """Confidence above 1.0 should be rejected."""
+        with pytest.raises(ValueError, match="confidence must be in range"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=1.5,
+            )
+
+    @pytest.mark.asyncio
+    async def test_confidence_non_numeric_rejected(self, service):
+        """Non-numeric confidence should be rejected."""
+        with pytest.raises(ValueError, match="confidence must be a number"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence="high",  # type: ignore
+            )
+
+    @pytest.mark.asyncio
+    async def test_confidence_boundary_values_accepted(self, service):
+        """Confidence at boundaries (0.0, 1.0) should be accepted."""
+        result_zero = await service.create_provenance(
+            source_id="mem-1", source_type="memory", confidence=0.0
+        )
+        result_one = await service.create_provenance(
+            source_id="mem-2", source_type="memory", confidence=1.0
+        )
+
+        assert result_zero.confidence == 0.0
+        assert result_one.confidence == 1.0
+
+    @pytest.mark.asyncio
+    async def test_retrieval_score_below_zero_rejected(self, service):
+        """Retrieval score below 0.0 should be rejected."""
+        with pytest.raises(ValueError, match="retrieval_score must be in range"):
+            await service.track_retrieval(
+                memory_id="mem-123",
+                retrieval_score=-0.5,
+                retrieved_by="user-1",
+            )
+
+    @pytest.mark.asyncio
+    async def test_retrieval_score_above_one_rejected(self, service):
+        """Retrieval score above 1.0 should be rejected."""
+        with pytest.raises(ValueError, match="retrieval_score must be in range"):
+            await service.track_retrieval(
+                memory_id="mem-123",
+                retrieval_score=2.0,
+                retrieved_by="user-1",
+            )
+
+    @pytest.mark.asyncio
+    async def test_retrieval_score_non_numeric_rejected(self, service):
+        """Non-numeric retrieval score should be rejected."""
+        with pytest.raises(ValueError, match="retrieval_score must be a number"):
+            await service.track_retrieval(
+                memory_id="mem-123",
+                retrieval_score="very high",  # type: ignore
+                retrieved_by="user-1",
+            )
+
+    @pytest.mark.asyncio
+    async def test_attach_rejects_invalid_confidence(self, service):
+        """attach_to_memory should reject invalid confidence values."""
+        from datetime import datetime, timezone
+        from src.memory.blocks.schemas import Provenance
+
+        invalid_prov = Provenance(
+            source_id="src-123",
+            source_type="memory",
+            confidence=5.0,  # Invalid - out of range
+            created_at=datetime.now(timezone.utc),
+            retrieval_score=None,
+            metadata=None,
+        )
+
+        with pytest.raises(ValueError, match="confidence must be in range"):
+            await service.attach_to_memory("mem-123", invalid_prov)
+
+
+class TestTOCTOUPrevention:
+    """TDD: Tests for TOCTOU vulnerability prevention via deep copying.
+
+    Council Round 18: Identified that mutable metadata stored by reference
+    allows post-validation mutation bypass.
+    """
+
+    @pytest.fixture
+    def service(self):
+        """Create a fresh ProvenanceService for each test."""
+        from src.memory.provenance.service import ProvenanceService
+
+        return ProvenanceService()
+
+    @pytest.mark.asyncio
+    async def test_create_provenance_deep_copies_metadata(self, service):
+        """create_provenance should deep copy metadata to prevent TOCTOU."""
+        original_metadata = {"nested": {"key": "original"}}
+
+        result = await service.create_provenance(
+            source_id="mem-123",
+            source_type="memory",
+            confidence=0.95,
+            metadata=original_metadata,
+        )
+
+        # Mutate the original after creation
+        original_metadata["nested"]["key"] = "mutated"
+        original_metadata["new_key"] = "new_value"
+
+        # Stored copy should be unaffected
+        assert result.metadata["nested"]["key"] == "original"
+        assert "new_key" not in result.metadata
+
+    @pytest.mark.asyncio
+    async def test_attach_to_memory_deep_copies_metadata(self, service):
+        """attach_to_memory should deep copy metadata to prevent TOCTOU."""
+        from datetime import datetime, timezone
+        from src.memory.blocks.schemas import Provenance
+
+        original_metadata = {"list": [1, 2, 3]}
+        prov = Provenance(
+            source_id="src-123",
+            source_type="memory",
+            confidence=0.95,
+            created_at=datetime.now(timezone.utc),
+            retrieval_score=None,
+            metadata=original_metadata,
+        )
+
+        await service.attach_to_memory("mem-123", prov)
+
+        # Mutate the original after attach
+        original_metadata["list"].append(4)
+        original_metadata["injected"] = "malicious"
+
+        # Stored copy should be unaffected
+        retrieved = await service.get_provenance("mem-123")
+        assert retrieved.metadata["list"] == [1, 2, 3]
+        assert "injected" not in retrieved.metadata

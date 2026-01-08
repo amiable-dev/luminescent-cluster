@@ -235,20 +235,33 @@ class ProvenanceService:
         Raises:
             ValueError: If string identifiers exceed MAX_STRING_ID_LENGTH
             ValueError: If metadata exceeds bounds (key count, value sizes, total size)
+            ValueError: If confidence is not a float in range [0.0, 1.0]
         """
+        # Validate confidence score (Council Round 18 fix)
+        if not isinstance(confidence, (int, float)):
+            raise ValueError(
+                f"confidence must be a number, got {type(confidence).__name__}"
+            )
+        if not 0.0 <= confidence <= 1.0:
+            raise ValueError(
+                f"confidence must be in range [0.0, 1.0], got {confidence}"
+            )
+
         # Validate string identifier lengths (Council Round 13 fix - DoS prevention)
         self._validate_string_id(source_id, "source_id")
         self._validate_string_id(source_type, "source_type")
 
-        # Validate metadata bounds BEFORE serialization (Council Round 13 fix)
-        # This prevents DoS by catching oversized payloads before json.dumps
+        # Validate and deep copy metadata (Council Round 18 fix - TOCTOU prevention)
+        # Deep copy prevents callers from mutating metadata after validation
+        import copy
+        import json
+        safe_metadata: Optional[dict[str, Any]] = None
         if metadata is not None:
             self._validate_metadata_bounds(metadata)
 
             # Now safe to serialize for total size check (Council Round 12 fix)
             # Note: After recursive validation, all values are JSON-safe primitives
             # so we don't need default=str (which was a DoS vector via __str__)
-            import json
             metadata_size = len(json.dumps(metadata))
             if metadata_size > self.MAX_METADATA_SIZE_BYTES:
                 raise ValueError(
@@ -256,13 +269,16 @@ class ProvenanceService:
                     f"({self.MAX_METADATA_SIZE_BYTES} bytes)"
                 )
 
+            # Deep copy to prevent TOCTOU attacks (Council Round 18 fix)
+            safe_metadata = copy.deepcopy(metadata)
+
         return Provenance(
             source_id=source_id,
             source_type=source_type,
-            confidence=confidence,
+            confidence=float(confidence),
             created_at=datetime.now(timezone.utc),
             retrieval_score=None,
-            metadata=metadata,
+            metadata=safe_metadata,
         )
 
     async def attach_to_memory(
@@ -286,7 +302,11 @@ class ProvenanceService:
         Raises:
             ValueError: If memory_id exceeds MAX_STRING_ID_LENGTH
             ValueError: If provenance fields exceed validation limits
+            ValueError: If confidence is not in range [0.0, 1.0]
         """
+        import copy
+        import json
+
         # Validate memory_id length (Council Round 13 fix)
         self._validate_string_id(memory_id, "memory_id")
 
@@ -294,12 +314,24 @@ class ProvenanceService:
         # Prevents bypass of DoS protections via directly-constructed Provenance
         self._validate_string_id(provenance.source_id, "provenance.source_id")
         self._validate_string_id(provenance.source_type, "provenance.source_type")
+
+        # Validate confidence range (Council Round 18 fix)
+        if not isinstance(provenance.confidence, (int, float)):
+            raise ValueError(
+                f"provenance.confidence must be a number, got {type(provenance.confidence).__name__}"
+            )
+        if not 0.0 <= provenance.confidence <= 1.0:
+            raise ValueError(
+                f"provenance.confidence must be in range [0.0, 1.0], got {provenance.confidence}"
+            )
+
+        # Validate and deep copy metadata (Council Round 18 fix - TOCTOU prevention)
+        safe_metadata: Optional[dict[str, Any]] = None
         if provenance.metadata is not None:
             self._validate_metadata_bounds(provenance.metadata)
 
             # Check total serialized size (Council Round 16 fix)
             # Ensures parity with create_provenance's size check
-            import json
             metadata_size = len(json.dumps(provenance.metadata))
             if metadata_size > self.MAX_METADATA_SIZE_BYTES:
                 raise ValueError(
@@ -307,12 +339,18 @@ class ProvenanceService:
                     f"({self.MAX_METADATA_SIZE_BYTES} bytes)"
                 )
 
+            # Deep copy to prevent TOCTOU attacks (Council Round 18 fix)
+            safe_metadata = copy.deepcopy(provenance.metadata)
+
+        # Create a safe copy of the Provenance with deep-copied metadata
+        safe_provenance = replace(provenance, metadata=safe_metadata)
+
         # Remove if exists (will re-add at end for LRU ordering)
         if memory_id in self._provenance_store:
             del self._provenance_store[memory_id]
 
         # Add at end (most recently used)
-        self._provenance_store[memory_id] = provenance
+        self._provenance_store[memory_id] = safe_provenance
 
         # Enforce LRU bound (Council Round 10 fix)
         while len(self._provenance_store) > self.MAX_PROVENANCE_ENTRIES:
@@ -371,7 +409,18 @@ class ProvenanceService:
 
         Raises:
             ValueError: If memory_id or retrieved_by exceed MAX_STRING_ID_LENGTH
+            ValueError: If retrieval_score is not in range [0.0, 1.0]
         """
+        # Validate retrieval_score range (Council Round 18 fix)
+        if not isinstance(retrieval_score, (int, float)):
+            raise ValueError(
+                f"retrieval_score must be a number, got {type(retrieval_score).__name__}"
+            )
+        if not 0.0 <= retrieval_score <= 1.0:
+            raise ValueError(
+                f"retrieval_score must be in range [0.0, 1.0], got {retrieval_score}"
+            )
+
         # Validate string identifier lengths (Council Round 13 fix)
         self._validate_string_id(memory_id, "memory_id")
         self._validate_string_id(retrieved_by, "retrieved_by")
