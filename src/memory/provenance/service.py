@@ -229,8 +229,10 @@ class ProvenanceService:
             self._validate_metadata_bounds(metadata)
 
             # Now safe to serialize for total size check (Council Round 12 fix)
+            # Note: After recursive validation, all values are JSON-safe primitives
+            # so we don't need default=str (which was a DoS vector via __str__)
             import json
-            metadata_size = len(json.dumps(metadata, default=str))
+            metadata_size = len(json.dumps(metadata))
             if metadata_size > self.MAX_METADATA_SIZE_BYTES:
                 raise ValueError(
                     f"Metadata size ({metadata_size} bytes) exceeds limit "
@@ -257,15 +259,26 @@ class ProvenanceService:
         Uses LRU eviction when MAX_PROVENANCE_ENTRIES is exceeded.
         OrderedDict provides O(1) move_to_end for LRU tracking.
 
+        Security Note (Council Round 15): Validates Provenance object fields
+        to prevent bypass of DoS protections via directly-constructed objects.
+
         Args:
             memory_id: ID of the memory to attach provenance to
             provenance: Provenance record to attach
 
         Raises:
             ValueError: If memory_id exceeds MAX_STRING_ID_LENGTH
+            ValueError: If provenance fields exceed validation limits
         """
         # Validate memory_id length (Council Round 13 fix)
         self._validate_string_id(memory_id, "memory_id")
+
+        # Validate provenance fields (Council Round 15 fix)
+        # Prevents bypass of DoS protections via directly-constructed Provenance
+        self._validate_string_id(provenance.source_id, "provenance.source_id")
+        self._validate_string_id(provenance.source_type, "provenance.source_type")
+        if provenance.metadata is not None:
+            self._validate_metadata_bounds(provenance.metadata)
 
         # Remove if exists (will re-add at end for LRU ordering)
         if memory_id in self._provenance_store:

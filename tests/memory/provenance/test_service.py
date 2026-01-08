@@ -733,3 +733,119 @@ class TestNestedMetadataValidation:
                 confidence=0.95,
                 metadata=metadata,
             )
+
+
+class TestProvenanceBypassPrevention:
+    """TDD: Tests for preventing validation bypass via direct object construction.
+
+    Council Round 15: Identified that attach_to_memory accepts Provenance objects
+    without validation, allowing bypass of DoS protections.
+    """
+
+    @pytest.fixture
+    def service(self):
+        """Create a fresh ProvenanceService for each test."""
+        from src.memory.provenance.service import ProvenanceService
+
+        return ProvenanceService()
+
+    @pytest.mark.asyncio
+    async def test_attach_validates_provenance_source_id(self, service):
+        """attach_to_memory should validate provenance.source_id length."""
+        from datetime import datetime, timezone
+        from src.memory.blocks.schemas import Provenance
+
+        # Directly construct Provenance with oversized source_id
+        malicious_prov = Provenance(
+            source_id="x" * 500,
+            source_type="memory",
+            confidence=0.95,
+            created_at=datetime.now(timezone.utc),
+            retrieval_score=None,
+            metadata=None,
+        )
+
+        with pytest.raises(ValueError, match="provenance.source_id length .* exceeds limit"):
+            await service.attach_to_memory("mem-123", malicious_prov)
+
+    @pytest.mark.asyncio
+    async def test_attach_validates_provenance_source_type(self, service):
+        """attach_to_memory should validate provenance.source_type length."""
+        from datetime import datetime, timezone
+        from src.memory.blocks.schemas import Provenance
+
+        malicious_prov = Provenance(
+            source_id="src-123",
+            source_type="y" * 500,
+            confidence=0.95,
+            created_at=datetime.now(timezone.utc),
+            retrieval_score=None,
+            metadata=None,
+        )
+
+        with pytest.raises(ValueError, match="provenance.source_type length .* exceeds limit"):
+            await service.attach_to_memory("mem-123", malicious_prov)
+
+    @pytest.mark.asyncio
+    async def test_attach_validates_provenance_metadata_keys(self, service):
+        """attach_to_memory should validate provenance.metadata key count."""
+        from datetime import datetime, timezone
+        from src.memory.blocks.schemas import Provenance
+
+        # Bypass create_provenance by directly constructing Provenance
+        malicious_metadata = {f"key_{i}": f"value_{i}" for i in range(150)}
+        malicious_prov = Provenance(
+            source_id="src-123",
+            source_type="memory",
+            confidence=0.95,
+            created_at=datetime.now(timezone.utc),
+            retrieval_score=None,
+            metadata=malicious_metadata,
+        )
+
+        with pytest.raises(ValueError, match="Metadata key count .* exceeds limit"):
+            await service.attach_to_memory("mem-123", malicious_prov)
+
+    @pytest.mark.asyncio
+    async def test_attach_validates_provenance_metadata_depth(self, service):
+        """attach_to_memory should validate provenance.metadata nesting depth."""
+        from datetime import datetime, timezone
+        from src.memory.blocks.schemas import Provenance
+
+        # Create deeply nested structure
+        nested = {"level": "bottom"}
+        for i in range(10):
+            nested = {"level": nested}
+
+        malicious_prov = Provenance(
+            source_id="src-123",
+            source_type="memory",
+            confidence=0.95,
+            created_at=datetime.now(timezone.utc),
+            retrieval_score=None,
+            metadata=nested,
+        )
+
+        with pytest.raises(ValueError, match="Metadata nesting depth .* exceeds limit"):
+            await service.attach_to_memory("mem-123", malicious_prov)
+
+    @pytest.mark.asyncio
+    async def test_attach_accepts_valid_provenance(self, service):
+        """attach_to_memory should accept valid Provenance objects."""
+        from datetime import datetime, timezone
+        from src.memory.blocks.schemas import Provenance
+
+        valid_prov = Provenance(
+            source_id="src-123",
+            source_type="memory",
+            confidence=0.95,
+            created_at=datetime.now(timezone.utc),
+            retrieval_score=None,
+            metadata={"valid": "metadata"},
+        )
+
+        await service.attach_to_memory("mem-123", valid_prov)
+
+        retrieved = await service.get_provenance("mem-123")
+        assert retrieved is not None
+        assert retrieved.source_id == "src-123"
