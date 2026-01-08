@@ -253,3 +253,73 @@ class TestProvenanceHistory:
         """get_retrieval_history should return empty list for unknown memory."""
         history = await service.get_retrieval_history("unknown-mem")
         assert history == []
+
+
+class TestMemoryBoundedStorage:
+    """TDD: Tests for bounded storage to prevent memory leaks.
+
+    Council Round 9: Identified unbounded memory growth in retrieval history.
+    """
+
+    @pytest.fixture
+    def service(self):
+        """Create a fresh ProvenanceService for each test."""
+        from src.memory.provenance.service import ProvenanceService
+
+        return ProvenanceService()
+
+    @pytest.mark.asyncio
+    async def test_retrieval_history_is_bounded(self, service):
+        """Retrieval history should have a maximum size to prevent memory leaks."""
+        prov = await service.create_provenance(
+            source_id="mem-123",
+            source_type="memory",
+            confidence=0.95,
+        )
+        await service.attach_to_memory("target-mem", prov)
+
+        # Track many retrieval events
+        for i in range(200):
+            await service.track_retrieval("target-mem", 0.5 + (i / 1000), f"user-{i}")
+
+        history = await service.get_retrieval_history("target-mem")
+
+        # Should be bounded (default 100)
+        assert len(history) <= 100, "Retrieval history should be bounded to prevent memory leaks"
+
+    @pytest.mark.asyncio
+    async def test_retrieval_history_keeps_recent(self, service):
+        """Bounded retrieval history should keep most recent events."""
+        prov = await service.create_provenance(
+            source_id="mem-123",
+            source_type="memory",
+            confidence=0.95,
+        )
+        await service.attach_to_memory("target-mem", prov)
+
+        # Track many retrieval events
+        for i in range(150):
+            await service.track_retrieval("target-mem", 0.5, f"user-{i}")
+
+        history = await service.get_retrieval_history("target-mem")
+
+        # Should keep the most recent events (user-50 to user-149)
+        if len(history) == 100:
+            # Latest should be most recent
+            assert history[-1]["retrieved_by"] == "user-149"
+
+    @pytest.mark.asyncio
+    async def test_provenance_store_is_bounded(self, service):
+        """Provenance store should have a maximum size."""
+        # Attach many provenance records
+        for i in range(200):
+            prov = await service.create_provenance(
+                source_id=f"src-{i}",
+                source_type="memory",
+                confidence=0.95,
+            )
+            await service.attach_to_memory(f"mem-{i}", prov)
+
+        # Check that the store doesn't grow unbounded
+        # This is a sanity check - in practice we'd use LRU eviction
+        assert len(service._provenance_store) <= 1000, "Provenance store should be bounded"

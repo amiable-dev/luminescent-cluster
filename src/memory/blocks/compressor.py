@@ -49,8 +49,12 @@ class HistoryCompressor:
         """
         Count tokens in text.
 
-        Uses a simple word-based approximation. For production,
+        Uses a hybrid word/character approximation. For production,
         use tiktoken with the actual model's tokenizer.
+
+        Security Note (Council Round 9): Word-only counting allows DoS
+        via strings without spaces. We use max(word_count, char_count/4)
+        to ensure accurate counting for all inputs.
 
         Args:
             text: Text to count tokens for
@@ -61,9 +65,16 @@ class HistoryCompressor:
         if not text:
             return 0
 
-        # Simple approximation: ~1.3 tokens per word on average
+        # Word-based approximation: ~1.3 tokens per word
         words = text.split()
-        return int(len(words) * 1.3)
+        word_based = int(len(words) * 1.3)
+
+        # Character-based approximation: ~4 chars per token
+        # This catches strings without spaces (DoS vector)
+        char_based = len(text) // 4
+
+        # Use the maximum to prevent budget bypass attacks
+        return max(word_based, char_based)
 
     def compress(
         self,

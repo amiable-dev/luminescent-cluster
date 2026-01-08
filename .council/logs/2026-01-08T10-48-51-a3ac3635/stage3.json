@@ -1,0 +1,41 @@
+{
+  "synthesis": {
+    "model": "google/gemini-3-pro-preview",
+    "response": "{\n  \"verdict\": \"rejected\",\n  \"confidence\": 1.0,\n  \"rationale\": \"The code contains critical security vulnerabilities identified by the council's review. Specifically, the naive token counting implementation (`text.split()`) creates a denial-of-service vector where large strings without spaces bypass budget limits. Additionally, the `ProvenanceService` introduces an unbounded memory leak, and critical source files (`assembler.py`) were truncated, preventing a complete security audit.\"\n}"
+  },
+  "aggregate_rankings": [
+    {
+      "model": "google/gemini-3-pro-preview",
+      "borda_score": 1.0,
+      "average_position": 1.0,
+      "average_score": 0.9,
+      "vote_count": 1,
+      "self_votes_excluded": true,
+      "rank": 1
+    },
+    {
+      "model": "anthropic/claude-opus-4.5",
+      "borda_score": 0.5,
+      "average_position": 2.0,
+      "average_score": 0.7,
+      "vote_count": 1,
+      "self_votes_excluded": true,
+      "rank": 2
+    },
+    {
+      "model": "x-ai/grok-4",
+      "borda_score": 0.0,
+      "average_position": 3.0,
+      "average_score": 0.35,
+      "vote_count": 2,
+      "self_votes_excluded": true,
+      "rank": 3
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 14446,
+    "completion_tokens": 1062,
+    "total_tokens": 15508
+  },
+  "timestamp": "2026-01-08T10:50:50.152429"
+}

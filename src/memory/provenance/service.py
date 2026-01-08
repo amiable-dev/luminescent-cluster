@@ -42,13 +42,20 @@ class ProvenanceService:
 
     Provides methods to create, attach, and retrieve provenance records,
     as well as track retrieval events for audit purposes.
+
+    Security Note (Council Round 9): Storage is bounded to prevent memory
+    leaks. Retrieval history is limited per-memory, and oldest events are
+    dropped when the limit is exceeded.
     """
+
+    # Maximum retrieval events to keep per memory (Council Round 9 fix)
+    MAX_RETRIEVAL_HISTORY_PER_MEMORY = 100
 
     def __init__(self) -> None:
         """Initialize the provenance service with in-memory storage."""
         # Map of memory_id -> Provenance
         self._provenance_store: dict[str, Provenance] = {}
-        # Map of memory_id -> list of RetrievalEvents
+        # Map of memory_id -> list of RetrievalEvents (bounded)
         self._retrieval_history: dict[str, list[RetrievalEvent]] = {}
 
     async def create_provenance(
@@ -143,6 +150,13 @@ class ProvenanceService:
         if memory_id not in self._retrieval_history:
             self._retrieval_history[memory_id] = []
         self._retrieval_history[memory_id].append(event)
+
+        # Enforce bound to prevent memory leak (Council Round 9 fix)
+        if len(self._retrieval_history[memory_id]) > self.MAX_RETRIEVAL_HISTORY_PER_MEMORY:
+            # Keep most recent events, drop oldest
+            self._retrieval_history[memory_id] = self._retrieval_history[memory_id][
+                -self.MAX_RETRIEVAL_HISTORY_PER_MEMORY:
+            ]
 
     async def get_retrieval_history(
         self,

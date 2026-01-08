@@ -232,6 +232,51 @@ class TestDictMessageHandling:
         assert "user:" in result or "First question" in result
 
 
+class TestTokenCountingDoSProtection:
+    """TDD: Tests for DoS protection in token counting.
+
+    Council Round 9: Identified that text.split() allows strings without
+    spaces to bypass budget limits.
+    """
+
+    @pytest.fixture
+    def compressor(self):
+        """Create a HistoryCompressor for tests."""
+        from src.memory.blocks.compressor import HistoryCompressor
+
+        return HistoryCompressor(max_tokens=100)
+
+    def test_count_tokens_string_without_spaces(self, compressor):
+        """Token count should handle strings without spaces (DoS vector)."""
+        # This could bypass word-based counting
+        no_spaces = "a" * 10000
+
+        result = compressor.count_tokens(no_spaces)
+
+        # Should return a reasonable token count based on characters
+        # ~4 chars per token is a rough approximation
+        assert result > 0
+        assert result >= 100  # Should recognize this is a large string
+
+    def test_count_tokens_long_url(self, compressor):
+        """Token count should handle long URLs properly."""
+        long_url = "https://example.com/" + "a" * 1000
+
+        result = compressor.count_tokens(long_url)
+
+        # Should be counted properly, not as 1 word
+        assert result > 50
+
+    def test_count_tokens_mixed_content(self, compressor):
+        """Token count should handle mixed content with long tokens."""
+        mixed = "Hello " + "x" * 500 + " World"
+
+        result = compressor.count_tokens(mixed)
+
+        # Should count the long token properly
+        assert result > 100
+
+
 class TestWhitespacePreservation:
     """TDD: Tests for whitespace preservation during truncation."""
 

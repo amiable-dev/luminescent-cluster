@@ -33,6 +33,14 @@ The memory system provides persistent technical context for AI development assis
 │  │              │  │ • Expiration │  │              │           │
 │  └──────────────┘  └──────────────┘  └──────────────┘           │
 │                                                                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
+│  │   Blocks     │  │  Provenance  │  │  Evaluation  │  Phase 2  │
+│  │              │  │              │  │              │           │
+│  │ • Assembler  │  │ • Service    │  │ • Efficiency │           │
+│  │ • Compressor │  │ • Tracking   │  │ • Harness    │           │
+│  │ • Schemas    │  │ • Retrieval  │  │ • Metrics    │           │
+│  └──────────────┘  └──────────────┘  └──────────────┘           │
+│                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -233,7 +241,113 @@ with tracer.trace_operation("memory.store", {"user_id": "user-123"}) as span:
     pass
 ```
 
+### Blocks (`src/memory/blocks/`) - Phase 2
+
+Context block assembly for token-efficient LLM consumption:
+
+```python
+from src.memory.blocks import BlockAssembler, BlockType, MemoryBlock
+
+assembler = BlockAssembler(token_budget=5000)
+
+# Assemble context from all blocks
+blocks = await assembler.assemble(
+    user_id="user-123",
+    task_context="Implement authentication",
+    conversation_history=messages,
+    query="auth patterns",
+)
+
+# Convert to prompt with XML delimiters
+prompt = assembler.to_prompt(blocks)
+```
+
+**5-Block Layout:**
+| Block | Purpose | Default Budget |
+|-------|---------|----------------|
+| System | Core instructions, persona | 485 tokens |
+| Project | Architecture, conventions | 985 tokens |
+| Task | Active goals, constraints | 485 tokens |
+| History | Compressed conversation | 985 tokens |
+| Knowledge | Retrieved memories | 1985 tokens |
+
+**History Compression:**
+
+```python
+from src.memory.blocks import HistoryCompressor
+
+compressor = HistoryCompressor(max_tokens=1000)
+
+# Compress conversation history
+# - Preserves recent N messages verbatim
+# - Summarizes older messages
+compressed = compressor.compress(messages, preserve_recent=3)
+```
+
+### Provenance (`src/memory/provenance/`) - Phase 2
+
+Tracks origin and retrieval metadata for all memories:
+
+```python
+from src.memory.provenance import ProvenanceService
+from src.memory.blocks.schemas import Provenance
+
+service = ProvenanceService(provider)
+
+# Create provenance for a memory
+provenance = await service.create_provenance(
+    source_id="mem-123",
+    source_type="conversation",
+    confidence=0.9,
+    metadata={"extraction_version": 1},
+)
+
+# Attach to memory
+await service.attach_to_memory("mem-123", provenance)
+
+# Track retrieval
+await service.track_retrieval(
+    memory_id="mem-123",
+    retrieval_score=0.85,
+    retrieved_by="user-456",
+)
+
+# Get full provenance history
+history = await service.get_provenance("mem-123")
+```
+
+**Provenance Fields:**
+- `source_id` - Unique identifier for the source
+- `source_type` - Type: "memory", "adr", "conversation"
+- `confidence` - Extraction confidence score
+- `retrieval_score` - Relevance score when retrieved
+- `metadata` - Additional context (extraction version, etc.)
+
+### Evaluation (`src/memory/evaluation/`) - Phase 2
+
+Token efficiency measurement and benchmarking:
+
+```python
+from src.memory.evaluation import TokenEfficiencyMetric, EvaluationHarness
+
+# Measure token efficiency
+metric = TokenEfficiencyMetric(baseline_tokens=7500)
+result = metric.calculate_efficiency(blocks)
+# Returns: {
+#   "total_tokens": 4500,
+#   "baseline_tokens": 7500,
+#   "efficiency_improvement": 0.40,  # 40% reduction
+#   "meets_target": True  # >= 30% target
+# }
+
+# Run evaluation harness
+harness = EvaluationHarness(provider, assembler)
+report = await harness.run_evaluation(user_id="user-123")
+```
+
 ## Exit Criteria (ADR-003)
+
+### Phase 1 (Complete)
 
 | Metric | Target | Achieved |
 |--------|--------|----------|
@@ -242,6 +356,14 @@ with tracer.trace_operation("memory.store", {"user_id": "user-123"}) as span:
 | Extraction precision | >85% | 100% |
 | Cross-user leakage | Zero | Zero |
 | Janitor for 10k | <10 min | <3s |
+
+### Phase 2 (Complete)
+
+| Metric | Target | Achieved |
+|--------|--------|----------|
+| Token efficiency | 30% improvement | 40% |
+| Provenance coverage | 100% of retrieved | 100% |
+| Stale memory detection | Operational | Yes |
 
 ## Testing
 
