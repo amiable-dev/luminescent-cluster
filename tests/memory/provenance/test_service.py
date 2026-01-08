@@ -207,7 +207,11 @@ class TestTrackRetrieval:
 
     @pytest.mark.asyncio
     async def test_track_retrieval_without_existing_provenance(self, service):
-        """track_retrieval should handle missing provenance gracefully."""
+        """track_retrieval should silently no-op for unknown memory IDs.
+
+        Council Round 11: Prevents orphan entries in _retrieval_history
+        that would cause unbounded memory growth.
+        """
         # Should not raise, just no-op
         await service.track_retrieval(
             memory_id="unknown-mem",
@@ -215,8 +219,13 @@ class TestTrackRetrieval:
             retrieved_by="user-456",
         )
 
+        # Provenance should still not exist
         result = await service.get_provenance("unknown-mem")
         assert result is None
+
+        # Retrieval history should NOT have an orphan entry
+        history = await service.get_retrieval_history("unknown-mem")
+        assert history == [], "Should not create orphan retrieval history entries"
 
 
 class TestProvenanceHistory:

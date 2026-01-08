@@ -56,6 +56,10 @@ class ProvenanceService:
     # Uses LRU eviction to prevent unbounded memory growth
     MAX_PROVENANCE_ENTRIES = 10000
 
+    # Maximum total retrieval history entries across all memories (Council Round 11 fix)
+    # Prevents orphan entries from causing unbounded growth
+    MAX_TOTAL_RETRIEVAL_HISTORY = 100000
+
     def __init__(self) -> None:
         """Initialize the provenance service with bounded in-memory storage."""
         # Map of memory_id -> Provenance (LRU bounded)
@@ -159,17 +163,30 @@ class ProvenanceService:
         Updates the provenance with the retrieval score and records
         the retrieval event in history.
 
+        Security Note (Council Round 11): Only tracks retrieval for memory IDs
+        that have provenance attached. This prevents orphan entries in
+        _retrieval_history from causing unbounded memory growth.
+
         Args:
             memory_id: ID of the retrieved memory
             retrieval_score: Relevance score from retrieval
             retrieved_by: User or system that performed retrieval
         """
-        # Update provenance with retrieval score if it exists
-        if memory_id in self._provenance_store:
-            existing = self._provenance_store[memory_id]
-            # Use dataclass replace to create updated copy
-            updated = replace(existing, retrieval_score=retrieval_score)
-            self._provenance_store[memory_id] = updated
+        # Only track retrieval for known memory IDs (Council Round 11 fix)
+        # This prevents orphan entries in _retrieval_history
+        if memory_id not in self._provenance_store:
+            return
+
+        # Update provenance with retrieval score
+        existing = self._provenance_store[memory_id]
+        # Use dataclass replace to create updated copy
+        updated = replace(existing, retrieval_score=retrieval_score)
+        self._provenance_store[memory_id] = updated
+
+        # Update access order for LRU (accessing = recently used)
+        if memory_id in self._provenance_access_order:
+            self._provenance_access_order.remove(memory_id)
+            self._provenance_access_order.append(memory_id)
 
         # Record retrieval event in history
         event = RetrievalEvent(
@@ -183,7 +200,7 @@ class ProvenanceService:
             self._retrieval_history[memory_id] = []
         self._retrieval_history[memory_id].append(event)
 
-        # Enforce bound to prevent memory leak (Council Round 9 fix)
+        # Enforce per-memory bound (Council Round 9 fix)
         if len(self._retrieval_history[memory_id]) > self.MAX_RETRIEVAL_HISTORY_PER_MEMORY:
             # Keep most recent events, drop oldest
             self._retrieval_history[memory_id] = self._retrieval_history[memory_id][
