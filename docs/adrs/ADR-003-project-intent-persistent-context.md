@@ -4,7 +4,7 @@
 **Date**: 2025-12-22
 **Decision Makers**: Development Team
 **Owners**: @christopherjoseph
-**Version**: 4.2 (Cross-ADR Synchronized)
+**Version**: 4.6 (Security Hardening)
 
 ## Decision Summary
 
@@ -1070,7 +1070,7 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 | **Phase 4** | Hindsight Integration | 📝 Not Started | Conditional on Phase 3 |
 | Phase 4 | MaaS Architecture | 📝 Not Started | Multi-agent support |
 
-**Test Summary**: 436 tests passing (as of 2026-01-08)
+**Test Summary**: 490 tests passing (as of 2026-01-08)
 
 **Legend**: ✅ Complete | 🔄 Partial | 📝 Not Started | ❌ Blocked
 
@@ -1288,3 +1288,4 @@ The following questions have been investigated and resolved:
 | 4.3 | 2026-01-07 | **Implementation Verification**: Council reviewed Phase 0-1d implementation across 3 rounds. Fixed critical bugs in EvaluationHarness (metrics calculation) and Janitor (persistence, error handling). Added dry-run mode and soft-delete to janitor. Updated test count to 330. Added Implementation Verification section with Council transcripts. Phase 2+ remains NOT STARTED. |
 | 4.4 | 2026-01-07 | **ADR-005 Compliance Fix**: Exported `MemoryProvider`, `ResponseFilter`, `MEMORY_PROVIDER_VERSION` from `src/extensions/__init__.py`. Council Round 4: No blocking issues, 10.0/10 accuracy. Fixed #117, unblocked #114. Test count: 1008 total (336 memory-specific). |
 | 4.5 | 2026-01-08 | **Phase 2 Complete**: Implemented Memory Blocks Architecture with 5-block layout (System, Project, Task, History, Knowledge). Added provenance tracking on all retrievals, line-preserving truncation, XML-safe delimiters. Met all exit criteria: 40% token efficiency (>30% target), provenance on all items, stale detection operational. Test count: 436 memory tests. Council verified across 8 rounds. |
+| 4.6 | 2026-01-08 | **Security Hardening (Council Rounds 13-19)**: Comprehensive DoS prevention in ProvenanceService. Added: bounded LRU storage, string identifier length limits, metadata bounds validation, recursive nested structure validation with early termination, strict JSON type safety, cycle detection, UTF-8 byte size validation, TOCTOU prevention via deep copy, score range validation (0.0-1.0). Test count: 490 memory tests (64 provenance-specific security tests). |
