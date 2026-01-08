@@ -129,41 +129,44 @@ class ProvenanceService:
                 f"({self.MAX_METADATA_KEYS})"
             )
 
-        # Recursively validate all elements (Council Round 14 fix)
-        element_count = self._count_and_validate_elements(metadata, depth=0)
-        if element_count > self.MAX_METADATA_ELEMENTS:
-            raise ValueError(
-                f"Metadata total element count ({element_count}) exceeds limit "
-                f"({self.MAX_METADATA_ELEMENTS})"
-            )
+        # Recursively validate all elements with early termination (Council Round 17 fix)
+        # Pass a mutable counter to enable immediate termination when limit exceeded
+        counter = [0]  # Use list for mutability in nested calls
+        self._count_and_validate_elements(metadata, depth=0, counter=counter)
 
     def _count_and_validate_elements(
-        self, obj: Any, depth: int
-    ) -> int:
+        self, obj: Any, depth: int, counter: list[int]
+    ) -> None:
         """
-        Recursively count and validate elements in metadata (Council Round 14 fix).
+        Recursively count and validate elements in metadata (Council Round 14/17 fix).
 
-        Prevents DoS via deeply nested or wide structures that would cause
-        json.dumps to consume excessive memory/CPU before size check.
+        Prevents DoS via deeply nested or wide structures. Council Round 17 fix:
+        Uses early termination - checks bounds during traversal, not after,
+        to prevent CPU exhaustion from large structures.
 
         Args:
             obj: Object to validate (dict, list, or primitive)
             depth: Current nesting depth
-
-        Returns:
-            Total element count
+            counter: Mutable counter [count] for tracking across recursive calls
 
         Raises:
-            ValueError: If depth exceeds MAX_METADATA_DEPTH or element too large
+            ValueError: If depth/count exceeds limits or element invalid
         """
-        # Check depth limit
+        # Check depth limit immediately
         if depth > self.MAX_METADATA_DEPTH:
             raise ValueError(
                 f"Metadata nesting depth ({depth}) exceeds limit "
                 f"({self.MAX_METADATA_DEPTH})"
             )
 
-        element_count = 1  # Count this element
+        # Increment and check element count immediately (Council Round 17 fix)
+        # This enables early termination before full traversal
+        counter[0] += 1
+        if counter[0] > self.MAX_METADATA_ELEMENTS:
+            raise ValueError(
+                f"Metadata total element count exceeds limit "
+                f"({self.MAX_METADATA_ELEMENTS})"
+            )
 
         if isinstance(obj, dict):
             for key, value in obj.items():
@@ -179,12 +182,12 @@ class ProvenanceService:
                         f"Metadata key length ({len(key)}) exceeds limit "
                         f"({self.MAX_STRING_ID_LENGTH})"
                     )
-                # Recursively count nested elements
-                element_count += self._count_and_validate_elements(value, depth + 1)
+                # Recursively validate nested elements (passes counter for early termination)
+                self._count_and_validate_elements(value, depth + 1, counter)
 
         elif isinstance(obj, (list, tuple)):
             for item in obj:
-                element_count += self._count_and_validate_elements(item, depth + 1)
+                self._count_and_validate_elements(item, depth + 1, counter)
 
         elif isinstance(obj, str):
             # Check string length
@@ -209,8 +212,6 @@ class ProvenanceService:
                 f"Metadata contains unsupported type: {type(obj).__name__}. "
                 "Only dict, list, tuple, str, int, float, bool, None are allowed."
             )
-
-        return element_count
 
     async def create_provenance(
         self,

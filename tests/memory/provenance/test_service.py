@@ -626,7 +626,7 @@ class TestNestedMetadataValidation:
         wide_list = list(range(600))  # 600 elements
         metadata = {"data": wide_list}
 
-        with pytest.raises(ValueError, match="Metadata total element count .* exceeds limit"):
+        with pytest.raises(ValueError, match="Metadata total element count exceeds limit"):
             await service.create_provenance(
                 source_id="mem-123",
                 source_type="memory",
