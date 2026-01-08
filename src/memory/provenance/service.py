@@ -68,7 +68,7 @@ class ProvenanceService:
             metadata: Optional additional metadata
 
         Returns:
-            New Provenance instance with created_at timestamp
+            New Provenance instance with created_at timestamp and metadata
         """
         return Provenance(
             source_id=source_id,
@@ -76,6 +76,7 @@ class ProvenanceService:
             confidence=confidence,
             created_at=datetime.now(timezone.utc),
             retrieval_score=None,
+            metadata=metadata,
         )
 
     async def attach_to_memory(

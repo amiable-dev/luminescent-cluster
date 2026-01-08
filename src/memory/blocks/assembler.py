@@ -337,41 +337,53 @@ class BlockAssembler:
         Truncate content while preserving line structure and formatting.
 
         Truncates at line boundaries when possible to avoid breaking
-        code blocks, lists, or structured text.
+        code blocks, lists, or structured text. Respects budget strictly.
 
         Args:
             content: Content to truncate
-            max_tokens: Maximum token budget
+            max_tokens: Maximum token budget (strictly enforced)
 
         Returns:
-            Truncated content with formatting preserved
+            Truncated content within budget
         """
         if not content:
+            return ""
+
+        # Reserve tokens for potential truncation marker
+        truncation_marker = "..."
+        marker_tokens = self._count_tokens(truncation_marker)
+        effective_budget = max_tokens - marker_tokens
+
+        if effective_budget <= 0:
             return ""
 
         # Try line-by-line truncation first
         lines = content.split("\n")
         result_lines = []
         current_tokens = 0
+        was_truncated = False
 
         for line in lines:
             line_tokens = self._count_tokens(line + "\n")
-            if current_tokens + line_tokens <= max_tokens:
+            if current_tokens + line_tokens <= effective_budget:
                 result_lines.append(line)
                 current_tokens += line_tokens
             else:
-                # Add truncation marker
-                if result_lines:
-                    result_lines.append("... [truncated]")
+                was_truncated = True
                 break
 
         if result_lines:
-            return "\n".join(result_lines)
+            result = "\n".join(result_lines)
+            if was_truncated:
+                result += "\n" + truncation_marker
+            return result
 
         # Fallback: word truncation if even first line is too long
         words = content.split()
-        max_words = int(max_tokens / 1.3)
-        return " ".join(words[:max_words]) + " ... [truncated]"
+        max_words = int(effective_budget / 1.3)
+        if max_words > 0:
+            return " ".join(words[:max_words]) + " " + truncation_marker
+        return truncation_marker
 
     def _escape_xml_content(self, content: str) -> str:
         """

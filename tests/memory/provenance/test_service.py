@@ -77,7 +77,7 @@ class TestCreateProvenance:
 
     @pytest.mark.asyncio
     async def test_create_provenance_with_metadata(self):
-        """create_provenance should accept optional metadata."""
+        """create_provenance should store optional metadata."""
         from src.memory.provenance.service import ProvenanceService
 
         service = ProvenanceService()
@@ -89,6 +89,9 @@ class TestCreateProvenance:
         )
 
         assert result.source_type == "adr"
+        assert result.metadata is not None
+        assert result.metadata["adr_id"] == "003"
+        assert result.metadata["version"] == "4.4"
 
 
 class TestAttachProvenance:

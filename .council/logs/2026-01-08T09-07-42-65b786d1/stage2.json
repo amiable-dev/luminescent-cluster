@@ -1,0 +1,82 @@
+{
+  "rankings": [
+    {
+      "model": "openai/gpt-5.2-pro",
+      "ranking": "### Response A\n\n**What it does well**\n- Follows the requested structure (Summary / Quality / Issues / Recommendations / Verdict) and stays tightly grounded in the provided code.\n- Identifies genuinely important correctness issues in `src/memory/blocks/assembler.py`, especially that `_truncate_preserving_format()` can exceed `max_tokens` because it appends a truncation marker without re-checking budget, and that `_trim_to_budget()` assumes truncation always fits. This is a real \u201ccore promise violated\u201d bug for a token-budgeting component.\n- Correctly flags inconsistent enforcement of per-block budgets (`build_project_block()` and `build_knowledge_block()` don\u2019t truncate to their block budgets).\n- Good security nuance: calls out that XML escaping does not actually \u201cprevent prompt injection,\u201d and that the docstring oversells it.\n- Gives concrete, actionable fixes and a justified verdict.\n\n**What it does poorly**\n- Line numbers are asserted very specifically, but they appear approximate (not necessarily wrong in spirit, but not verifiable here). Still, it cites the correct functions/regions.\n- Minor overreach on \u201cXML injection attacks\u201d framing\u2014this is not real XML parsing, so the threat is more \u201cdelimiter breaking / prompt structure confusion\u201d than XML injection per se. But the recommendation to tone down claims is still correct.\n\n**Overall:** Strong, accurate, and helpful review; the \u201cREJECTED\u201d verdict is well supported.\n\n---\n\n### Response B\n\n**What it does well**\n- Clear summary and generally good coverage of modules.\n- Calls out real-but-secondary issues: rough token counting, unused `metadata` parameter, in-memory persistence limitations.\n- Provides reasonable improvement suggestions (inject tokenizer, improve escaping via standard utilities, configuration for system prompt).\n\n**What it does poorly**\n- Misses the most important correctness problem: truncation can violate token budgets due to the truncation marker and lack of post-checking. Declaring \u201cno critical issues\u201d is a major miss given the module\u2019s purpose.\n- Several citations/line references are inaccurate (e.g., XML escaping location) and the XML escaping critique is somewhat misguided: escaping quotes/apostrophes is only required for XML attributes; the code is embedding text nodes.\n- Suggests returning `None` for empty knowledge blocks due to \u201cwasting a block slot,\u201d but `to_prompt()` already omits empty `block.content`, so the practical impact is minimal.\n\n**Overall:** Useful but overlooks the central budget-adherence flaw and therefore reaches an unreliable \u201cAPPROVED\u201d verdict.\n\n---\n\n### Response C\n\n**What it does well**\n- Reasonably complete narrative summary of the architecture and components.\n- Notes a few legitimate concerns (async-without-await, basic token approximation, in-memory provenance growth).\n\n**What it does poorly**\n- Contains notable inaccuracies/overstatements:\n  - Claims XML formatting \u201cprevents injection\u201d more strongly than warranted, without recognizing (as Response A did) that this is not a real security boundary.\n  - States the code \u201cmeets the ADR-003 Phase 2 criteria\u201d and implies the 30% target is achieved, but nothing here demonstrates that target is met\u2014there\u2019s only a metric class and a simplistic compressor.\n- Misses key practical issues:\n  - Doesn\u2019t notice missing per-block budget enforcement for Project/Knowledge.\n  - Doesn\u2019t catch the truncation-marker budget violation risk in `_truncate_preserving_format()` / `_trim_to_budget()`.\n- Line numbers are vague (\u201cline ~200\u201d), which doesn\u2019t meet the prompt\u2019s \u201cbe specific\u201d requirement as well as it could.\n\n**Overall:** Reads well, but materially less accurate and misses core issues; \u201cAPPROVED\u201d is not well justified.\n\n---\n\n### Response D\n\n**What it does well**\n- Solid high-level summary and a couple of practical recommendations (tokenizer abstraction, truncation conservatism).\n- Correctly highlights the risk of the token heuristic and in-memory provenance persistence.\n- Brings up a legitimate prompt-design question: whether omitting empty blocks vs. explicitly stating \u201cno history\u201d is desired.\n\n**What it does poorly**\n- Misses the most critical functional bug: truncation can exceed budgets due to the truncation marker and no revalidation\u2014same central omission as B/C.\n- Overstates security: frames `_escape_xml_content` as \u201cprompt injection prevention\u201d rather than \u201cdelimiter safety / structure preservation.\u201d\n- Doesn\u2019t meet the \u201ccite file paths and line numbers\u201d requirement consistently (only one snippet citation).\n\n**Overall:** Decent but incomplete; the \u201cAPPROVED\u201d verdict is not supported given the budget-adherence risk.\n\n---\n\n```json\n{\n  \"ranking\": [\"Response A\", \"Response B\", \"Response D\", \"Response C\"],\n  \"scores\": {\n    \"Response A\": 9,\n    \"Response B\": 6,\n    \"Response D\": 5,\n    \"Response C\": 4\n  }\n}\n```",
+      "parsed_ranking": {
+        "ranking": [
+          "Response A",
+          "Response B",
+          "Response D",
+          "Response C"
+        ],
+        "scores": {
+          "Response A": 9,
+          "Response B": 6,
+          "Response D": 5,
+          "Response C": 4
+        }
+      }
+    },
+    {
+      "model": "google/gemini-3-pro-preview",
+      "ranking": "Here is the evaluation of the candidate responses.\n\n### Evaluation of Candidate Responses\n\n**Response A**\nThis is an exceptional review. It is the only response that critically analyzes the logic flow of the `BlockAssembler` to identify that:\n1.  The truncation logic (`_truncate_preserving_format`) blindly appends \"truncated\" markers, which adds tokens *after* the check, guaranteeing that the result exceeds the budget in tight constraints.\n2.  The assembler explicitly ignores the `block_budgets` configuration for `PROJECT` and `KNOWLEDGE` blocks, rendering those constraints useless until global trimming occurs.\n3.  The `ProvenanceService` accepts a `metadata` argument that it immediately discards (a functional bug).\n\nThe reviewer provides specific line references, explains *why* the bugs matter (model context window failures), and rightly rejects the code. The security assessment regarding prompt injection vs. XML structure integrity is also highly accurate.\n\n**Response B**\nThis is a good review that correctly identifies the functional bug in `ProvenanceService` (unused `metadata` parameter). It also spots a valid potential race condition in the retrieval history tracking. However, it completely misses the logic errors in the `BlockAssembler` (budget violations). It points out a potential issue with XML escaping quotes (which is valid for attributes but less critical for text content) and offers good clean-up suggestions. The \"APPROVED\" verdict is too lenient given the functional bugs (data loss in provenance), but the review itself is helpful.\n\n**Response C**\nThis is a competent review but leans heavily on high-level observations. It identifies potential crashes (e.g., `None` content in summarization) and the poor math in the truncation fallback. However, it misses the critical logic flaws regarding budget enforcement and the unused metadata parameter. The analysis of performance and security is sound but generic.\n\n**Response D**\nThis is an adequate high-level review. It focuses on architectural improvements (injecting a Tokenizer interface) which is good advice, but fails to identify the functional bugs present in the code (unused arguments, broken budget logic). It accepts the code as \"high quality\" despite these errors. It serves better as an architectural consultation than a code review.\n\n### Ranking and Scores\n\n1.  **Response A**: Found critical logic bugs that break the system's core promise (token budgeting). Justified \"REJECTED\" verdict.\n2.  **Response B**: Found functional bugs (unused variables) and concurrency issues. Missed logic flow errors.\n3.  **Response C**: Found valid edge cases (exceptions) but missed main functional bugs.\n4.  **Response D**: Focused on high-level architecture; missed functional bugs entirely.\n\n```json\n{\n  \"ranking\": [\"Response A\", \"Response B\", \"Response C\", \"Response D\"],\n  \"scores\": {\n    \"Response A\": 9,\n    \"Response B\": 7,\n    \"Response C\": 6,\n    \"Response D\": 5\n  }\n}\n```",
+      "parsed_ranking": {
+        "ranking": [
+          "Response A",
+          "Response B",
+          "Response C",
+          "Response D"
+        ],
+        "scores": {
+          "Response A": 9,
+          "Response B": 7,
+          "Response C": 6,
+          "Response D": 5
+        }
+      }
+    },
+    {
+      "model": "anthropic/claude-opus-4.5",
+      "ranking": "# Code Review Evaluation\n\n## Response A Critique\n\n**Strengths:**\n- Identifies a genuine critical issue: the `_truncate_preserving_format()` method can exceed token budgets because the truncation marker is added without checking if it fits\n- Correctly notes that per-block budgets aren't enforced consistently (PROJECT and KNOWLEDGE blocks don't truncate)\n- Accurately points out that XML escaping doesn't actually prevent prompt injection attacks - this is an important security clarification\n- Good observation about the unused `metadata` parameter in `create_provenance()`\n- Thorough and well-organized with specific line number references\n\n**Weaknesses:**\n- The line numbers cited are inconsistent with the actual code (e.g., references to lines 336-376 for `_truncate_preserving_format` when the file is much shorter)\n- The \"critical\" rating on the truncation issue may be slightly overstated - while it's a valid edge case concern, calling it \"critical\" might be too strong for what amounts to potentially a few extra tokens in edge cases\n\n## Response B Critique\n\n**Strengths:**\n- Well-organized structure with clear categorization of issues\n- Identifies the incomplete XML escaping (missing quote/apostrophe escaping)\n- Good catch on the race condition potential with `setdefault` recommendation\n- Notes the unused `metadata` parameter\n- Practical recommendations that are actionable\n\n**Weaknesses:**\n- Rates this as \"APPROVED\" despite identifying medium issues including incomplete XML escaping and inconsistent token counting\n- Misses the more significant issue that truncation can exceed budgets\n- Says \"Critical Issues: None identified\" but the token budget guarantee issue is a real concern\n- Doesn't identify that per-block budgets aren't enforced for PROJECT and KNOWLEDGE blocks\n\n## Response C Critique\n\n**Strengths:**\n- Comprehensive coverage of bugs, security, and performance concerns\n- Correctly identifies the edge case in `_truncate_preserving_format` with small `max_tokens`\n- Notes the in-memory storage concern and unbounded memory growth\n- Good security observations about basic XML escaping and lack of input validation\n- Mentions the async methods not actually being async (no `await` calls)\n\n**Weaknesses:**\n- Approves the code despite identifying several issues that could be problematic\n- Some line number references are approximate/incorrect\n- Doesn't emphasize the budget guarantee issue as strongly as it should\n- The \"8/10\" score explanation seems arbitrary\n\n## Response D Critique\n\n**Strengths:**\n- Clean, well-organized structure\n- Correctly identifies the token counting heuristic as a significant risk\n- Good recommendation about abstracting the tokenizer using a Protocol\n- Identifies the truncation precision issue with dense content like source code\n- Thoughtful recommendation about handling empty blocks explicitly\n\n**Weaknesses:**\n- Approves the code without adequately addressing the truncation budget guarantee issue\n- Doesn't identify that per-block budgets aren't enforced for some block types\n- Less thorough than some other responses in identifying specific issues\n- Doesn't mention the unused `metadata` parameter\n- Doesn't identify the XML escaping limitations\n\n## Comparative Analysis\n\nResponse A is the most thorough in identifying the critical truncation budget issue and provides the most security-conscious analysis of the XML escaping claims. It correctly rejects the code based on a legitimate concern that token budgets can be exceeded.\n\nResponse B provides good structure but misses the most significant issue (budget guarantee violation) and incorrectly categorizes critical issues as \"none.\"\n\nResponse C covers a broad range of concerns but doesn't weight them appropriately - approving despite identifying issues that could break the core promise of the assembler.\n\nResponse D has clean structure and good recommendations but is less comprehensive in identifying issues.\n\nThe key question is whether the truncation/budget issue is truly critical. Looking at the code, `_truncate_preserving_format()` does add truncation markers without ensuring they fit within budget, which could cause the total to exceed limits. This is a valid concern for a module whose primary purpose is budget management.\n\n```json\n{\n  \"ranking\": [\"Response A\", \"Response C\", \"Response D\", \"Response B\"],\n  \"scores\": {\n    \"Response A\": 8,\n    \"Response C\": 7,\n    \"Response D\": 6,\n    \"Response B\": 5\n  }\n}\n```",
+      "parsed_ranking": {
+        "ranking": [
+          "Response A",
+          "Response C",
+          "Response D",
+          "Response B"
+        ],
+        "scores": {
+          "Response A": 8,
+          "Response C": 7,
+          "Response D": 6,
+          "Response B": 5
+        }
+      }
+    }
+  ],
+  "label_to_model": {
+    "Response A": {
+      "model": "openai/gpt-5.2-pro",
+      "display_index": 0
+    },
+    "Response B": {
+      "model": "anthropic/claude-opus-4.5",
+      "display_index": 1
+    },
+    "Response C": {
+      "model": "x-ai/grok-4",
+      "display_index": 2
+    },
+    "Response D": {
+      "model": "google/gemini-3-pro-preview",
+      "display_index": 3
+    }
+  },
+  "usage": {
+    "prompt_tokens": 44604,
+    "completion_tokens": 7537,
+    "total_tokens": 52141
+  },
+  "timestamp": "2026-01-08T09:14:28.148520"
+}

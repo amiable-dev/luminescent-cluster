@@ -55,6 +55,7 @@ class Provenance:
         confidence: Confidence score from extraction (0.0-1.0)
         created_at: When the source was created
         retrieval_score: Relevance score from retrieval ranking (optional)
+        metadata: Additional source-specific metadata (optional)
     """
 
     source_id: str
@@ -62,16 +63,20 @@ class Provenance:
     confidence: float
     created_at: datetime
     retrieval_score: Optional[float] = None
+    metadata: Optional[dict[str, Any]] = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert provenance to dictionary for serialization."""
-        return {
+        result = {
             "source_id": self.source_id,
             "source_type": self.source_type,
             "confidence": self.confidence,
             "created_at": self.created_at.isoformat(),
             "retrieval_score": self.retrieval_score,
         }
+        if self.metadata:
+            result["metadata"] = self.metadata
+        return result
 
 
 @dataclass
