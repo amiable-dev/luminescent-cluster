@@ -45,3 +45,6 @@ temp/
 .claude/
 .mcp.json
 .venv/
+
+# Council verification logs (contain sensitive paths)
+.council/logs/

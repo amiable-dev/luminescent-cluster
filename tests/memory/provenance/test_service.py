@@ -97,7 +97,8 @@ class TestCreateProvenance:
     async def test_create_provenance_rejects_oversized_metadata(self):
         """create_provenance should reject metadata exceeding size limit.
 
-        Council Round 12: Prevents DoS via oversized metadata payloads.
+        Council Round 12/13: Prevents DoS via oversized metadata payloads.
+        Now validates bounds BEFORE serialization to prevent json.dumps DoS.
         """
         from src.memory.provenance.service import ProvenanceService
 
@@ -105,7 +106,8 @@ class TestCreateProvenance:
         # Create metadata that exceeds the limit
         oversized_metadata = {"data": "x" * 20000}
 
-        with pytest.raises(ValueError, match="Metadata size .* exceeds limit"):
+        # Council Round 13: Now catches value length before json.dumps
+        with pytest.raises(ValueError, match=".* exceeds limit"):
             await service.create_provenance(
                 source_id="mem-123",
                 source_type="memory",
@@ -401,3 +403,167 @@ class TestMemoryBoundedStorage:
         # mem-1 should be evicted (oldest non-accessed)
         mem_1 = await service.get_provenance("mem-1")
         assert mem_1 is None, "Oldest non-accessed entry should be evicted"
+
+
+class TestStringIdValidation:
+    """TDD: Tests for string identifier length validation.
+
+    Council Round 13: Identified missing length validations for string
+    identifiers which pose a memory exhaustion risk.
+    """
+
+    @pytest.fixture
+    def service(self):
+        """Create a fresh ProvenanceService for each test."""
+        from src.memory.provenance.service import ProvenanceService
+
+        return ProvenanceService()
+
+    @pytest.mark.asyncio
+    async def test_create_provenance_rejects_oversized_source_id(self, service):
+        """create_provenance should reject source_id exceeding limit."""
+        oversized_id = "x" * 500  # Exceeds MAX_STRING_ID_LENGTH (256)
+
+        with pytest.raises(ValueError, match="source_id length .* exceeds limit"):
+            await service.create_provenance(
+                source_id=oversized_id,
+                source_type="memory",
+                confidence=0.95,
+            )
+
+    @pytest.mark.asyncio
+    async def test_create_provenance_rejects_oversized_source_type(self, service):
+        """create_provenance should reject source_type exceeding limit."""
+        oversized_type = "y" * 500
+
+        with pytest.raises(ValueError, match="source_type length .* exceeds limit"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type=oversized_type,
+                confidence=0.95,
+            )
+
+    @pytest.mark.asyncio
+    async def test_attach_to_memory_rejects_oversized_memory_id(self, service):
+        """attach_to_memory should reject memory_id exceeding limit."""
+        prov = await service.create_provenance(
+            source_id="src-123",
+            source_type="memory",
+            confidence=0.95,
+        )
+        oversized_id = "z" * 500
+
+        with pytest.raises(ValueError, match="memory_id length .* exceeds limit"):
+            await service.attach_to_memory(oversized_id, prov)
+
+    @pytest.mark.asyncio
+    async def test_track_retrieval_rejects_oversized_memory_id(self, service):
+        """track_retrieval should reject memory_id exceeding limit."""
+        oversized_id = "a" * 500
+
+        with pytest.raises(ValueError, match="memory_id length .* exceeds limit"):
+            await service.track_retrieval(
+                memory_id=oversized_id,
+                retrieval_score=0.9,
+                retrieved_by="user-1",
+            )
+
+    @pytest.mark.asyncio
+    async def test_track_retrieval_rejects_oversized_retrieved_by(self, service):
+        """track_retrieval should reject retrieved_by exceeding limit."""
+        oversized_user = "b" * 500
+
+        with pytest.raises(ValueError, match="retrieved_by length .* exceeds limit"):
+            await service.track_retrieval(
+                memory_id="mem-123",
+                retrieval_score=0.9,
+                retrieved_by=oversized_user,
+            )
+
+    @pytest.mark.asyncio
+    async def test_get_provenance_rejects_oversized_memory_id(self, service):
+        """get_provenance should reject memory_id exceeding limit."""
+        oversized_id = "c" * 500
+
+        with pytest.raises(ValueError, match="memory_id length .* exceeds limit"):
+            await service.get_provenance(oversized_id)
+
+    @pytest.mark.asyncio
+    async def test_get_retrieval_history_rejects_oversized_memory_id(self, service):
+        """get_retrieval_history should reject memory_id exceeding limit."""
+        oversized_id = "d" * 500
+
+        with pytest.raises(ValueError, match="memory_id length .* exceeds limit"):
+            await service.get_retrieval_history(oversized_id)
+
+
+class TestMetadataBoundsValidation:
+    """TDD: Tests for metadata bounds validation before serialization.
+
+    Council Round 13: Identified that json.dumps DoS vector allows massive
+    objects to be serialized into memory before rejection.
+    """
+
+    @pytest.fixture
+    def service(self):
+        """Create a fresh ProvenanceService for each test."""
+        from src.memory.provenance.service import ProvenanceService
+
+        return ProvenanceService()
+
+    @pytest.mark.asyncio
+    async def test_metadata_key_count_validation(self, service):
+        """Metadata with too many keys should be rejected before serialization."""
+        # Create metadata with more than MAX_METADATA_KEYS (100)
+        oversized_metadata = {f"key_{i}": f"value_{i}" for i in range(150)}
+
+        with pytest.raises(ValueError, match="Metadata key count .* exceeds limit"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=oversized_metadata,
+            )
+
+    @pytest.mark.asyncio
+    async def test_metadata_key_length_validation(self, service):
+        """Metadata keys exceeding length limit should be rejected."""
+        oversized_key = "k" * 500
+        metadata = {oversized_key: "value"}
+
+        with pytest.raises(ValueError, match="Metadata key length .* exceeds limit"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata=metadata,
+            )
+
+    @pytest.mark.asyncio
+    async def test_metadata_type_validation(self, service):
+        """Metadata must be a dictionary."""
+        # This shouldn't happen with type hints, but validate anyway
+        with pytest.raises(ValueError, match="Metadata must be a dictionary"):
+            await service.create_provenance(
+                source_id="mem-123",
+                source_type="memory",
+                confidence=0.95,
+                metadata="not a dict",  # type: ignore
+            )
+
+    @pytest.mark.asyncio
+    async def test_valid_metadata_within_bounds(self, service):
+        """Valid metadata within bounds should be accepted."""
+        # Create metadata within all limits
+        valid_metadata = {f"key_{i}": f"value_{i}" for i in range(50)}
+
+        result = await service.create_provenance(
+            source_id="mem-123",
+            source_type="memory",
+            confidence=0.95,
+            metadata=valid_metadata,
+        )
+
+        assert result is not None
+        assert result.metadata is not None
+        assert len(result.metadata) == 50

@@ -61,6 +61,14 @@ class ProvenanceService:
     # Prevents DoS via oversized metadata payloads
     MAX_METADATA_SIZE_BYTES = 10000
 
+    # Maximum string identifier length (Council Round 13 fix)
+    # Prevents memory exhaustion via oversized string identifiers
+    MAX_STRING_ID_LENGTH = 256
+
+    # Maximum metadata key count (Council Round 13 fix)
+    # Prevents DoS by checking bounds before json.dumps serialization
+    MAX_METADATA_KEYS = 100
+
     def __init__(self) -> None:
         """Initialize the provenance service with bounded in-memory storage."""
         # Map of memory_id -> Provenance (LRU bounded)
@@ -68,6 +76,63 @@ class ProvenanceService:
         self._provenance_store: OrderedDict[str, Provenance] = OrderedDict()
         # Map of memory_id -> list of RetrievalEvents (bounded)
         self._retrieval_history: dict[str, list[RetrievalEvent]] = {}
+
+    def _validate_string_id(self, value: str, field_name: str) -> None:
+        """
+        Validate string identifier length (Council Round 13 fix).
+
+        Prevents memory exhaustion attacks via oversized string identifiers.
+
+        Args:
+            value: String value to validate
+            field_name: Name of the field for error message
+
+        Raises:
+            ValueError: If string exceeds MAX_STRING_ID_LENGTH
+        """
+        if len(value) > self.MAX_STRING_ID_LENGTH:
+            raise ValueError(
+                f"{field_name} length ({len(value)}) exceeds limit "
+                f"({self.MAX_STRING_ID_LENGTH})"
+            )
+
+    def _validate_metadata_bounds(self, metadata: dict[str, Any]) -> None:
+        """
+        Validate metadata bounds before serialization (Council Round 13 fix).
+
+        Checks metadata structure bounds BEFORE calling json.dumps to prevent
+        DoS via massive object serialization.
+
+        Args:
+            metadata: Metadata dict to validate
+
+        Raises:
+            ValueError: If metadata exceeds bounds
+        """
+        # Check type first
+        if not isinstance(metadata, dict):
+            raise ValueError("Metadata must be a dictionary")
+
+        # Check key count before serialization (prevents deep recursion attack)
+        if len(metadata) > self.MAX_METADATA_KEYS:
+            raise ValueError(
+                f"Metadata key count ({len(metadata)}) exceeds limit "
+                f"({self.MAX_METADATA_KEYS})"
+            )
+
+        # Check individual key and value string lengths
+        for key, value in metadata.items():
+            if len(str(key)) > self.MAX_STRING_ID_LENGTH:
+                raise ValueError(
+                    f"Metadata key length ({len(str(key))}) exceeds limit "
+                    f"({self.MAX_STRING_ID_LENGTH})"
+                )
+            # For string values, check length directly
+            if isinstance(value, str) and len(value) > self.MAX_METADATA_SIZE_BYTES:
+                raise ValueError(
+                    f"Metadata value length ({len(value)}) exceeds limit "
+                    f"({self.MAX_METADATA_SIZE_BYTES})"
+                )
 
     async def create_provenance(
         self,
@@ -89,10 +154,19 @@ class ProvenanceService:
             New Provenance instance with created_at timestamp and metadata
 
         Raises:
-            ValueError: If metadata exceeds MAX_METADATA_SIZE_BYTES
+            ValueError: If string identifiers exceed MAX_STRING_ID_LENGTH
+            ValueError: If metadata exceeds bounds (key count, value sizes, total size)
         """
-        # Validate metadata size (Council Round 12 fix - DoS prevention)
+        # Validate string identifier lengths (Council Round 13 fix - DoS prevention)
+        self._validate_string_id(source_id, "source_id")
+        self._validate_string_id(source_type, "source_type")
+
+        # Validate metadata bounds BEFORE serialization (Council Round 13 fix)
+        # This prevents DoS by catching oversized payloads before json.dumps
         if metadata is not None:
+            self._validate_metadata_bounds(metadata)
+
+            # Now safe to serialize for total size check (Council Round 12 fix)
             import json
             metadata_size = len(json.dumps(metadata, default=str))
             if metadata_size > self.MAX_METADATA_SIZE_BYTES:
@@ -124,7 +198,13 @@ class ProvenanceService:
         Args:
             memory_id: ID of the memory to attach provenance to
             provenance: Provenance record to attach
+
+        Raises:
+            ValueError: If memory_id exceeds MAX_STRING_ID_LENGTH
         """
+        # Validate memory_id length (Council Round 13 fix)
+        self._validate_string_id(memory_id, "memory_id")
+
         # Remove if exists (will re-add at end for LRU ordering)
         if memory_id in self._provenance_store:
             del self._provenance_store[memory_id]
@@ -153,7 +233,13 @@ class ProvenanceService:
 
         Returns:
             Provenance if found, None otherwise
+
+        Raises:
+            ValueError: If memory_id exceeds MAX_STRING_ID_LENGTH
         """
+        # Validate memory_id length (Council Round 13 fix)
+        self._validate_string_id(memory_id, "memory_id")
+
         result = self._provenance_store.get(memory_id)
         if result is not None:
             # Update access order (move to end for LRU) - O(1) operation
@@ -180,7 +266,14 @@ class ProvenanceService:
             memory_id: ID of the retrieved memory
             retrieval_score: Relevance score from retrieval
             retrieved_by: User or system that performed retrieval
+
+        Raises:
+            ValueError: If memory_id or retrieved_by exceed MAX_STRING_ID_LENGTH
         """
+        # Validate string identifier lengths (Council Round 13 fix)
+        self._validate_string_id(memory_id, "memory_id")
+        self._validate_string_id(retrieved_by, "retrieved_by")
+
         # Only track retrieval for known memory IDs (Council Round 11 fix)
         # This prevents orphan entries in _retrieval_history
         if memory_id not in self._provenance_store:
@@ -226,7 +319,13 @@ class ProvenanceService:
 
         Returns:
             List of retrieval events as dictionaries
+
+        Raises:
+            ValueError: If memory_id exceeds MAX_STRING_ID_LENGTH
         """
+        # Validate memory_id length (Council Round 13 fix)
+        self._validate_string_id(memory_id, "memory_id")
+
         events = self._retrieval_history.get(memory_id, [])
         return [
             {
