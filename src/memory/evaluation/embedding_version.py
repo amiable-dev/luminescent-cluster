@@ -46,17 +46,29 @@ class EmbeddingVersion:
     config_snapshot: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
-        data = asdict(self)
-        data["created_at"] = self.created_at.isoformat()
-        return data
+        """Convert to dictionary for JSON serialization.
+
+        Note: config_snapshot is intentionally excluded to prevent
+        potential secret leakage (API keys, credentials in config).
+        """
+        return {
+            "model_id": self.model_id,
+            "version_hash": self.version_hash,
+            "dimension": self.dimension,
+            "created_at": self.created_at.isoformat(),
+            # config_snapshot intentionally excluded to prevent secret leakage
+        }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "EmbeddingVersion":
         """Create from dictionary."""
-        data = data.copy()
-        data["created_at"] = datetime.fromisoformat(data["created_at"])
-        return cls(**data)
+        return cls(
+            model_id=data["model_id"],
+            version_hash=data["version_hash"],
+            dimension=data["dimension"],
+            created_at=datetime.fromisoformat(data["created_at"]),
+            # config_snapshot not loaded from serialization (security)
+        )
 
 
 class EmbeddingVersionTracker:

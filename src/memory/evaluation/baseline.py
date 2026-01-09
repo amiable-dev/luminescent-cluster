@@ -71,6 +71,12 @@ class BaselineStore:
 
     History files are automatically pruned to prevent unbounded growth.
 
+    Security Notes:
+    - Filter names are hashed with a salt to prevent dictionary attacks
+    - Symlink checks provide best-effort protection (TOCTOU limitations exist)
+    - For adversarial environments, ensure storage_path is not writable by
+      untrusted users
+
     Example:
         >>> store = BaselineStore(Path("/data/recall_baselines"))
         >>> baseline = RecallBaseline(
@@ -88,6 +94,8 @@ class BaselineStore:
     UNFILTERED_FILENAME = "unfiltered.json"
     HISTORY_DIR = "history"
     MAX_HISTORY_FILES = 100  # Prevent unbounded disk usage
+    # Salt for filter name hashing to resist dictionary attacks
+    _FILTER_NAME_SALT = "amiable-recall-baseline-v1"
 
     def __init__(self, storage_path: Path):
         """Initialize the baseline store.
@@ -166,10 +174,11 @@ class BaselineStore:
         if not filter_name:
             raise ValueError("filter_name cannot be empty")
 
-        # Use only hash - do not preserve any part of the original name
-        # This prevents PII leakage into filenames
+        # Use salted hash to resist dictionary attacks
+        # No part of original name is preserved (prevents PII leakage)
         # Use 32 chars (128 bits) to minimize collision risk
-        name_hash = hashlib.sha256(filter_name.encode("utf-8")).hexdigest()[:32]
+        salted_input = f"{self._FILTER_NAME_SALT}:{filter_name}"
+        name_hash = hashlib.sha256(salted_input.encode("utf-8")).hexdigest()[:32]
         return name_hash
 
     def _get_baseline_path(self, filtered: bool, filter_name: str | None) -> Path:
