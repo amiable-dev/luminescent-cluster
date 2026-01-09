@@ -1167,9 +1167,9 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 | **Phase 3** | Two-Stage Retrieval | ✅ Complete | `src/memory/retrieval/` - BM25 + Vector + RRF + Cross-Encoder |
 | Phase 3 | Provider Integration | ✅ Complete | `LocalMemoryProvider` with optional hybrid retrieval |
 | Phase 3 | Exit Criteria | ✅ Complete | <1s latency, multi-hop improvement - 15 benchmarks |
-| Phase 3 | Knowledge Graph | 📝 Not Started | HybridRAG |
 | Phase 3 | Entity Extraction | 📝 Not Started | Async pipeline |
-| **Phase 4** | Hindsight Integration | 📝 Not Started | Conditional on Phase 3 |
+| **Phase 4** | Knowledge Graph | 📝 Not Started | HybridRAG (deferred from Phase 3) |
+| Phase 4 | Hindsight Integration | 📝 Not Started | Conditional on Phase 3 |
 | Phase 4 | MaaS Architecture | 📝 Not Started | Multi-agent support |
 
 **Test Summary**: 773 memory tests passing (as of 2026-01-09) - 16 new provider integration tests
