@@ -139,9 +139,10 @@ class RecallHealthMonitor:
     ) -> RecallHealthResult:
         """Compute Recall@k for a set of queries.
 
-        Recall@k = |HNSW_results ∩ exact_results| / k
+        Recall@k = |HNSW_results ∩ exact_results| / |exact_results|
 
-        Averaged across all queries.
+        This measures what proportion of the true top-k results from exact
+        search were found by HNSW approximate search. Averaged across queries.
 
         Args:
             queries: List of query strings to evaluate.

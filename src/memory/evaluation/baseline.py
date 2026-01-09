@@ -65,9 +65,11 @@ class BaselineStore:
     Baselines are stored as JSON files in a directory structure:
     - baselines/
       - unfiltered.json       (default unfiltered baseline)
-      - filtered_tenant.json  (tenant-filtered baseline)
+      - filtered_<hash>.json  (tenant-filtered baseline)
       - history/
         - 2025-01-08T10-00-00.json (historical baselines)
+
+    History files are automatically pruned to prevent unbounded growth.
 
     Example:
         >>> store = BaselineStore(Path("/data/recall_baselines"))
@@ -85,6 +87,7 @@ class BaselineStore:
 
     UNFILTERED_FILENAME = "unfiltered.json"
     HISTORY_DIR = "history"
+    MAX_HISTORY_FILES = 100  # Prevent unbounded disk usage
 
     def __init__(self, storage_path: Path):
         """Initialize the baseline store.
@@ -142,18 +145,18 @@ class BaselineStore:
             raise
 
     def _sanitize_filter_name(self, filter_name: str) -> str:
-        """Sanitize filter name to prevent path traversal attacks.
+        """Sanitize filter name to prevent path traversal and PII leakage.
 
-        Uses a hash-based approach to ensure:
+        Uses a pure hash-based approach to ensure:
         1. Distinct inputs always produce distinct outputs (no collisions)
         2. Output is safe for filenames (alphanumeric only)
-        3. Original name is partially preserved for readability
+        3. Original name is NOT stored (prevents PII leakage)
 
         Args:
             filter_name: The raw filter name.
 
         Returns:
-            Sanitized filter name safe for use in filenames.
+            Hash-based identifier safe for use in filenames.
 
         Raises:
             ValueError: If filter_name is empty.
@@ -163,17 +166,10 @@ class BaselineStore:
         if not filter_name:
             raise ValueError("filter_name cannot be empty")
 
-        # Extract safe prefix for readability (first 20 alphanumeric chars)
-        safe_prefix = re.sub(r"[^a-zA-Z0-9]", "", filter_name)[:20]
-
-        # Use hash of original name to ensure distinct inputs never collide
-        name_hash = hashlib.sha256(filter_name.encode("utf-8")).hexdigest()[:12]
-
-        # Combine prefix with hash for uniqueness + readability
-        if safe_prefix:
-            return f"{safe_prefix}_{name_hash}"
-        else:
-            return name_hash
+        # Use only hash - do not preserve any part of the original name
+        # This prevents PII leakage into filenames
+        name_hash = hashlib.sha256(filter_name.encode("utf-8")).hexdigest()[:16]
+        return name_hash
 
     def _get_baseline_path(self, filtered: bool, filter_name: str | None) -> Path:
         """Get the path for a baseline file.
@@ -242,6 +238,26 @@ class BaselineStore:
 
         # Copy to history using atomic write
         self._safe_write_json(archive_path, data)
+
+        # Prune old history files to prevent unbounded growth
+        self._prune_history()
+
+    def _prune_history(self) -> None:
+        """Remove oldest history files to stay within MAX_HISTORY_FILES limit."""
+        history_dir = self.storage_path / self.HISTORY_DIR
+
+        # Get all history files sorted by modification time (oldest first)
+        history_files = sorted(
+            history_dir.glob("*.json"),
+            key=lambda p: p.stat().st_mtime if not p.is_symlink() else 0,
+        )
+
+        # Remove oldest files if over limit
+        files_to_remove = len(history_files) - self.MAX_HISTORY_FILES
+        if files_to_remove > 0:
+            for path in history_files[:files_to_remove]:
+                if not path.is_symlink():  # Don't follow symlinks
+                    path.unlink()
 
     def _safe_read_json(self, path: Path) -> dict[str, Any] | None:
         """Safely read JSON from file with symlink protection.

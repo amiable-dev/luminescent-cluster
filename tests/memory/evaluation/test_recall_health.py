@@ -280,18 +280,20 @@ class TestBaselineStore:
         assert drift < 0  # Negative drift = improvement
 
     def test_path_traversal_prevention(self, temp_dir: Path) -> None:
-        """Test that path traversal attacks are prevented via sanitization."""
+        """Test that path traversal attacks are prevented via hash sanitization."""
         store = BaselineStore(temp_dir)
 
-        # Path traversal attempts are sanitized to safe names with hash
-        # "../../../etc/passwd" -> "etcpasswd_<hash>" (safe prefix + hash)
+        # Path traversal attempts are sanitized to pure hash names
+        # No part of the original name is preserved (prevents PII leakage)
         path = store._get_baseline_path(filtered=True, filter_name="../../../etc/passwd")
-        assert path.name.startswith("filtered_etcpasswd_")
+        assert path.name.startswith("filtered_")
         assert path.name.endswith(".json")
         assert path.parent == temp_dir
+        # Ensure no part of the attack path is in the filename
+        assert "etc" not in path.name
+        assert "passwd" not in path.name
 
-        # Pure traversal strings with no alphanumeric content still get a hash
-        # (they have no safe prefix but still get a hash-based name)
+        # Pure traversal strings get a hash-based name
         path2 = store._get_baseline_path(filtered=True, filter_name="../../..")
         assert path2.name.startswith("filtered_")
         assert path2.name.endswith(".json")
@@ -313,31 +315,34 @@ class TestBaselineStore:
             store.load_history(filtered=True, filter_name=None)
 
     def test_sanitize_filter_name(self, temp_dir: Path) -> None:
-        """Test filter name sanitization with hash-based collision prevention."""
+        """Test filter name sanitization with pure hash (no PII leakage)."""
         store = BaselineStore(temp_dir)
 
-        # Names include a hash suffix for uniqueness
+        # Names are pure hash - no part of original preserved
         result = store._sanitize_filter_name("tenant_123")
-        assert result.startswith("tenant123_")  # Prefix is alphanumeric only
-        assert len(result) > 12  # Has hash suffix
+        assert len(result) == 16  # Fixed length hash
+        assert result.isalnum()  # Only alphanumeric
+        # Ensure original name is NOT in result
+        assert "tenant" not in result
+        assert "123" not in result
 
         # Different inputs produce different outputs (no collisions)
         result1 = store._sanitize_filter_name("A:1")
         result2 = store._sanitize_filter_name("A!1")
         assert result1 != result2  # Distinct inputs stay distinct
 
-        # Special characters are removed from prefix
-        result3 = store._sanitize_filter_name("tenant/123")
-        assert result3.startswith("tenant123_")
+        # Same input produces same hash (deterministic)
+        result3 = store._sanitize_filter_name("tenant_123")
+        assert result3 == result  # Same as first result
 
         # Empty raises ValueError
         with pytest.raises(ValueError, match="cannot be empty"):
             store._sanitize_filter_name("")
 
-        # Long names have prefix truncated but stay unique
+        # All results are same length (16 char hash)
         long_name = "a" * 100
         result4 = store._sanitize_filter_name(long_name)
-        assert len(result4) <= 33  # 20 char prefix + underscore + 12 char hash
+        assert len(result4) == 16
 
     def test_archive_previous_baseline(self, temp_dir: Path) -> None:
         """Test that previous baseline is archived."""
