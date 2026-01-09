@@ -106,6 +106,9 @@ class ReviewQueue:
     # Maximum total pending items
     MAX_TOTAL_PENDING = 10000
 
+    # Maximum history entries to prevent unbounded memory growth
+    MAX_HISTORY_ENTRIES = 10000
+
     def __init__(
         self,
         store_callback: Optional[Any] = None,
@@ -269,6 +272,10 @@ class ReviewQueue:
             # Use generic error to avoid leaking user_id existence
             raise ValueError("Unauthorized: cannot approve this pending memory")
 
+        # RACE CONDITION FIX: Remove from queue BEFORE calling callback
+        # This prevents duplicate approvals if callback takes time
+        await self._remove_pending(queue_id)
+
         memory_id: Optional[str] = None
 
         # Store via callback if available
@@ -291,9 +298,7 @@ class ReviewQueue:
             memory_id=memory_id,
         )
         self._review_history.append(action)
-
-        # Remove from queue
-        await self._remove_pending(queue_id)
+        self._trim_history()
 
         return memory_id or queue_id
 
@@ -324,6 +329,9 @@ class ReviewQueue:
         if pending.user_id != reviewer:
             raise ValueError("Unauthorized: cannot reject this pending memory")
 
+        # Remove from queue first (consistent with approve)
+        await self._remove_pending(queue_id)
+
         # Record action (include user_id for proper filtering)
         action = ReviewAction(
             queue_id=queue_id,
@@ -334,9 +342,7 @@ class ReviewQueue:
             reason=reason,
         )
         self._review_history.append(action)
-
-        # Remove from queue
-        await self._remove_pending(queue_id)
+        self._trim_history()
 
     async def _remove_pending(self, queue_id: str) -> None:
         """Remove a pending item from all indexes.
@@ -349,6 +355,16 @@ class ReviewQueue:
             user_queue = self._user_pending.get(pending.user_id, [])
             if queue_id in user_queue:
                 user_queue.remove(queue_id)
+
+    def _trim_history(self) -> None:
+        """Trim history to prevent unbounded memory growth.
+
+        Removes oldest entries when MAX_HISTORY_ENTRIES is exceeded.
+        """
+        if len(self._review_history) > self.MAX_HISTORY_ENTRIES:
+            # Remove oldest entries (at the beginning of the list)
+            excess = len(self._review_history) - self.MAX_HISTORY_ENTRIES
+            self._review_history = self._review_history[excess:]
 
     async def get_review_history(
         self,
