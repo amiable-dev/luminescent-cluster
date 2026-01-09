@@ -115,23 +115,17 @@ class HedgeDetector:
     )
 
     # Strong assertion markers that can override hedge words
-    # If these are present, the statement may still be grounded
     # SECURITY: Only include specific, unambiguous assertion markers
-    # Generic phrases like "it is" are excluded as they match too broadly
+    # that require actual supporting evidence to be meaningful.
+    # Generic phrases like "according to" are excluded as they can
+    # be trivially added to bypass hedge detection.
+    # These markers should reduce speculation score but NOT flip is_speculative
+    # unless corroborated by an actual citation (handled in validator).
     ASSERTION_MARKERS = [
-        "definitely",
-        "certainly",
-        "absolutely",
         "confirmed",
         "verified",
-        "decided to use",
-        "we chose",
-        "we selected",
-        "we decided",
-        "the decision was",
-        "per adr",
-        "according to",
-        "as documented",
+        "definitely",
+        "certainly",
     ]
 
     # Patterns that look like hedge words but aren't in context

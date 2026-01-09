@@ -913,10 +913,10 @@ class TestReviewQueueAuthorization:
             await queue.approve(queue_id, "user-2")
 
     @pytest.mark.asyncio
-    async def test_authorized_user_can_approve(
+    async def test_owner_can_reject_own_memory(
         self, queue, evidence, validation_result
     ):
-        """Explicitly authorized user can approve memories."""
+        """Memory owner should be able to reject their own pending memory."""
         queue_id = await queue.enqueue(
             user_id="user-1",
             content="Test memory",
@@ -926,11 +926,12 @@ class TestReviewQueueAuthorization:
             validation_result=validation_result,
         )
 
-        # Admin approves with explicit authorization
-        memory_id = await queue.approve(
-            queue_id, "admin", authorized_user_id="user-1"
-        )
-        assert memory_id is not None
+        # Owner rejects their own - should succeed
+        await queue.reject(queue_id, "user-1", "Changed my mind")
+
+        # Should be removed from queue
+        pending = await queue.get_pending("user-1")
+        assert len(pending) == 0
 
     @pytest.mark.asyncio
     async def test_other_user_cannot_reject_memory(
@@ -996,21 +997,38 @@ class TestHedgeDetectorSecurity:
         assert result.is_speculative is True
         assert "maybe" in result.hedge_words_found
 
+        # "According to" should NOT override speculation (was removed)
+        result = detector.analyze("According to docs, this might work")
+        assert result.is_speculative is True
+        assert "might" in result.hedge_words_found
+
         # "This is" should NOT override speculation
         result = detector.analyze("This is probably wrong")
         assert result.is_speculative is True
         assert "probably" in result.hedge_words_found
 
-    def test_specific_assertions_do_override(self):
-        """Specific assertion markers should override hedge words."""
+    def test_only_strong_assertions_override(self):
+        """Only very specific assertion markers should override hedge words."""
         detector = HedgeDetector()
 
-        # "Confirmed" should override
+        # "Confirmed" should override - it implies verification occurred
         result = detector.analyze("Confirmed: we might need this feature")
         assert result.is_speculative is False
         assert result.has_assertions is True
 
-        # "Per ADR" should override
-        result = detector.analyze("Per ADR-003, we should probably use this")
+        # "Verified" should override
+        result = detector.analyze("Verified that we should probably use this")
         assert result.is_speculative is False
         assert result.has_assertions is True
+
+    def test_weak_phrases_do_not_override(self):
+        """Removed assertion markers should NOT override hedge words."""
+        detector = HedgeDetector()
+
+        # "We decided" was removed - too easy to fake
+        result = detector.analyze("We decided this might be the solution")
+        assert result.is_speculative is True
+
+        # "According to" was removed - too easy to fake
+        result = detector.analyze("According to the API, maybe it works")
+        assert result.is_speculative is True
