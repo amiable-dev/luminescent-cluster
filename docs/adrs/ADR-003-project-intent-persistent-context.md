@@ -4,7 +4,7 @@
 **Date**: 2025-12-22
 **Decision Makers**: Development Team
 **Owners**: @christopherjoseph
-**Version**: 6.0 (Two-Stage Retrieval Architecture)
+**Version**: 6.1 (Provider Integration)
 
 ## Decision Summary
 
@@ -1165,13 +1165,14 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 | Phase 2 | Exit Criteria Tests | ✅ Complete | 6 benchmark tests passing |
 | Phase 2 | Grounded Memory Ingestion | ✅ Complete | 3-tier provenance model: `src/memory/ingestion/` - 62 tests (security hardened) |
 | **Phase 3** | Two-Stage Retrieval | ✅ Complete | `src/memory/retrieval/` - BM25 + Vector + RRF + Cross-Encoder |
+| Phase 3 | Provider Integration | ✅ Complete | `LocalMemoryProvider` with optional hybrid retrieval |
 | Phase 3 | Exit Criteria | ✅ Complete | <1s latency, multi-hop improvement - 15 benchmarks |
 | Phase 3 | Knowledge Graph | 📝 Not Started | HybridRAG |
 | Phase 3 | Entity Extraction | 📝 Not Started | Async pipeline |
 | **Phase 4** | Hindsight Integration | 📝 Not Started | Conditional on Phase 3 |
 | Phase 4 | MaaS Architecture | 📝 Not Started | Multi-agent support |
 
-**Test Summary**: 757 memory tests passing (as of 2026-01-09) - 168 new Two-Stage Retrieval tests
+**Test Summary**: 773 memory tests passing (as of 2026-01-09) - 16 new provider integration tests
 
 **Legend**: ✅ Complete | 🔄 Partial | 📝 Not Started | ❌ Blocked
 
@@ -1401,3 +1402,4 @@ The following questions have been investigated and resolved:
 | 4.9 | 2026-01-09 | **Grounded Memory Ingestion Complete**: Implemented Phase 2 3-tier provenance model to prevent hallucination write-back. Added `src/memory/ingestion/` package with 8 modules: `evidence.py` (EvidenceObject), `result.py` (ValidationResult, IngestionTier), `citation_detector.py` (ADR/commit/URL regex), `hedge_detector.py` (speculative language blocking), `dedup_checker.py` (Jaccard similarity >0.92), `validator.py` (IngestionValidator orchestrator), `review_queue.py` (Tier 2 pending memories). Integrated into `create_memory()` MCP tool with bypass_validation option. Added review queue MCP tools: `get_pending_memories`, `approve_pending_memory`, `reject_pending_memory`. Exit criteria met: zero hallucination write-back in grounded ingestion tests. Test count: 575 memory tests (48 ingestion-specific). **Remaining**: Two-Stage Retrieval (Phase 3). |
 | 5.0 | 2026-01-09 | **Grounded Memory Ingestion Security Hardened**: Council verification across 6 rounds identified and fixed critical security vulnerabilities. **Fixes**: (1) Hedge bypass via assertion markers - assertions no longer override `is_speculative`; (2) Dedup fail-open - now raises `DedupCheckError`, flags for review; (3) Cross-tenant data leak in `get_review_history` - requires `user_id`; (4) Cross-tenant DoS via eviction - rejects at capacity; (5) IDOR in `get_by_id` - requires authorization; (6) Strong speculation missed - added "i don't know"; (7) Race condition in approve - removes before callback; (8) Unbounded history growth - added `MAX_HISTORY_ENTRIES`. Council synthesis: "approved" at 0.9 confidence. Test count: 589 memory tests (62 ingestion-specific). |
 | 6.0 | 2026-01-09 | **Two-Stage Retrieval Architecture Complete (Phase 3)**: Implemented hybrid retrieval as specified in ADR-003 Phase 3. **Stage 1 (Parallel Candidate Generation)**: `bm25.py` (BM25 sparse keyword search with tokenization, IDF, multi-tenant indexes), `vector_search.py` (dense semantic search with sentence-transformers, lazy loading, cosine similarity). **Stage 2 (Fusion + Reranking)**: `fusion.py` (RRF algorithm with k=60, weighted fusion, fuse_with_details for provenance), `reranker.py` (cross-encoder reranking with ms-marco-MiniLM-L-6-v2, fallback reranker for fast mode). **Orchestrator**: `hybrid.py` (HybridRetriever with parallel Stage 1 via asyncio.gather, RRF fusion, optional reranking, RetrievalMetrics for latency tracking). **Integration**: Updated `src/memory/retrieval/__init__.py` exports. **Exit Criteria Met**: latency <1s, multi-hop queries outperform pure vector. Test count: 757 memory tests (168 new retrieval tests, 15 exit benchmarks). **Remaining**: Knowledge Graph (Phase 3), Entity Extraction (Phase 3). |
+| 6.1 | 2026-01-09 | **Provider Integration Complete**: Integrated HybridRetriever into LocalMemoryProvider with backwards compatibility. **Features**: Optional `use_hybrid_retrieval` parameter (default: False), `use_cross_encoder` for quality vs speed tradeoff, `use_query_rewriter` for term expansion. **New Methods**: `retrieve_with_scores()` returns (Memory, score) tuples, `retrieve_with_metrics()` returns detailed RetrievalMetrics. **Automatic Index Management**: store/delete/clear operations sync with hybrid indexes. **Bug Fix**: Fixed `hybrid.py` to use `query_rewriter.rewrite()` instead of `expand()` (string vs list return type). Test count: 773 memory tests (16 new provider integration tests). **Remaining**: Knowledge Graph (Phase 3), Entity Extraction (Phase 3). |
