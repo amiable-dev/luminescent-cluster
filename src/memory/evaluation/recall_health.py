@@ -150,13 +150,24 @@ class RecallHealthMonitor:
             hnsw_filter: Optional filtered HNSW search function.
                         If not provided, uses default hnsw_search.
             filter_name: Name of the filter for baseline lookup.
-                        Required for drift detection when using filters.
+                        Required when using filter_fn for proper baseline handling.
 
         Returns:
             RecallHealthResult with metrics and threshold evaluation.
+
+        Raises:
+            ValueError: If queries is empty.
+            ValueError: If filter_fn is provided but filter_name is not.
         """
         if not queries:
             raise ValueError("Query list cannot be empty")
+
+        # Validate filter_name requirement when using filters
+        if filter_fn is not None and filter_name is None:
+            raise ValueError(
+                "filter_name is required when using filter_fn. "
+                "Provide a filter_name to identify the filtered baseline."
+            )
 
         individual_recalls = []
         search_fn = hnsw_filter if hnsw_filter else self._hnsw_search

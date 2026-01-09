@@ -195,10 +195,12 @@ class ReindexTrigger:
             logger.warning(f"Triggering reindex: {reason}")
 
             # Handle both sync and async callbacks
+            # Run sync callbacks in thread pool to avoid blocking event loop
             if asyncio.iscoroutinefunction(self._reindex_callback):
                 await self._reindex_callback()
             else:
-                self._reindex_callback()
+                loop = asyncio.get_running_loop()
+                await loop.run_in_executor(None, self._reindex_callback)
 
             event.completed = True
             self._last_reindex = datetime.now()
