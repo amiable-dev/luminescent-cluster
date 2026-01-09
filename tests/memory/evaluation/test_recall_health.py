@@ -296,6 +296,18 @@ class TestBaselineStore:
         with pytest.raises(ValueError, match="must contain at least one alphanumeric"):
             store._get_baseline_path(filtered=True, filter_name="/.//")
 
+    def test_filtered_requires_filter_name(self, temp_dir: Path) -> None:
+        """Test that filtered=True requires a filter_name."""
+        store = BaselineStore(temp_dir)
+
+        # filtered=True with filter_name=None should raise
+        with pytest.raises(ValueError, match="filter_name is required"):
+            store._get_baseline_path(filtered=True, filter_name=None)
+
+        # Same for load_history
+        with pytest.raises(ValueError, match="filter_name is required"):
+            store.load_history(filtered=True, filter_name=None)
+
     def test_sanitize_filter_name(self, temp_dir: Path) -> None:
         """Test filter name sanitization."""
         store = BaselineStore(temp_dir)

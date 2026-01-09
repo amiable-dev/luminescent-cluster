@@ -137,13 +137,23 @@ class BaselineStore:
 
         Returns:
             Path to the baseline file within storage_path.
+
+        Raises:
+            ValueError: If filtered=True but filter_name is None or empty.
         """
-        if filtered and filter_name:
+        if filtered:
+            # Require filter_name for filtered baselines to prevent
+            # accidentally overwriting the global unfiltered baseline
+            if not filter_name:
+                raise ValueError(
+                    "filter_name is required for filtered baselines. "
+                    "Cannot use filtered=True with filter_name=None."
+                )
             safe_name = self._sanitize_filter_name(filter_name)
             path = self.storage_path / f"filtered_{safe_name}.json"
             # Verify path stays within storage_path (defense in depth)
             if not path.resolve().is_relative_to(self.storage_path.resolve()):
-                raise ValueError(f"Invalid filter_name: path escape detected")
+                raise ValueError("Invalid filter_name: path escape detected")
             return path
         return self.storage_path / self.UNFILTERED_FILENAME
 
@@ -221,14 +231,28 @@ class BaselineStore:
 
         Args:
             filtered: Whether to load filtered baseline history.
-            filter_name: Name of the filter.
+            filter_name: Name of the filter (sanitized before use in glob).
             limit: Maximum number of historical baselines to return.
 
         Returns:
             List of baselines sorted by created_at descending (newest first).
+
+        Raises:
+            ValueError: If filtered=True but filter_name is None or empty.
         """
         history_dir = self.storage_path / self.HISTORY_DIR
-        prefix = f"filtered_{filter_name}_" if filtered and filter_name else "unfiltered_"
+
+        if filtered:
+            # Require and sanitize filter_name for filtered history
+            if not filter_name:
+                raise ValueError(
+                    "filter_name is required for filtered baseline history. "
+                    "Cannot use filtered=True with filter_name=None."
+                )
+            safe_name = self._sanitize_filter_name(filter_name)
+            prefix = f"filtered_{safe_name}_"
+        else:
+            prefix = "unfiltered_"
 
         baselines = []
         for path in history_dir.glob(f"{prefix}*.json"):
