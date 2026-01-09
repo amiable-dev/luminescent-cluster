@@ -4,21 +4,32 @@
 """Evaluation harness for memory system.
 
 Provides the EvaluationHarness class for running golden dataset
-evaluations and computing metrics.
+evaluations and computing metrics, including HNSW recall health monitoring.
 
 Related GitHub Issues:
 - #78: Create Evaluation Harness
 
-ADR Reference: ADR-003 Memory Architecture, Phase 0 (Foundations)
+ADR Reference: ADR-003 Memory Architecture, Phase 0 (Foundations, HNSW Recall Health)
 """
+
+from __future__ import annotations
 
 import json
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from src.memory.evaluation.reporter import EvaluationReport
+
+if TYPE_CHECKING:
+    from src.memory.evaluation.baseline import BaselineStore
+    from src.memory.evaluation.brute_force import BruteForceSearcher
+    from src.memory.evaluation.recall_health import (
+        RecallHealthMonitor,
+        RecallHealthResult,
+        SearchResult,
+    )
 
 
 @dataclass
@@ -268,3 +279,127 @@ class EvaluationHarness:
             self.questions = original_questions
 
         return report
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # HNSW Recall Health Monitoring (ADR-003 Phase 0)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def configure_recall_monitoring(
+        self,
+        brute_force: "BruteForceSearcher",
+        hnsw_search: Callable[[str, int], list["SearchResult"]],
+        baseline_store: "BaselineStore",
+        embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2",
+        embedding_version: str = "unknown",
+    ) -> None:
+        """Enable HNSW recall health monitoring.
+
+        This configures the harness to measure Recall@k by comparing
+        HNSW approximate search results against brute-force exact search.
+
+        Args:
+            brute_force: Brute-force searcher for ground truth.
+            hnsw_search: Function that performs HNSW search.
+            baseline_store: Store for loading/saving recall baselines.
+            embedding_model: Model ID for baseline compatibility.
+            embedding_version: Version hash for baseline compatibility.
+
+        Example:
+            >>> harness = EvaluationHarness()
+            >>> harness.load_dataset("tests/memory/golden_dataset.json")
+            >>> harness.configure_recall_monitoring(
+            ...     brute_force=brute_force_searcher,
+            ...     hnsw_search=pixeltable_search,
+            ...     baseline_store=BaselineStore(Path("/data/baselines")),
+            ... )
+            >>> result = harness.run_recall_health_check()
+        """
+        from src.memory.evaluation.recall_health import RecallHealthMonitor
+
+        self._recall_monitor = RecallHealthMonitor(
+            brute_force=brute_force,
+            hnsw_search=hnsw_search,
+            baseline_store=baseline_store,
+            embedding_model=embedding_model,
+            embedding_version=embedding_version,
+        )
+
+    def run_recall_health_check(
+        self,
+        k: int = 10,
+        use_golden_queries: bool = True,
+        queries: list[str] | None = None,
+    ) -> "RecallHealthResult":
+        """Run recall health check.
+
+        Measures Recall@k for the HNSW search against brute-force
+        ground truth and checks against thresholds.
+
+        Args:
+            k: Number of results to consider.
+            use_golden_queries: If True, use questions from loaded dataset.
+            queries: Custom queries (used if use_golden_queries=False).
+
+        Returns:
+            RecallHealthResult with pass/fail status.
+
+        Raises:
+            RuntimeError: If recall monitoring not configured.
+            ValueError: If no queries available.
+        """
+        if not hasattr(self, "_recall_monitor") or self._recall_monitor is None:
+            raise RuntimeError(
+                "Recall monitoring not configured. "
+                "Call configure_recall_monitoring() first."
+            )
+
+        if use_golden_queries:
+            if not self.questions:
+                raise ValueError(
+                    "No golden queries loaded. Call load_dataset() first."
+                )
+            query_list = [q.question for q in self.questions]
+        else:
+            if not queries:
+                raise ValueError("No queries provided.")
+            query_list = queries
+
+        return self._recall_monitor.check_health(query_list, k)
+
+    def establish_recall_baseline(
+        self,
+        k: int = 10,
+        use_golden_queries: bool = True,
+        queries: list[str] | None = None,
+    ) -> None:
+        """Establish a new recall baseline.
+
+        Use after reindexing or initial setup to create a baseline
+        for future drift detection.
+
+        Args:
+            k: Number of results to consider.
+            use_golden_queries: If True, use questions from loaded dataset.
+            queries: Custom queries (used if use_golden_queries=False).
+
+        Raises:
+            RuntimeError: If recall monitoring not configured.
+        """
+        if not hasattr(self, "_recall_monitor") or self._recall_monitor is None:
+            raise RuntimeError(
+                "Recall monitoring not configured. "
+                "Call configure_recall_monitoring() first."
+            )
+
+        if use_golden_queries:
+            if not self.questions:
+                raise ValueError(
+                    "No golden queries loaded. Call load_dataset() first."
+                )
+            query_list = [q.question for q in self.questions]
+        else:
+            if not queries:
+                raise ValueError("No queries provided.")
+            query_list = queries
+
+        self._recall_monitor.establish_baseline(query_list, k)
