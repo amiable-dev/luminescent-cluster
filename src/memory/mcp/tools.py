@@ -13,17 +13,27 @@ Related GitHub Issues:
 - #89: delete_memory MCP Tool
 
 ADR Reference: ADR-003 Memory Architecture, Phase 1a (Storage)
+ADR Reference: ADR-003 Memory Architecture, Phase 2 (Grounded Ingestion)
 """
 
 from typing import Any, Optional
 
 from src.extensions.registry import ExtensionRegistry
+from src.memory.ingestion import (
+    IngestionTier,
+    IngestionValidator,
+    ReviewQueue,
+)
 from src.memory.providers.local import LocalMemoryProvider
 from src.memory.schemas import Memory, MemoryType
 
 # Module-level provider instance for OSS mode
 # In cloud mode, this would be replaced by registry lookup
 _local_provider: Optional[LocalMemoryProvider] = None
+
+# Module-level ingestion validator and review queue (ADR-003 Phase 2)
+_ingestion_validator: Optional[IngestionValidator] = None
+_review_queue: Optional[ReviewQueue] = None
 
 
 def _log_audit_event(
@@ -77,6 +87,61 @@ def _get_provider() -> LocalMemoryProvider:
     return _local_provider
 
 
+def _get_validator() -> IngestionValidator:
+    """Get the ingestion validator instance.
+
+    ADR-003 Phase 2: Grounded Memory Ingestion.
+    Lazily initializes with the current provider.
+    """
+    global _ingestion_validator
+
+    if _ingestion_validator is None:
+        provider = _get_provider()
+        _ingestion_validator = IngestionValidator(
+            provider=provider,
+            enable_dedup=True,
+        )
+
+    return _ingestion_validator
+
+
+def _get_review_queue() -> ReviewQueue:
+    """Get the review queue instance for Tier 2 memories.
+
+    ADR-003 Phase 2: Memories flagged for review are queued
+    for human approval before promotion to permanent storage.
+    """
+    global _review_queue
+
+    if _review_queue is None:
+        # Create store callback that stores approved memories
+        async def store_approved(
+            content: str,
+            memory_type: str,
+            source: str,
+            user_id: str,
+            evidence: Any,
+        ) -> str:
+            """Store an approved memory with evidence attached."""
+            provider = _get_provider()
+            memory = Memory(
+                user_id=user_id,
+                content=content,
+                memory_type=MemoryType(memory_type),
+                source=source,
+                confidence=1.0,  # User-approved
+                metadata={
+                    "evidence": evidence.to_dict() if evidence else {},
+                    "approved_from_review": True,
+                },
+            )
+            return await provider.store(memory, {})
+
+        _review_queue = ReviewQueue(store_callback=store_approved)
+
+    return _review_queue
+
+
 async def create_memory(
     user_id: str,
     content: str,
@@ -85,10 +150,17 @@ async def create_memory(
     confidence: float = 1.0,
     raw_source: Optional[str] = None,
     metadata: Optional[dict[str, Any]] = None,
+    bypass_validation: bool = False,
 ) -> dict[str, Any]:
-    """Create a new memory.
+    """Create a new memory with grounded ingestion validation.
 
     MCP Tool for storing a memory in the memory system.
+    ADR-003 Phase 2: Validates content before storage using 3-tier model.
+
+    Validation Tiers:
+    - Tier 1 (AUTO_APPROVE): Content with citations, trusted sources
+    - Tier 2 (FLAG_REVIEW): AI-synthesized claims without sources
+    - Tier 3 (BLOCK): Speculative content, duplicates
 
     Args:
         user_id: User who owns this memory.
@@ -98,9 +170,10 @@ async def create_memory(
         confidence: Extraction confidence score (0.0-1.0).
         raw_source: Original text for re-extraction.
         metadata: Additional metadata.
+        bypass_validation: Skip validation (for internal/trusted sources).
 
     Returns:
-        Dict with memory_id of the created memory.
+        Dict with memory_id of the created memory, or error/pending status.
 
     Example:
         >>> result = await create_memory(
@@ -116,6 +189,76 @@ async def create_memory(
         mem_type = MemoryType(memory_type)
     except ValueError:
         return {"error": f"Invalid memory_type: {memory_type}"}
+
+    # === ADR-003 Phase 2: Grounded Ingestion Validation ===
+    if not bypass_validation:
+        validator = _get_validator()
+        validation_result = await validator.validate(
+            content=content,
+            memory_type=memory_type,
+            source=source,
+            user_id=user_id,
+            metadata=metadata,
+        )
+
+        # Tier 3: Block speculative/duplicate content
+        if validation_result.tier == IngestionTier.BLOCK:
+            _log_audit_event(
+                actor=user_id,
+                resource="memory:blocked",
+                action="create",
+                outcome="blocked",
+                details={
+                    "memory_type": memory_type,
+                    "source": source,
+                    "reason": validation_result.reason,
+                    "checks_failed": validation_result.checks_failed,
+                },
+            )
+            return {
+                "error": "blocked",
+                "reason": validation_result.reason,
+                "tier": validation_result.tier.value,
+                "checks_failed": validation_result.checks_failed,
+            }
+
+        # Tier 2: Queue for human review
+        if validation_result.tier == IngestionTier.FLAG_REVIEW:
+            review_queue = _get_review_queue()
+            queue_id = await review_queue.enqueue(
+                user_id=user_id,
+                content=content,
+                memory_type=memory_type,
+                source=source,
+                evidence=validation_result.evidence,
+                validation_result=validation_result,
+                metadata=metadata,
+            )
+
+            _log_audit_event(
+                actor=user_id,
+                resource=f"memory:pending:{queue_id}",
+                action="create",
+                outcome="pending_review",
+                details={
+                    "memory_type": memory_type,
+                    "source": source,
+                    "queue_id": queue_id,
+                },
+            )
+            return {
+                "status": "pending_review",
+                "queue_id": queue_id,
+                "reason": validation_result.reason,
+                "tier": validation_result.tier.value,
+                "message": "Memory queued for review. Use approve_pending_memory() to approve.",
+            }
+
+        # Tier 1: Auto-approve - continue to storage
+        # Attach evidence to metadata
+        metadata = metadata or {}
+        metadata["evidence"] = validation_result.evidence.to_dict()
+        metadata["validation_tier"] = validation_result.tier.value
 
     # Create Memory object
     memory = Memory(
@@ -143,7 +286,7 @@ async def create_memory(
 
     return {
         "memory_id": memory_id,
-        "message": f"Memory created successfully",
+        "message": "Memory created successfully",
     }
 
 
@@ -589,9 +732,140 @@ async def assemble_context(
     }
 
 
+async def get_pending_memories(
+    user_id: str,
+    limit: int = 10,
+) -> dict[str, Any]:
+    """Get pending memories awaiting review.
+
+    MCP Tool for listing Tier 2 memories that need human approval.
+    ADR-003 Phase 2: Grounded Memory Ingestion review queue.
+
+    Args:
+        user_id: User ID to filter pending memories.
+        limit: Maximum number of pending memories to return.
+
+    Returns:
+        Dict with list of pending memories and count.
+
+    Example:
+        >>> result = await get_pending_memories("user-123")
+        >>> for pending in result["pending"]:
+        ...     print(pending["content"])
+    """
+    review_queue = _get_review_queue()
+    pending = await review_queue.get_pending(user_id, limit=limit)
+
+    return {
+        "pending": [p.to_dict() for p in pending],
+        "count": len(pending),
+        "total_pending": review_queue.pending_count(user_id),
+    }
+
+
+async def approve_pending_memory(
+    queue_id: str,
+    reviewer: str,
+) -> dict[str, Any]:
+    """Approve a pending memory from the review queue.
+
+    MCP Tool for approving Tier 2 memories.
+    Approved memories are promoted to permanent storage.
+
+    Args:
+        queue_id: Queue ID of the pending memory.
+        reviewer: Who is approving (user_id or "system").
+
+    Returns:
+        Dict with memory_id of the stored memory.
+
+    Example:
+        >>> result = await approve_pending_memory(
+        ...     queue_id="abc-123",
+        ...     reviewer="user-123"
+        ... )
+        >>> print(result["memory_id"])
+    """
+    review_queue = _get_review_queue()
+
+    try:
+        memory_id = await review_queue.approve(queue_id, reviewer)
+
+        _log_audit_event(
+            actor=reviewer,
+            resource=f"memory:{memory_id}",
+            action="approve",
+            outcome="success",
+            details={"queue_id": queue_id},
+        )
+
+        return {
+            "success": True,
+            "memory_id": memory_id,
+            "message": "Memory approved and stored successfully",
+        }
+    except ValueError as e:
+        return {
+            "success": False,
+            "error": str(e),
+        }
+
+
+async def reject_pending_memory(
+    queue_id: str,
+    reviewer: str,
+    reason: str,
+) -> dict[str, Any]:
+    """Reject a pending memory from the review queue.
+
+    MCP Tool for rejecting Tier 2 memories.
+    Rejected memories are discarded.
+
+    Args:
+        queue_id: Queue ID of the pending memory.
+        reviewer: Who is rejecting (user_id or "system").
+        reason: Reason for rejection.
+
+    Returns:
+        Dict with success status.
+
+    Example:
+        >>> result = await reject_pending_memory(
+        ...     queue_id="abc-123",
+        ...     reviewer="user-123",
+        ...     reason="Incorrect information"
+        ... )
+    """
+    review_queue = _get_review_queue()
+
+    try:
+        await review_queue.reject(queue_id, reviewer, reason)
+
+        _log_audit_event(
+            actor=reviewer,
+            resource=f"memory:pending:{queue_id}",
+            action="reject",
+            outcome="success",
+            details={"reason": reason},
+        )
+
+        return {
+            "success": True,
+            "queue_id": queue_id,
+            "message": "Memory rejected",
+        }
+    except ValueError as e:
+        return {
+            "success": False,
+            "error": str(e),
+        }
+
+
 def reset_provider() -> None:
-    """Reset the provider instance (for testing)."""
-    global _local_provider
+    """Reset the provider and validator instances (for testing)."""
+    global _local_provider, _ingestion_validator, _review_queue
     if _local_provider is not None:
         _local_provider.clear()
     _local_provider = None
+    _ingestion_validator = None
+    _review_queue = None

@@ -65,12 +65,13 @@ class TestCreateMemoryTool:
         """
         from src.memory.mcp.tools import create_memory
 
-        # Valid types should work
+        # Valid types should work (bypass validation for CRUD testing)
         result = await create_memory(
             user_id="user-123",
             content="Test",
             memory_type="fact",
             source="test",
+            bypass_validation=True,
         )
         assert "memory_id" in result
 
@@ -269,12 +270,13 @@ class TestDeleteMemoryTool:
         """
         from src.memory.mcp.tools import create_memory, delete_memory
 
-        # Create a memory first
+        # Create a memory first (bypass validation for CRUD testing)
         create_result = await create_memory(
             user_id="user-123",
             content="To be deleted",
             memory_type="fact",
             source="test",
+            bypass_validation=True,
         )
 
         result = await delete_memory(memory_id=create_result["memory_id"])
@@ -296,6 +298,7 @@ class TestDeleteMemoryTool:
             content="Delete me",
             memory_type="fact",
             source="test",
+            bypass_validation=True,
         )
 
         result = await delete_memory(memory_id=create_result["memory_id"])
@@ -341,6 +344,7 @@ class TestGetMemoryByIdTool:
             content="Test memory",
             memory_type="fact",
             source="test",
+            bypass_validation=True,
         )
 
         result = await get_memory_by_id(memory_id=create_result["memory_id"])
@@ -425,12 +429,13 @@ class TestUpdateMemoryTool:
         """
         from src.memory.mcp.tools import create_memory, update_memory
 
-        # Create a memory first
+        # Create a memory first (bypass validation for CRUD testing)
         create_result = await create_memory(
             user_id="user-update-test",
             content="Original content",
             memory_type="preference",
             source="test",
+            bypass_validation=True,
         )
 
         result = await update_memory(
@@ -451,12 +456,13 @@ class TestUpdateMemoryTool:
         """
         from src.memory.mcp.tools import create_memory, get_memory_by_id, update_memory
 
-        # Create a memory first
+        # Create a memory first (bypass validation for CRUD testing)
         create_result = await create_memory(
             user_id="user-update-test",
             content="Original content",
             memory_type="fact",
             source="test",
+            bypass_validation=True,
         )
 
         # Update the memory
@@ -484,6 +490,7 @@ class TestUpdateMemoryTool:
             content="Test content",
             memory_type="fact",
             source="original-source",
+            bypass_validation=True,
         )
 
         await update_memory(
@@ -549,6 +556,7 @@ class TestInvalidateMemoryTool:
             content="To be invalidated",
             memory_type="fact",
             source="test",
+            bypass_validation=True,
         )
 
         result = await invalidate_memory(
@@ -573,6 +581,7 @@ class TestInvalidateMemoryTool:
             content="Valid memory",
             memory_type="fact",
             source="test",
+            bypass_validation=True,
         )
 
         await invalidate_memory(
@@ -603,6 +612,7 @@ class TestInvalidateMemoryTool:
             content="Test memory",
             memory_type="fact",
             source="test",
+            bypass_validation=True,
         )
 
         reason = "User corrected this information"
@@ -643,12 +653,13 @@ class TestInvalidateMemoryTool:
         """
         from src.memory.mcp.tools import create_memory, get_memories, invalidate_memory
 
-        # Create and invalidate a memory
+        # Create and invalidate a memory (bypass validation for CRUD testing)
         create_result = await create_memory(
             user_id="user-invalidate-exclude-test",
             content="Invalidated memory for exclusion test",
             memory_type="preference",
             source="test",
+            bypass_validation=True,
         )
 
         await invalidate_memory(
@@ -709,6 +720,7 @@ class TestGetMemoryProvenanceTool:
             memory_type="fact",
             source="conversation",
             raw_source="User said: I prefer Python over JavaScript",
+            bypass_validation=True,
         )
 
         result = await get_memory_provenance(memory_id=create_result["memory_id"])
@@ -755,6 +767,7 @@ class TestGetMemoryProvenanceTool:
             content="Test memory",
             memory_type="fact",
             source="test",
+            bypass_validation=True,
         )
 
         result = await get_memory_provenance(memory_id=create_result["memory_id"])
@@ -780,6 +793,7 @@ class TestGetMemoryProvenanceTool:
             content="Test memory",
             memory_type="fact",
             source="test",
+            bypass_validation=True,
         )
 
         result = await get_memory_provenance(memory_id=create_result["memory_id"])
@@ -805,6 +819,7 @@ class TestGetMemoryProvenanceTool:
             content="Original content",
             memory_type="fact",
             source="test",
+            bypass_validation=True,
         )
 
         # Update the memory
