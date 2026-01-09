@@ -4,7 +4,7 @@
 **Date**: 2025-12-22
 **Decision Makers**: Development Team
 **Owners**: @christopherjoseph
-**Version**: 4.6 (Security Hardening)
+**Version**: 4.8 (HNSW Recall Health Complete)
 
 ## Decision Summary
 
@@ -1135,6 +1135,9 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 | Phase 0 | Memory Schema & Lifecycle | ✅ Complete | `src/memory/schemas/`, `src/memory/lifecycle/` - 36 tests |
 | Phase 0 | Governance & Observability | ✅ Complete | `src/memory/observability/` - 27 tests |
 | Phase 0 | MemoryProvider Protocol | ✅ Complete | `src/memory/protocols.py` - ADR-007 compliant |
+| Phase 0 | HNSW Recall Health Monitoring | ✅ Complete | `src/memory/evaluation/recall_health.py`, `brute_force.py`, `baseline.py` - 37 tests |
+| Phase 0 | Embedding Version Tracking | ✅ Complete | `src/memory/evaluation/embedding_version.py` - Council verified |
+| Phase 0 | Reindex Trigger | ✅ Complete | `src/memory/maintenance/reindex_trigger.py` - Auto-reindex on threshold breach |
 | **Phase 1** | Session Memory MCP | ✅ Complete | `session_memory_server.py` - 45 tests |
 | Phase 1 | Pixeltable MCP | ✅ Complete | `pixeltable_mcp_server.py` - 62 tests |
 | Phase 1a | Hot Memory Storage | ✅ Complete | `src/memory/storage/`, `src/memory/providers/local.py` - 27 tests |
@@ -1160,12 +1163,14 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 | Phase 2 | History Compression | ✅ Complete | Line-preserving truncation |
 | Phase 2 | Token Efficiency | ✅ Complete | 40% efficiency (>30% target) |
 | Phase 2 | Exit Criteria Tests | ✅ Complete | 6 benchmark tests passing |
+| Phase 2 | Grounded Memory Ingestion | 📝 Not Started | 3-tier provenance model (auto-approve/flag/block) |
 | **Phase 3** | Knowledge Graph | 📝 Not Started | HybridRAG |
+| Phase 3 | Two-Stage Retrieval | 📝 Not Started | RRF fusion + cross-encoder reranking |
 | Phase 3 | Entity Extraction | 📝 Not Started | Async pipeline |
 | **Phase 4** | Hindsight Integration | 📝 Not Started | Conditional on Phase 3 |
 | Phase 4 | MaaS Architecture | 📝 Not Started | Multi-agent support |
 
-**Test Summary**: 490 tests passing (as of 2026-01-08)
+**Test Summary**: 527 tests passing (as of 2026-01-09)
 
 **Legend**: ✅ Complete | 🔄 Partial | 📝 Not Started | ❌ Blocked
 
@@ -1391,3 +1396,4 @@ The following questions have been investigated and resolved:
 | 4.5 | 2026-01-08 | **Phase 2 Complete**: Implemented Memory Blocks Architecture with 5-block layout (System, Project, Task, History, Knowledge). Added provenance tracking on all retrievals, line-preserving truncation, XML-safe delimiters. Met all exit criteria: 40% token efficiency (>30% target), provenance on all items, stale detection operational. Test count: 436 memory tests. Council verified across 8 rounds. |
 | 4.6 | 2026-01-08 | **Security Hardening (Council Rounds 13-19)**: Comprehensive DoS prevention in ProvenanceService. Added: bounded LRU storage, string identifier length limits, metadata bounds validation, recursive nested structure validation with early termination, strict JSON type safety, cycle detection, UTF-8 byte size validation, TOCTOU prevention via deep copy, score range validation (0.0-1.0). Test count: 490 memory tests (64 provenance-specific security tests). |
 | 4.7 | 2026-01-09 | **Research-Driven Strategy Update**: Council-validated additions based on January 2026 RAG research. **Phase 0**: Added HNSW Recall Health Monitoring (critical silent failure mode), recall@k against exact search baseline, retuning milestones at 10k/50k/100k items, embedding versioning. **Phase 2**: Added Grounded Memory Ingestion with 3-tier provenance model, Evidence Object schema. **Phase 3**: Added Two-Stage Retrieval Architecture intent (RRF, multi-query expansion, cross-encoder reranking). **Risks**: Added HNSW silent recall degradation, filter-induced recall collapse, embedding model drift, retrieval poisoning. **References**: HNSW at Scale (TDS), 12 RAG Types (TuringPost). |
+| 4.8 | 2026-01-09 | **HNSW Recall Health Complete**: Implemented full Phase 0 HNSW monitoring suite. Added `recall_health.py` (RecallHealthMonitor, Recall@k computation), `brute_force.py` (exact cosine similarity ground truth), `baseline.py` (drift detection with atomic writes, history pruning), `embedding_version.py` (model version tracking). Security hardening: symlink protection, path containment, PII exclusion, salted hashing. Added `ReindexTrigger` for auto-reindex. Council verified across 31 rounds (0 blocking issues, 10/10 accuracy). Test count: 527 memory tests. **Remaining**: Grounded Memory Ingestion (Phase 2), Two-Stage Retrieval (Phase 3). |
