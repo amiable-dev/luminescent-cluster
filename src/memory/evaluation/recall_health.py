@@ -294,12 +294,25 @@ class RecallHealthMonitor:
             queries: List of query strings.
             k: Number of results to consider.
             filter_fn: Optional filter for filtered baseline.
-            filter_name: Name for filtered baseline.
+            filter_name: Name for filtered baseline (required if filter_fn is provided).
 
         Returns:
             The created RecallBaseline.
+
+        Raises:
+            ValueError: If filter_fn is provided but filter_name is not.
         """
-        result = self.measure_recall_at_k(queries, k, filter_fn=filter_fn)
+        # Validate that filter_name is provided when using a filter
+        if filter_fn is not None and filter_name is None:
+            raise ValueError(
+                "filter_name is required when establishing a filtered baseline. "
+                "Provide a filter_name to identify this filtered baseline."
+            )
+
+        # Pass filter_name through for proper baseline handling
+        result = self.measure_recall_at_k(
+            queries, k, filter_fn=filter_fn, filter_name=filter_name
+        )
 
         baseline = RecallBaseline(
             recall_at_k=result.recall_at_k,

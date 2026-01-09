@@ -204,10 +204,20 @@ class EmbeddingVersionTracker:
 
         Returns:
             Stored version, or None if not found.
+
+        Raises:
+            ValueError: If path is a symlink (potential attack).
         """
         path = self.storage_path / self.VERSION_FILENAME
         if not path.exists():
             return None
+
+        # Check for symlink attack
+        if path.is_symlink():
+            raise ValueError(
+                f"Refusing to read symlink: {path}. "
+                "This may be a symlink attack."
+            )
 
         with open(path) as f:
             data = json.load(f)

@@ -226,13 +226,10 @@ class BaselineStore:
         """Move a baseline file to history directory using atomic write."""
         history_dir = self.storage_path / self.HISTORY_DIR
 
-        # Check for symlink attack on source
-        if path.is_symlink():
-            raise ValueError(f"Refusing to archive symlink: {path}")
-
-        # Read existing baseline to get timestamp
-        with open(path) as f:
-            data = json.load(f)
+        # Read existing baseline safely (includes symlink check)
+        data = self._safe_read_json(path)
+        if data is None:
+            return  # Nothing to archive
 
         # Use created_at for archive filename
         created_at = datetime.fromisoformat(data["created_at"])
@@ -241,6 +238,35 @@ class BaselineStore:
 
         # Copy to history using atomic write
         self._safe_write_json(archive_path, data)
+
+    def _safe_read_json(self, path: Path) -> dict[str, Any] | None:
+        """Safely read JSON from file with symlink protection.
+
+        Args:
+            path: File path to read.
+
+        Returns:
+            Parsed JSON data, or None if file doesn't exist.
+
+        Raises:
+            ValueError: If path is a symlink (potential attack).
+        """
+        if not path.exists():
+            return None
+
+        # Check for symlink attack
+        if path.is_symlink():
+            raise ValueError(
+                f"Refusing to read symlink: {path}. "
+                "This may be a symlink attack."
+            )
+
+        # Verify path is within storage directory
+        if not path.resolve().is_relative_to(self.storage_path.resolve()):
+            raise ValueError(f"Path {path} is outside storage directory")
+
+        with open(path) as f:
+            return json.load(f)
 
     def load_baseline(
         self,
@@ -255,14 +281,15 @@ class BaselineStore:
 
         Returns:
             The loaded baseline, or None if not found.
+
+        Raises:
+            ValueError: If path is a symlink.
         """
         path = self._get_baseline_path(filtered, filter_name)
+        data = self._safe_read_json(path)
 
-        if not path.exists():
+        if data is None:
             return None
-
-        with open(path) as f:
-            data = json.load(f)
 
         return RecallBaseline.from_dict(data)
 
@@ -301,6 +328,9 @@ class BaselineStore:
 
         baselines = []
         for path in history_dir.glob(f"{prefix}*.json"):
+            # Check for symlinks in history files
+            if path.is_symlink():
+                continue  # Skip symlinks silently in history
             with open(path) as f:
                 data = json.load(f)
             baselines.append(RecallBaseline.from_dict(data))
