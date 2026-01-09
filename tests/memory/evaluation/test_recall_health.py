@@ -279,6 +279,39 @@ class TestBaselineStore:
 
         assert drift < 0  # Negative drift = improvement
 
+    def test_path_traversal_prevention(self, temp_dir: Path) -> None:
+        """Test that path traversal attacks are prevented via sanitization."""
+        store = BaselineStore(temp_dir)
+
+        # Path traversal attempts are sanitized to safe names
+        # "../../../etc/passwd" -> "etcpasswd" (dots and slashes removed)
+        path = store._get_baseline_path(filtered=True, filter_name="../../../etc/passwd")
+        assert path.name == "filtered_etcpasswd.json"
+        assert path.parent == temp_dir
+
+        # Pure traversal strings with no alphanumeric content raise ValueError
+        with pytest.raises(ValueError, match="must contain at least one alphanumeric"):
+            store._get_baseline_path(filtered=True, filter_name="../../..")
+
+        with pytest.raises(ValueError, match="must contain at least one alphanumeric"):
+            store._get_baseline_path(filtered=True, filter_name="/.//")
+
+    def test_sanitize_filter_name(self, temp_dir: Path) -> None:
+        """Test filter name sanitization."""
+        store = BaselineStore(temp_dir)
+
+        # Normal names work
+        assert store._sanitize_filter_name("tenant_123") == "tenant_123"
+        assert store._sanitize_filter_name("my-filter") == "my-filter"
+
+        # Special characters are removed
+        assert store._sanitize_filter_name("tenant/123") == "tenant123"
+        assert store._sanitize_filter_name("filter@name") == "filtername"
+
+        # Long names are truncated
+        long_name = "a" * 100
+        assert len(store._sanitize_filter_name(long_name)) == 64
+
     def test_archive_previous_baseline(self, temp_dir: Path) -> None:
         """Test that previous baseline is archived."""
         store = BaselineStore(temp_dir)

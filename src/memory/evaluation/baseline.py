@@ -10,6 +10,7 @@ Related ADR: ADR-003 Memory Architecture, Phase 0 (HNSW Recall Health Monitoring
 """
 
 import json
+import re
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
@@ -97,10 +98,53 @@ class BaselineStore:
         self.storage_path.mkdir(parents=True, exist_ok=True)
         (self.storage_path / self.HISTORY_DIR).mkdir(exist_ok=True)
 
+    def _sanitize_filter_name(self, filter_name: str) -> str:
+        """Sanitize filter name to prevent path traversal attacks.
+
+        Only allows alphanumeric characters, underscores, and hyphens.
+        Removes any path separators or special characters.
+
+        Args:
+            filter_name: The raw filter name.
+
+        Returns:
+            Sanitized filter name safe for use in filenames.
+
+        Raises:
+            ValueError: If filter_name is empty after sanitization.
+        """
+        # Remove any path traversal attempts and special chars
+        sanitized = re.sub(r"[^a-zA-Z0-9_-]", "", filter_name)
+
+        if not sanitized:
+            raise ValueError(
+                f"Invalid filter_name '{filter_name}': "
+                "must contain at least one alphanumeric character"
+            )
+
+        # Limit length to prevent filesystem issues
+        if len(sanitized) > 64:
+            sanitized = sanitized[:64]
+
+        return sanitized
+
     def _get_baseline_path(self, filtered: bool, filter_name: str | None) -> Path:
-        """Get the path for a baseline file."""
+        """Get the path for a baseline file.
+
+        Args:
+            filtered: Whether this is a filtered baseline.
+            filter_name: Name of the filter (sanitized before use).
+
+        Returns:
+            Path to the baseline file within storage_path.
+        """
         if filtered and filter_name:
-            return self.storage_path / f"filtered_{filter_name}.json"
+            safe_name = self._sanitize_filter_name(filter_name)
+            path = self.storage_path / f"filtered_{safe_name}.json"
+            # Verify path stays within storage_path (defense in depth)
+            if not path.resolve().is_relative_to(self.storage_path.resolve()):
+                raise ValueError(f"Invalid filter_name: path escape detected")
+            return path
         return self.storage_path / self.UNFILTERED_FILENAME
 
     def save_baseline(

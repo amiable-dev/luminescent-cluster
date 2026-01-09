@@ -135,6 +135,7 @@ class RecallHealthMonitor:
         k: int = 10,
         filter_fn: Callable[[Document], bool] | None = None,
         hnsw_filter: Callable[[str, int], list[SearchResult]] | None = None,
+        filter_name: str | None = None,
     ) -> RecallHealthResult:
         """Compute Recall@k for a set of queries.
 
@@ -148,6 +149,8 @@ class RecallHealthMonitor:
             filter_fn: Optional filter for brute-force search.
             hnsw_filter: Optional filtered HNSW search function.
                         If not provided, uses default hnsw_search.
+            filter_name: Name of the filter for baseline lookup.
+                        Required for drift detection when using filters.
 
         Returns:
             RecallHealthResult with metrics and threshold evaluation.
@@ -186,7 +189,7 @@ class RecallHealthMonitor:
 
         # Check against baseline for drift
         filtered = filter_fn is not None
-        filter_name = "custom" if filtered else None
+        # Load baseline using the provided filter_name (None for unfiltered)
         baseline = self._baseline_store.load_baseline(filtered, filter_name)
 
         baseline_recall = None
@@ -255,12 +258,14 @@ class RecallHealthMonitor:
         Returns:
             RecallHealthResult with filter context.
         """
-        result = self.measure_recall_at_k(
-            queries, k, filter_fn=filter_fn, hnsw_filter=hnsw_filter
+        # Pass filter_name through for proper baseline lookup
+        return self.measure_recall_at_k(
+            queries,
+            k,
+            filter_fn=filter_fn,
+            hnsw_filter=hnsw_filter,
+            filter_name=filter_name,
         )
-        # Update filter name
-        result.filter_name = filter_name
-        return result
 
     def should_reindex(self, result: RecallHealthResult) -> bool:
         """Determine if recall degradation requires reindex.
