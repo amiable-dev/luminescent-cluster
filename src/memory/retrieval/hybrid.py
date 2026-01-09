@@ -248,7 +248,7 @@ class HybridRetriever:
         # Query expansion
         effective_query = query
         if expand_query and self.query_rewriter:
-            effective_query = self.query_rewriter.expand(query)
+            effective_query = self.query_rewriter.rewrite(query)
             metrics.query_expanded = effective_query != query
 
         # Stage 1: Parallel candidate generation
