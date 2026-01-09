@@ -10,7 +10,9 @@ Related ADR: ADR-003 Memory Architecture, Phase 0 (HNSW Recall Health Monitoring
 """
 
 import json
+import os
 import re
+import tempfile
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
@@ -98,6 +100,47 @@ class BaselineStore:
         self.storage_path.mkdir(parents=True, exist_ok=True)
         (self.storage_path / self.HISTORY_DIR).mkdir(exist_ok=True)
 
+    def _safe_write_json(self, path: Path, data: dict[str, Any]) -> None:
+        """Safely write JSON to file using atomic write pattern.
+
+        Uses write-to-temp-then-rename for atomicity and checks for
+        symlinks to prevent symlink attacks.
+
+        Args:
+            path: Target file path.
+            data: Data to write as JSON.
+
+        Raises:
+            ValueError: If path is a symlink (potential attack).
+        """
+        # Check for symlink attack
+        if path.exists() and path.is_symlink():
+            raise ValueError(
+                f"Refusing to write to symlink: {path}. "
+                "This may be a symlink attack."
+            )
+
+        # Verify path is within storage directory
+        if not path.resolve().is_relative_to(self.storage_path.resolve()):
+            raise ValueError(f"Path {path} is outside storage directory")
+
+        # Write to temp file first, then atomically rename
+        fd, tmp_path = tempfile.mkstemp(
+            suffix=".json.tmp",
+            dir=self.storage_path,
+            text=True,
+        )
+        try:
+            with os.fdopen(fd, "w") as f:
+                json.dump(data, f, indent=2)
+            # Atomic rename (on POSIX systems)
+            os.rename(tmp_path, path)
+        except Exception:
+            # Clean up temp file on failure
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            raise
+
     def _sanitize_filter_name(self, filter_name: str) -> str:
         """Sanitize filter name to prevent path traversal attacks.
 
@@ -163,7 +206,7 @@ class BaselineStore:
         filter_name: str | None = None,
         archive_previous: bool = True,
     ) -> None:
-        """Save a new baseline.
+        """Save a new baseline using atomic write.
 
         Args:
             baseline: The baseline to save.
@@ -176,13 +219,16 @@ class BaselineStore:
         if archive_previous and path.exists():
             self._archive_baseline(path)
 
-        # Save new baseline
-        with open(path, "w") as f:
-            json.dump(baseline.to_dict(), f, indent=2)
+        # Save new baseline using atomic write
+        self._safe_write_json(path, baseline.to_dict())
 
     def _archive_baseline(self, path: Path) -> None:
-        """Move a baseline file to history directory."""
+        """Move a baseline file to history directory using atomic write."""
         history_dir = self.storage_path / self.HISTORY_DIR
+
+        # Check for symlink attack on source
+        if path.is_symlink():
+            raise ValueError(f"Refusing to archive symlink: {path}")
 
         # Read existing baseline to get timestamp
         with open(path) as f:
@@ -193,9 +239,8 @@ class BaselineStore:
         archive_name = f"{path.stem}_{created_at.strftime('%Y-%m-%dT%H-%M-%S')}.json"
         archive_path = history_dir / archive_name
 
-        # Copy to history
-        with open(archive_path, "w") as f:
-            json.dump(data, f, indent=2)
+        # Copy to history using atomic write
+        self._safe_write_json(archive_path, data)
 
     def load_baseline(
         self,

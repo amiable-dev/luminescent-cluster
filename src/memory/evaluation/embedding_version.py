@@ -11,6 +11,8 @@ Related ADR: ADR-003 Memory Architecture, Phase 0 (HNSW Recall Health Monitoring
 
 import hashlib
 import json
+import os
+import tempfile
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
@@ -163,14 +165,39 @@ class EmbeddingVersionTracker:
         )
 
     def save_version(self, version: EmbeddingVersion) -> None:
-        """Save current version as the stored version.
+        """Save current version as the stored version using atomic write.
 
         Args:
             version: Version to save.
+
+        Raises:
+            ValueError: If target path is a symlink (potential attack).
         """
         path = self.storage_path / self.VERSION_FILENAME
-        with open(path, "w") as f:
-            json.dump(version.to_dict(), f, indent=2)
+
+        # Check for symlink attack
+        if path.exists() and path.is_symlink():
+            raise ValueError(
+                f"Refusing to write to symlink: {path}. "
+                "This may be a symlink attack."
+            )
+
+        # Write to temp file first, then atomically rename
+        fd, tmp_path = tempfile.mkstemp(
+            suffix=".json.tmp",
+            dir=self.storage_path,
+            text=True,
+        )
+        try:
+            with os.fdopen(fd, "w") as f:
+                json.dump(version.to_dict(), f, indent=2)
+            # Atomic rename (on POSIX systems)
+            os.rename(tmp_path, path)
+        except Exception:
+            # Clean up temp file on failure
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            raise
 
     def load_stored_version(self) -> EmbeddingVersion | None:
         """Load the stored embedding version.

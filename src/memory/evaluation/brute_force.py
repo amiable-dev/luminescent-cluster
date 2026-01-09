@@ -6,12 +6,19 @@
 Provides ground truth for Recall@k measurement by computing exact
 cosine similarity against all documents in the corpus.
 
+IMPORTANT: This module is designed for offline evaluation, not real-time
+queries. The search operations are CPU-intensive and will block the
+asyncio event loop. For async contexts, use the async wrapper methods
+or run searches in a thread pool executor.
+
 Related ADR: ADR-003 Memory Architecture, Phase 0 (HNSW Recall Health Monitoring)
 
 Research Reference:
 - "HNSW at Scale: Why Your RAG System Gets Worse as the Vector Database Grows"
 """
 
+import asyncio
+import concurrent.futures
 from dataclasses import dataclass, field
 from typing import Any, Callable, Protocol
 
@@ -235,3 +242,57 @@ class BruteForceSearcher:
     def get_document_ids(self) -> list[str]:
         """Return all document IDs in the corpus."""
         return [doc.id for doc in self._documents]
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Async Wrappers - Use these in asyncio contexts to avoid blocking
+    # ─────────────────────────────────────────────────────────────────────────
+
+    async def search_async(
+        self,
+        query: str,
+        k: int = 10,
+        executor: concurrent.futures.ThreadPoolExecutor | None = None,
+    ) -> list[BruteForceResult]:
+        """Async wrapper for search() that runs in a thread pool.
+
+        Use this method in asyncio contexts to avoid blocking the event loop.
+
+        Args:
+            query: Query text to search for.
+            k: Number of results to return.
+            executor: Optional thread pool executor. If None, uses default.
+
+        Returns:
+            List of BruteForceResult sorted by descending similarity.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(executor, self.search, query, k)
+
+    async def search_with_filter_async(
+        self,
+        query: str,
+        k: int,
+        filter_fn: Callable[[Document], bool],
+        executor: concurrent.futures.ThreadPoolExecutor | None = None,
+    ) -> list[BruteForceResult]:
+        """Async wrapper for search_with_filter() that runs in a thread pool.
+
+        Use this method in asyncio contexts to avoid blocking the event loop.
+
+        Args:
+            query: Query text to search for.
+            k: Number of results to return.
+            filter_fn: Function that returns True for documents to include.
+            executor: Optional thread pool executor. If None, uses default.
+
+        Returns:
+            List of BruteForceResult sorted by descending similarity.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            executor,
+            self.search_with_filter,
+            query,
+            k,
+            filter_fn,
+        )
