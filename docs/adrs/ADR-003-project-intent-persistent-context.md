@@ -4,7 +4,7 @@
 **Date**: 2025-12-22
 **Decision Makers**: Development Team
 **Owners**: @christopherjoseph
-**Version**: 5.0 (Grounded Memory Ingestion Security Hardened)
+**Version**: 6.0 (Two-Stage Retrieval Architecture)
 
 ## Decision Summary
 
@@ -1164,13 +1164,14 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 | Phase 2 | Token Efficiency | ✅ Complete | 40% efficiency (>30% target) |
 | Phase 2 | Exit Criteria Tests | ✅ Complete | 6 benchmark tests passing |
 | Phase 2 | Grounded Memory Ingestion | ✅ Complete | 3-tier provenance model: `src/memory/ingestion/` - 62 tests (security hardened) |
-| **Phase 3** | Knowledge Graph | 📝 Not Started | HybridRAG |
-| Phase 3 | Two-Stage Retrieval | 📝 Not Started | RRF fusion + cross-encoder reranking |
+| **Phase 3** | Two-Stage Retrieval | ✅ Complete | `src/memory/retrieval/` - BM25 + Vector + RRF + Cross-Encoder |
+| Phase 3 | Exit Criteria | ✅ Complete | <1s latency, multi-hop improvement - 15 benchmarks |
+| Phase 3 | Knowledge Graph | 📝 Not Started | HybridRAG |
 | Phase 3 | Entity Extraction | 📝 Not Started | Async pipeline |
 | **Phase 4** | Hindsight Integration | 📝 Not Started | Conditional on Phase 3 |
 | Phase 4 | MaaS Architecture | 📝 Not Started | Multi-agent support |
 
-**Test Summary**: 589 memory tests passing (as of 2026-01-09)
+**Test Summary**: 757 memory tests passing (as of 2026-01-09) - 168 new Two-Stage Retrieval tests
 
 **Legend**: ✅ Complete | 🔄 Partial | 📝 Not Started | ❌ Blocked
 
@@ -1398,4 +1399,5 @@ The following questions have been investigated and resolved:
 | 4.7 | 2026-01-09 | **Research-Driven Strategy Update**: Council-validated additions based on January 2026 RAG research. **Phase 0**: Added HNSW Recall Health Monitoring (critical silent failure mode), recall@k against exact search baseline, retuning milestones at 10k/50k/100k items, embedding versioning. **Phase 2**: Added Grounded Memory Ingestion with 3-tier provenance model, Evidence Object schema. **Phase 3**: Added Two-Stage Retrieval Architecture intent (RRF, multi-query expansion, cross-encoder reranking). **Risks**: Added HNSW silent recall degradation, filter-induced recall collapse, embedding model drift, retrieval poisoning. **References**: HNSW at Scale (TDS), 12 RAG Types (TuringPost). |
 | 4.8 | 2026-01-09 | **HNSW Recall Health Complete**: Implemented full Phase 0 HNSW monitoring suite. Added `recall_health.py` (RecallHealthMonitor, Recall@k computation), `brute_force.py` (exact cosine similarity ground truth), `baseline.py` (drift detection with atomic writes, history pruning), `embedding_version.py` (model version tracking). Security hardening: symlink protection, path containment, PII exclusion, salted hashing. Added `ReindexTrigger` for auto-reindex. Council verified across 31 rounds (0 blocking issues, 10/10 accuracy). Test count: 527 memory tests. **Remaining**: Grounded Memory Ingestion (Phase 2), Two-Stage Retrieval (Phase 3). |
 | 4.9 | 2026-01-09 | **Grounded Memory Ingestion Complete**: Implemented Phase 2 3-tier provenance model to prevent hallucination write-back. Added `src/memory/ingestion/` package with 8 modules: `evidence.py` (EvidenceObject), `result.py` (ValidationResult, IngestionTier), `citation_detector.py` (ADR/commit/URL regex), `hedge_detector.py` (speculative language blocking), `dedup_checker.py` (Jaccard similarity >0.92), `validator.py` (IngestionValidator orchestrator), `review_queue.py` (Tier 2 pending memories). Integrated into `create_memory()` MCP tool with bypass_validation option. Added review queue MCP tools: `get_pending_memories`, `approve_pending_memory`, `reject_pending_memory`. Exit criteria met: zero hallucination write-back in grounded ingestion tests. Test count: 575 memory tests (48 ingestion-specific). **Remaining**: Two-Stage Retrieval (Phase 3). |
-| 5.0 | 2026-01-09 | **Grounded Memory Ingestion Security Hardened**: Council verification across 6 rounds identified and fixed critical security vulnerabilities. **Fixes**: (1) Hedge bypass via assertion markers - assertions no longer override `is_speculative`; (2) Dedup fail-open - now raises `DedupCheckError`, flags for review; (3) Cross-tenant data leak in `get_review_history` - requires `user_id`; (4) Cross-tenant DoS via eviction - rejects at capacity; (5) IDOR in `get_by_id` - requires authorization; (6) Strong speculation missed - added "i don't know"; (7) Race condition in approve - removes before callback; (8) Unbounded history growth - added `MAX_HISTORY_ENTRIES`. Council synthesis: "approved" at 0.9 confidence. Test count: 589 memory tests (62 ingestion-specific). **Remaining**: Two-Stage Retrieval Architecture (Phase 3). |
+| 5.0 | 2026-01-09 | **Grounded Memory Ingestion Security Hardened**: Council verification across 6 rounds identified and fixed critical security vulnerabilities. **Fixes**: (1) Hedge bypass via assertion markers - assertions no longer override `is_speculative`; (2) Dedup fail-open - now raises `DedupCheckError`, flags for review; (3) Cross-tenant data leak in `get_review_history` - requires `user_id`; (4) Cross-tenant DoS via eviction - rejects at capacity; (5) IDOR in `get_by_id` - requires authorization; (6) Strong speculation missed - added "i don't know"; (7) Race condition in approve - removes before callback; (8) Unbounded history growth - added `MAX_HISTORY_ENTRIES`. Council synthesis: "approved" at 0.9 confidence. Test count: 589 memory tests (62 ingestion-specific). |
+| 6.0 | 2026-01-09 | **Two-Stage Retrieval Architecture Complete (Phase 3)**: Implemented hybrid retrieval as specified in ADR-003 Phase 3. **Stage 1 (Parallel Candidate Generation)**: `bm25.py` (BM25 sparse keyword search with tokenization, IDF, multi-tenant indexes), `vector_search.py` (dense semantic search with sentence-transformers, lazy loading, cosine similarity). **Stage 2 (Fusion + Reranking)**: `fusion.py` (RRF algorithm with k=60, weighted fusion, fuse_with_details for provenance), `reranker.py` (cross-encoder reranking with ms-marco-MiniLM-L-6-v2, fallback reranker for fast mode). **Orchestrator**: `hybrid.py` (HybridRetriever with parallel Stage 1 via asyncio.gather, RRF fusion, optional reranking, RetrievalMetrics for latency tracking). **Integration**: Updated `src/memory/retrieval/__init__.py` exports. **Exit Criteria Met**: latency <1s, multi-hop queries outperform pure vector. Test count: 757 memory tests (168 new retrieval tests, 15 exit benchmarks). **Remaining**: Knowledge Graph (Phase 3), Entity Extraction (Phase 3). |
