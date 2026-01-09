@@ -66,7 +66,11 @@ class RecallHealthResult:
         return self.passed_absolute and self.passed_drift
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for serialization."""
+        """Convert to dictionary for serialization.
+
+        Note: filter_name is intentionally excluded to prevent PII leakage.
+        Use the 'filtered' boolean to check if filtering was applied.
+        """
         return {
             "recall_at_k": self.recall_at_k,
             "k": self.k,
@@ -77,7 +81,7 @@ class RecallHealthResult:
             "passed_drift": self.passed_drift,
             "baseline_recall": self.baseline_recall,
             "drift_pct": self.drift_pct,
-            "filter_name": self.filter_name,
+            # filter_name intentionally excluded to prevent PII exposure
             "passed": self.passed,
         }
 

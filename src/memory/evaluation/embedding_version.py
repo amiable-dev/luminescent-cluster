@@ -171,7 +171,7 @@ class EmbeddingVersionTracker:
             version: Version to save.
 
         Raises:
-            ValueError: If target path is a symlink (potential attack).
+            ValueError: If target path is a symlink or escapes storage directory.
         """
         path = self.storage_path / self.VERSION_FILENAME
 
@@ -181,6 +181,10 @@ class EmbeddingVersionTracker:
                 f"Refusing to write to symlink: {path}. "
                 "This may be a symlink attack."
             )
+
+        # Verify path stays within storage_path (defense in depth)
+        if not path.resolve().is_relative_to(self.storage_path.resolve()):
+            raise ValueError(f"Path {path} escapes storage directory")
 
         # Write to temp file first, then atomically rename
         fd, tmp_path = tempfile.mkstemp(
@@ -206,7 +210,7 @@ class EmbeddingVersionTracker:
             Stored version, or None if not found.
 
         Raises:
-            ValueError: If path is a symlink (potential attack).
+            ValueError: If path is a symlink or escapes storage directory.
         """
         path = self.storage_path / self.VERSION_FILENAME
         if not path.exists():
@@ -218,6 +222,10 @@ class EmbeddingVersionTracker:
                 f"Refusing to read symlink: {path}. "
                 "This may be a symlink attack."
             )
+
+        # Verify path stays within storage_path (defense in depth)
+        if not path.resolve().is_relative_to(self.storage_path.resolve()):
+            raise ValueError(f"Path {path} escapes storage directory")
 
         with open(path) as f:
             data = json.load(f)
