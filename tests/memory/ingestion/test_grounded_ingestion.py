@@ -240,15 +240,24 @@ class TestHedgeDetector:
             is_spec, _ = detector.contains_hedge_words(content)
             assert not is_spec, f"Should not flag: {content}"
 
-    def test_assertion_markers_override(self, detector):
-        """Test that assertion markers override hedge words."""
-        # "definitely" should override "might" in context
+    def test_assertion_markers_tracked_but_not_override(self, detector):
+        """Test that assertion markers are tracked but do NOT override hedge words.
+
+        SECURITY: Adding "definitely" to speculative content must not bypass
+        the hedge detection. Assertion markers only reduce speculation_score.
+        """
+        # Content with no hedge words - not speculative
         content = "We definitely chose PostgreSQL"
         result = detector.analyze(content)
         assert result.has_assertions
-        # If assertions are present, is_speculative should be False
-        # even if some hedge-like words exist
-        assert not result.is_speculative or result.has_assertions
+        assert not result.is_speculative  # No hedge words = not speculative
+
+        # SECURITY: Adding "definitely" to speculative content must STILL be speculative
+        bypass_attempt = "Maybe we should use Redis, definitely"
+        bypass_result = detector.analyze(bypass_attempt)
+        assert bypass_result.has_assertions  # Has "definitely"
+        assert bypass_result.is_speculative  # But STILL speculative due to "maybe"
+        assert "maybe" in bypass_result.hedge_words_found
 
     def test_false_positive_month_may(self, detector):
         """Test that 'May 2024' is not detected as hedge."""
@@ -1007,19 +1016,25 @@ class TestHedgeDetectorSecurity:
         assert result.is_speculative is True
         assert "probably" in result.hedge_words_found
 
-    def test_only_strong_assertions_override(self):
-        """Only very specific assertion markers should override hedge words."""
+    def test_assertion_markers_never_override_hedge_words(self):
+        """SECURITY: Assertion markers must NEVER override hedge words.
+
+        This is the critical security fix: adding "confirmed" or "verified"
+        to speculative content must NOT bypass hedge detection.
+        """
         detector = HedgeDetector()
 
-        # "Confirmed" should override - it implies verification occurred
+        # "Confirmed" is tracked but does NOT override "might"
         result = detector.analyze("Confirmed: we might need this feature")
-        assert result.is_speculative is False
-        assert result.has_assertions is True
+        assert result.is_speculative is True  # MUST stay speculative
+        assert result.has_assertions is True  # But we track the assertion
+        assert "might" in result.hedge_words_found
 
-        # "Verified" should override
+        # "Verified" is tracked but does NOT override "probably"
         result = detector.analyze("Verified that we should probably use this")
-        assert result.is_speculative is False
+        assert result.is_speculative is True  # MUST stay speculative
         assert result.has_assertions is True
+        assert "probably" in result.hedge_words_found
 
     def test_weak_phrases_do_not_override(self):
         """Removed assertion markers should NOT override hedge words."""
@@ -1032,3 +1047,62 @@ class TestHedgeDetectorSecurity:
         # "According to" was removed - too easy to fake
         result = detector.analyze("According to the API, maybe it works")
         assert result.is_speculative is True
+
+
+class TestDedupCheckerSecurity:
+    """Security tests for DedupChecker."""
+
+    @pytest.mark.asyncio
+    async def test_dedup_check_raises_on_provider_error(self):
+        """DedupChecker should raise DedupCheckError on provider failure.
+
+        SECURITY: Fail-closed - errors should not allow content through.
+        """
+        from unittest.mock import AsyncMock
+
+        from src.memory.ingestion.dedup_checker import DedupCheckError, DedupChecker
+
+        # Create a provider that always fails
+        mock_provider = AsyncMock()
+        mock_provider.search.side_effect = Exception("Database connection failed")
+
+        checker = DedupChecker(mock_provider)
+
+        with pytest.raises(DedupCheckError) as exc_info:
+            await checker.check_duplicate("Some content", "user-1")
+
+        assert "provider error" in str(exc_info.value).lower()
+
+    @pytest.mark.asyncio
+    async def test_validator_flags_for_review_on_dedup_failure(self):
+        """Validator should flag for review when dedup check fails.
+
+        SECURITY: Cannot verify uniqueness = cannot auto-approve.
+        """
+        from unittest.mock import AsyncMock
+
+        from src.memory.ingestion.dedup_checker import DedupChecker
+        from src.memory.ingestion.result import IngestionTier
+        from src.memory.ingestion.validator import IngestionValidator
+
+        # Create a provider that always fails
+        mock_provider = AsyncMock()
+        mock_provider.search.side_effect = Exception("Database connection failed")
+
+        validator = IngestionValidator(
+            provider=mock_provider,
+            enable_dedup=True,
+        )
+
+        # Content that would otherwise be auto-approved (trusted source)
+        result = await validator.validate(
+            content="User prefers dark mode",
+            memory_type="preference",
+            source="user",
+            user_id="user-1",
+        )
+
+        # SECURITY: Even with trusted source, dedup failure → flag for review
+        assert result.tier == IngestionTier.FLAG_REVIEW
+        assert "dedup_check_failed" in str(result.checks_failed)
+        assert "cannot verify uniqueness" in result.reason.lower()

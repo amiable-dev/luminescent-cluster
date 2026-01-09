@@ -114,13 +114,11 @@ class HedgeDetector:
         + CONDITIONAL
     )
 
-    # Strong assertion markers that can override hedge words
-    # SECURITY: Only include specific, unambiguous assertion markers
-    # that require actual supporting evidence to be meaningful.
-    # Generic phrases like "according to" are excluded as they can
-    # be trivially added to bypass hedge detection.
-    # These markers should reduce speculation score but NOT flip is_speculative
-    # unless corroborated by an actual citation (handled in validator).
+    # Strong assertion markers (informational only, do NOT override hedge detection)
+    # SECURITY: These markers are tracked for informational purposes only.
+    # They reduce speculation_score but NEVER flip is_speculative to False.
+    # This prevents trivial bypass by appending "definitely" to speculative content.
+    # Actual citation validation is handled separately in the validator.
     ASSERTION_MARKERS = [
         "confirmed",
         "verified",
@@ -218,9 +216,10 @@ class HedgeDetector:
         )
 
         # Determine if speculative
-        # - If has hedge words AND no strong assertions: speculative
-        # - If assertion markers present: reduce speculation confidence
-        is_speculative = len(hedge_words_found) > 0 and not has_assertions
+        # SECURITY: Hedge words ALWAYS indicate speculation, regardless of assertion markers.
+        # Assertion markers only reduce the speculation_score for informational purposes,
+        # but NEVER override is_speculative. This prevents bypass via "maybe X, definitely".
+        is_speculative = len(hedge_words_found) > 0
 
         return HedgeDetectionResult(
             is_speculative=is_speculative,

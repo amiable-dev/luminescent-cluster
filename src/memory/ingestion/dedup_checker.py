@@ -14,6 +14,16 @@ from dataclasses import dataclass
 from typing import Any, Optional, Protocol
 
 
+class DedupCheckError(Exception):
+    """Raised when duplicate check fails due to provider error.
+
+    SECURITY: Callers should treat this as "cannot verify uniqueness"
+    and flag for review rather than auto-approving.
+    """
+
+    pass
+
+
 class MemoryProviderProtocol(Protocol):
     """Protocol for memory providers used by DedupChecker."""
 
@@ -106,14 +116,12 @@ class DedupChecker:
                 filters=filters,
                 limit=self.MAX_MEMORIES_TO_CHECK,
             )
-        except Exception:
-            # If search fails, allow ingestion (fail open)
-            return DuplicateCheckResult(
-                is_duplicate=False,
-                existing_memory_id=None,
-                similarity_score=0.0,
-                checked_count=0,
-            )
+        except Exception as e:
+            # SECURITY: Fail-closed - raise error instead of allowing through
+            # Callers should catch DedupCheckError and flag for review
+            raise DedupCheckError(
+                f"Cannot verify uniqueness due to provider error: {e}"
+            ) from e
 
         if not existing_memories:
             return DuplicateCheckResult(

@@ -13,7 +13,7 @@ Tiers:
 """
 
 from src.memory.ingestion.citation_detector import Citation, CitationDetector
-from src.memory.ingestion.dedup_checker import DedupChecker
+from src.memory.ingestion.dedup_checker import DedupCheckError, DedupChecker
 from src.memory.ingestion.evidence import EvidenceObject
 from src.memory.ingestion.hedge_detector import HedgeDetector
 from src.memory.ingestion.result import IngestionTier, ValidationResult
@@ -30,6 +30,7 @@ __all__ = [
     "Citation",
     "HedgeDetector",
     "DedupChecker",
+    "DedupCheckError",
     # Validator
     "IngestionValidator",
     # Review queue

@@ -20,7 +20,11 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from src.memory.ingestion.citation_detector import CitationDetector
-from src.memory.ingestion.dedup_checker import DedupChecker, MemoryProviderProtocol
+from src.memory.ingestion.dedup_checker import (
+    DedupCheckError,
+    DedupChecker,
+    MemoryProviderProtocol,
+)
 from src.memory.ingestion.evidence import EvidenceObject
 from src.memory.ingestion.hedge_detector import HedgeDetector
 from src.memory.ingestion.result import IngestionTier, ValidationResult
@@ -146,20 +150,26 @@ class IngestionValidator:
 
         # === Check 3: Deduplication ===
         is_duplicate = False
+        dedup_check_failed = False
         if self.dedup_checker and self.enable_dedup:
-            dedup_result = await self.dedup_checker.check_duplicate(
-                content, user_id, memory_type
-            )
-            is_duplicate = dedup_result.is_duplicate
-            similarity_score = dedup_result.similarity_score
-
-            if is_duplicate:
-                checks_failed.append(
-                    f"duplicate_detected: {dedup_result.existing_memory_id}"
+            try:
+                dedup_result = await self.dedup_checker.check_duplicate(
+                    content, user_id, memory_type
                 )
-                conflicting_memory_id = dedup_result.existing_memory_id
-            else:
-                checks_passed.append("unique_content")
+                is_duplicate = dedup_result.is_duplicate
+                similarity_score = dedup_result.similarity_score
+
+                if is_duplicate:
+                    checks_failed.append(
+                        f"duplicate_detected: {dedup_result.existing_memory_id}"
+                    )
+                    conflicting_memory_id = dedup_result.existing_memory_id
+                else:
+                    checks_passed.append("unique_content")
+            except DedupCheckError:
+                # SECURITY: Fail-closed - cannot verify uniqueness, flag for review
+                dedup_check_failed = True
+                checks_failed.append("dedup_check_failed: cannot verify uniqueness")
 
         # === Determine tier ===
         tier = self._determine_tier(
@@ -168,6 +178,7 @@ class IngestionValidator:
             is_duplicate=is_duplicate,
             source=source,
             memory_type=memory_type,
+            dedup_check_failed=dedup_check_failed,
         )
 
         # === Build evidence object ===
@@ -200,11 +211,13 @@ class IngestionValidator:
         is_duplicate: bool,
         source: str,
         memory_type: str,
+        dedup_check_failed: bool = False,
     ) -> IngestionTier:
         """Determine the ingestion tier based on validation results.
 
         Decision Matrix:
         - BLOCK (Tier 3): hedge words OR duplicate
+        - FLAG_REVIEW (Tier 2): dedup check failed (cannot verify uniqueness)
         - AUTO_APPROVE (Tier 1): citation OR trusted source OR decision with context
         - FLAG_REVIEW (Tier 2): everything else
 
@@ -214,6 +227,7 @@ class IngestionValidator:
             is_duplicate: Whether content duplicates existing memory.
             source: Source of the memory.
             memory_type: Type of memory.
+            dedup_check_failed: Whether dedup check failed (provider error).
 
         Returns:
             Appropriate IngestionTier.
@@ -226,6 +240,12 @@ class IngestionValidator:
         # Duplicates must be blocked
         if is_duplicate:
             return IngestionTier.BLOCK
+
+        # === Tier 2: Flag for review (security fail-closed) ===
+        # SECURITY: If dedup check failed, we cannot verify uniqueness
+        # Flag for review rather than auto-approving potentially duplicate content
+        if dedup_check_failed:
+            return IngestionTier.FLAG_REVIEW
 
         # === Tier 1: Auto-approve ===
         # Content with citations is grounded
@@ -282,6 +302,8 @@ class IngestionValidator:
             return "Approved: Content meets grounding requirements."
 
         # FLAG_REVIEW
+        if any("dedup_check_failed" in c for c in checks_failed):
+            return "Flagged for review: Cannot verify uniqueness (provider error)."
         return "Flagged for review: Content lacks citations or trusted source attribution."
 
     def validate_sync(
