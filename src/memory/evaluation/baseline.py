@@ -133,8 +133,8 @@ class BaselineStore:
         try:
             with os.fdopen(fd, "w") as f:
                 json.dump(data, f, indent=2)
-            # Atomic rename (on POSIX systems)
-            os.rename(tmp_path, path)
+            # Atomic replace (cross-platform)
+            os.replace(tmp_path, path)
         except Exception:
             # Clean up temp file on failure
             if os.path.exists(tmp_path):
@@ -328,12 +328,15 @@ class BaselineStore:
 
         baselines = []
         for path in history_dir.glob(f"{prefix}*.json"):
-            # Check for symlinks in history files
-            if path.is_symlink():
-                continue  # Skip symlinks silently in history
-            with open(path) as f:
-                data = json.load(f)
-            baselines.append(RecallBaseline.from_dict(data))
+            # Use safe read to check symlinks and path containment
+            try:
+                data = self._safe_read_json(path)
+                if data is None:
+                    continue  # Skip files that couldn't be read
+                baselines.append(RecallBaseline.from_dict(data))
+            except ValueError:
+                # Skip symlinks or files outside storage path
+                continue
 
         # Sort by created_at descending
         baselines.sort(key=lambda b: b.created_at, reverse=True)

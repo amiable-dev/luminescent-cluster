@@ -191,8 +191,8 @@ class EmbeddingVersionTracker:
         try:
             with os.fdopen(fd, "w") as f:
                 json.dump(version.to_dict(), f, indent=2)
-            # Atomic rename (on POSIX systems)
-            os.rename(tmp_path, path)
+            # Atomic replace (cross-platform)
+            os.replace(tmp_path, path)
         except Exception:
             # Clean up temp file on failure
             if os.path.exists(tmp_path):

@@ -170,6 +170,7 @@ class RecallHealthMonitor:
             )
 
         individual_recalls = []
+        skipped_queries = 0  # Track queries with no ground truth
         search_fn = hnsw_filter if hnsw_filter else self._hnsw_search
 
         for query in queries:
@@ -187,15 +188,25 @@ class RecallHealthMonitor:
 
             # Compute recall for this query
             if len(exact_ids) == 0:
-                # No ground truth results - skip or count as perfect
-                query_recall = 1.0
+                # No ground truth results - this is a data issue that should
+                # be investigated. We exclude it from recall calculation to
+                # avoid masking problems. Track separately.
+                skipped_queries += 1
+                continue
             else:
                 intersection = exact_ids & hnsw_ids
                 query_recall = len(intersection) / len(exact_ids)
+                individual_recalls.append(query_recall)
 
-            individual_recalls.append(query_recall)
+        # Check if any queries had results
+        if not individual_recalls:
+            raise ValueError(
+                f"All {len(queries)} queries returned no ground truth results. "
+                "This indicates a data issue - check that the corpus is indexed "
+                "and that filters are not excluding all documents."
+            )
 
-        # Average recall across all queries
+        # Average recall across queries with valid results
         avg_recall = sum(individual_recalls) / len(individual_recalls)
 
         # Check against baseline for drift

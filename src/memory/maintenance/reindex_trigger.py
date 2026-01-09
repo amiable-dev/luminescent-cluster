@@ -11,6 +11,7 @@ Related ADR: ADR-003 Memory Architecture, Phase 0 (HNSW Recall Health Monitoring
 
 import asyncio
 import logging
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Awaitable, Callable
@@ -70,6 +71,8 @@ class ReindexTrigger:
         ...     print("Reindex was triggered due to recall degradation")
     """
 
+    MAX_HISTORY_SIZE = 1000  # Prevent unbounded memory growth
+
     def __init__(
         self,
         recall_monitor: RecallHealthMonitor,
@@ -112,6 +115,12 @@ class ReindexTrigger:
         elapsed = (datetime.now() - self._last_reindex).total_seconds() / 3600
         return elapsed < self._cooldown_hours
 
+    def _trim_history(self) -> None:
+        """Trim history to prevent unbounded memory growth."""
+        if len(self._history) > self.MAX_HISTORY_SIZE:
+            # Keep the most recent events
+            self._history = self._history[-self.MAX_HISTORY_SIZE :]
+
     async def check_and_trigger(
         self,
         queries: list[str],
@@ -136,8 +145,12 @@ class ReindexTrigger:
             )
             return False
 
-        # Run health check
-        result = self._monitor.check_health(queries, k)
+        # Run health check in thread pool to avoid blocking event loop
+        # (brute-force search is CPU-intensive)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: self._monitor.check_health(queries, k)
+        )
 
         # Log result
         logger.info(
@@ -213,8 +226,28 @@ class ReindexTrigger:
 
         finally:
             self._history.append(event)
+            self._trim_history()
 
         return event.completed
+
+    def _sanitize_for_log(self, value: str) -> str:
+        """Sanitize a value for safe logging.
+
+        Removes newlines, control characters, and other potentially
+        dangerous characters that could enable log injection attacks.
+
+        Args:
+            value: The string to sanitize.
+
+        Returns:
+            A sanitized string safe for logging.
+        """
+        # Remove control characters and newlines
+        sanitized = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", value)
+        # Limit length to prevent log flooding
+        if len(sanitized) > 100:
+            sanitized = sanitized[:100] + "..."
+        return sanitized
 
     async def check_filtered_and_trigger(
         self,
@@ -242,12 +275,20 @@ class ReindexTrigger:
             logger.info("Skipping filtered reindex check - in cooldown period")
             return False
 
-        result = self._monitor.check_filtered_health(
-            queries, filter_fn, hnsw_filter, filter_name, k
+        # Run health check in thread pool to avoid blocking event loop
+        # (brute-force search is CPU-intensive)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None,
+            lambda: self._monitor.check_filtered_health(
+                queries, filter_fn, hnsw_filter, filter_name, k
+            ),
         )
 
+        # Sanitize filter_name before logging to prevent log injection
+        safe_filter_name = self._sanitize_for_log(filter_name)
         logger.info(
-            f"Filtered recall health check ({filter_name}): "
+            f"Filtered recall health check ({safe_filter_name}): "
             f"recall={result.recall_at_k:.2%}, "
             f"passed_absolute={result.passed_absolute}"
         )
