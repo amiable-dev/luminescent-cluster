@@ -168,7 +168,8 @@ class BaselineStore:
 
         # Use only hash - do not preserve any part of the original name
         # This prevents PII leakage into filenames
-        name_hash = hashlib.sha256(filter_name.encode("utf-8")).hexdigest()[:16]
+        # Use 32 chars (128 bits) to minimize collision risk
+        name_hash = hashlib.sha256(filter_name.encode("utf-8")).hexdigest()[:32]
         return name_hash
 
     def _get_baseline_path(self, filtered: bool, filter_name: str | None) -> Path:
@@ -246,6 +247,11 @@ class BaselineStore:
         """Remove oldest history files to stay within MAX_HISTORY_FILES limit."""
         history_dir = self.storage_path / self.HISTORY_DIR
 
+        # Verify history_dir is not a symlink (defense against directory symlink attacks)
+        if history_dir.is_symlink():
+            # Do not prune if directory is a symlink - this could be an attack
+            return
+
         # Get all history files sorted by modification time (oldest first)
         history_files = sorted(
             history_dir.glob("*.json"),
@@ -256,8 +262,15 @@ class BaselineStore:
         files_to_remove = len(history_files) - self.MAX_HISTORY_FILES
         if files_to_remove > 0:
             for path in history_files[:files_to_remove]:
-                if not path.is_symlink():  # Don't follow symlinks
-                    path.unlink()
+                # Verify file is within history_dir and not a symlink
+                if path.is_symlink():
+                    continue
+                try:
+                    if not path.resolve().is_relative_to(history_dir.resolve()):
+                        continue  # Skip files outside history directory
+                except (ValueError, RuntimeError):
+                    continue  # Skip on resolution errors
+                path.unlink()
 
     def _safe_read_json(self, path: Path) -> dict[str, Any] | None:
         """Safely read JSON from file with symlink protection.

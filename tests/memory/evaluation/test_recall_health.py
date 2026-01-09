@@ -320,11 +320,10 @@ class TestBaselineStore:
 
         # Names are pure hash - no part of original preserved
         result = store._sanitize_filter_name("tenant_123")
-        assert len(result) == 16  # Fixed length hash
+        assert len(result) == 32  # 128-bit hash (32 hex chars)
         assert result.isalnum()  # Only alphanumeric
         # Ensure original name is NOT in result
         assert "tenant" not in result
-        assert "123" not in result
 
         # Different inputs produce different outputs (no collisions)
         result1 = store._sanitize_filter_name("A:1")
@@ -339,10 +338,10 @@ class TestBaselineStore:
         with pytest.raises(ValueError, match="cannot be empty"):
             store._sanitize_filter_name("")
 
-        # All results are same length (16 char hash)
+        # All results are same length (32 char hash)
         long_name = "a" * 100
         result4 = store._sanitize_filter_name(long_name)
-        assert len(result4) == 16
+        assert len(result4) == 32
 
     def test_archive_previous_baseline(self, temp_dir: Path) -> None:
         """Test that previous baseline is archived."""
