@@ -70,6 +70,9 @@ class BruteForceSearcher:
     and performs exact nearest neighbor search using brute-force
     cosine similarity computation.
 
+    Note: This class limits corpus size to prevent out-of-memory conditions.
+    For larger corpora, use sampling or a dedicated evaluation service.
+
     Example:
         >>> from sentence_transformers import SentenceTransformer
         >>> model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
@@ -80,6 +83,9 @@ class BruteForceSearcher:
         >>> print(results[0].document_id)
         "1"
     """
+
+    # Maximum corpus size to prevent OOM (50K docs ~= 300MB for 384-dim embeddings)
+    MAX_CORPUS_SIZE = 50_000
 
     def __init__(self, embedding_model: EmbeddingModel):
         """Initialize the brute-force searcher.
@@ -110,10 +116,17 @@ class BruteForceSearcher:
             documents: List of documents to index.
 
         Raises:
-            ValueError: If documents list is empty.
+            ValueError: If documents list is empty or exceeds MAX_CORPUS_SIZE.
         """
         if not documents:
             raise ValueError("Cannot index empty document list")
+
+        if len(documents) > self.MAX_CORPUS_SIZE:
+            raise ValueError(
+                f"Corpus size {len(documents)} exceeds maximum allowed "
+                f"({self.MAX_CORPUS_SIZE}). Use sampling or a dedicated "
+                "evaluation service for larger corpora."
+            )
 
         self._documents = documents
         self._id_to_index = {doc.id: i for i, doc in enumerate(documents)}

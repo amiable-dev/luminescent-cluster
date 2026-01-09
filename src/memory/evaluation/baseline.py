@@ -144,8 +144,10 @@ class BaselineStore:
     def _sanitize_filter_name(self, filter_name: str) -> str:
         """Sanitize filter name to prevent path traversal attacks.
 
-        Only allows alphanumeric characters, underscores, and hyphens.
-        Removes any path separators or special characters.
+        Uses a hash-based approach to ensure:
+        1. Distinct inputs always produce distinct outputs (no collisions)
+        2. Output is safe for filenames (alphanumeric only)
+        3. Original name is partially preserved for readability
 
         Args:
             filter_name: The raw filter name.
@@ -154,22 +156,24 @@ class BaselineStore:
             Sanitized filter name safe for use in filenames.
 
         Raises:
-            ValueError: If filter_name is empty after sanitization.
+            ValueError: If filter_name is empty.
         """
-        # Remove any path traversal attempts and special chars
-        sanitized = re.sub(r"[^a-zA-Z0-9_-]", "", filter_name)
+        import hashlib
 
-        if not sanitized:
-            raise ValueError(
-                f"Invalid filter_name '{filter_name}': "
-                "must contain at least one alphanumeric character"
-            )
+        if not filter_name:
+            raise ValueError("filter_name cannot be empty")
 
-        # Limit length to prevent filesystem issues
-        if len(sanitized) > 64:
-            sanitized = sanitized[:64]
+        # Extract safe prefix for readability (first 20 alphanumeric chars)
+        safe_prefix = re.sub(r"[^a-zA-Z0-9]", "", filter_name)[:20]
 
-        return sanitized
+        # Use hash of original name to ensure distinct inputs never collide
+        name_hash = hashlib.sha256(filter_name.encode("utf-8")).hexdigest()[:12]
+
+        # Combine prefix with hash for uniqueness + readability
+        if safe_prefix:
+            return f"{safe_prefix}_{name_hash}"
+        else:
+            return name_hash
 
     def _get_baseline_path(self, filtered: bool, filter_name: str | None) -> Path:
         """Get the path for a baseline file.

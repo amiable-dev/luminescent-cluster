@@ -283,18 +283,22 @@ class TestBaselineStore:
         """Test that path traversal attacks are prevented via sanitization."""
         store = BaselineStore(temp_dir)
 
-        # Path traversal attempts are sanitized to safe names
-        # "../../../etc/passwd" -> "etcpasswd" (dots and slashes removed)
+        # Path traversal attempts are sanitized to safe names with hash
+        # "../../../etc/passwd" -> "etcpasswd_<hash>" (safe prefix + hash)
         path = store._get_baseline_path(filtered=True, filter_name="../../../etc/passwd")
-        assert path.name == "filtered_etcpasswd.json"
+        assert path.name.startswith("filtered_etcpasswd_")
+        assert path.name.endswith(".json")
         assert path.parent == temp_dir
 
-        # Pure traversal strings with no alphanumeric content raise ValueError
-        with pytest.raises(ValueError, match="must contain at least one alphanumeric"):
-            store._get_baseline_path(filtered=True, filter_name="../../..")
+        # Pure traversal strings with no alphanumeric content still get a hash
+        # (they have no safe prefix but still get a hash-based name)
+        path2 = store._get_baseline_path(filtered=True, filter_name="../../..")
+        assert path2.name.startswith("filtered_")
+        assert path2.name.endswith(".json")
 
-        with pytest.raises(ValueError, match="must contain at least one alphanumeric"):
-            store._get_baseline_path(filtered=True, filter_name="/.//")
+        # Empty filter_name raises ValueError (caught by _get_baseline_path)
+        with pytest.raises(ValueError, match="filter_name is required"):
+            store._get_baseline_path(filtered=True, filter_name="")
 
     def test_filtered_requires_filter_name(self, temp_dir: Path) -> None:
         """Test that filtered=True requires a filter_name."""
@@ -309,20 +313,31 @@ class TestBaselineStore:
             store.load_history(filtered=True, filter_name=None)
 
     def test_sanitize_filter_name(self, temp_dir: Path) -> None:
-        """Test filter name sanitization."""
+        """Test filter name sanitization with hash-based collision prevention."""
         store = BaselineStore(temp_dir)
 
-        # Normal names work
-        assert store._sanitize_filter_name("tenant_123") == "tenant_123"
-        assert store._sanitize_filter_name("my-filter") == "my-filter"
+        # Names include a hash suffix for uniqueness
+        result = store._sanitize_filter_name("tenant_123")
+        assert result.startswith("tenant123_")  # Prefix is alphanumeric only
+        assert len(result) > 12  # Has hash suffix
 
-        # Special characters are removed
-        assert store._sanitize_filter_name("tenant/123") == "tenant123"
-        assert store._sanitize_filter_name("filter@name") == "filtername"
+        # Different inputs produce different outputs (no collisions)
+        result1 = store._sanitize_filter_name("A:1")
+        result2 = store._sanitize_filter_name("A!1")
+        assert result1 != result2  # Distinct inputs stay distinct
 
-        # Long names are truncated
+        # Special characters are removed from prefix
+        result3 = store._sanitize_filter_name("tenant/123")
+        assert result3.startswith("tenant123_")
+
+        # Empty raises ValueError
+        with pytest.raises(ValueError, match="cannot be empty"):
+            store._sanitize_filter_name("")
+
+        # Long names have prefix truncated but stay unique
         long_name = "a" * 100
-        assert len(store._sanitize_filter_name(long_name)) == 64
+        result4 = store._sanitize_filter_name(long_name)
+        assert len(result4) <= 33  # 20 char prefix + underscore + 12 char hash
 
     def test_archive_previous_baseline(self, temp_dir: Path) -> None:
         """Test that previous baseline is archived."""
