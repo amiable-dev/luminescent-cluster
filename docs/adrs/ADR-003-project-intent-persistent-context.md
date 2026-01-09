@@ -794,7 +794,28 @@ relevance = base_relevance * exp(-λ * days_since_access)
    - Latency/cost instrumentation
    - Contradiction/hallucination tests
 
-2. **Memory Schema & Lifecycle**
+2. **HNSW Recall Health Monitoring** (Council Addition - January 2026)
+   > **Critical Risk**: HNSW approximate search silently degrades as the database grows. No errors are raised—the system appears healthy while retrieval quality deteriorates.
+
+   | Requirement | Target | Notes |
+   |-------------|--------|-------|
+   | Recall@k Metric | Measured against brute-force exact search | Golden query set (50 queries) |
+   | Absolute Threshold | Recall@10 ≥ 0.90 | Alert if below |
+   | Relative Drift | ≤ 5% drop from baseline | Alert on regression |
+   | Filtered Search | Evaluate with tenant/tag filters | Prevents "filter-induced recall collapse" |
+   | Reindex Trigger | Auto-VACUUM when Recall < threshold | Automated maintenance |
+
+   **Retuning Milestones**:
+   - 10k items: Benchmark and log
+   - 50k items: Benchmark, alert, consider `ef_search` tuning
+   - 100k items: Mandatory review, consider index rebuild
+
+   **Embedding Versioning** (Council Required):
+   - Version-tag all embeddings with model identifier
+   - On model change: flag for re-embedding
+   - Index_v1 cannot serve traffic for Model_v2
+
+3. **Memory Schema & Lifecycle**
    - Define memory types (decisions, facts, procedures, preferences)
    - TTL and expiration policies
    - Versioning strategy (Option H foundation)
@@ -957,10 +978,52 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
    - Confidence scoring
    - Temporal decay implementation
 
+4. **Grounded Memory Ingestion** (Council Addition - January 2026)
+   > **Risk**: The `/memorize` command can pollute long-term memory with hallucinations or unsourced claims. "Garbage in, garbage forever."
+
+   **Tiered Provenance Model** (Council Recommended over NLI):
+   ```
+   ┌─────────────────────────────────────────────────────────────────┐
+   │                    GROUNDED INGESTION TIERS                     │
+   ├─────────────────────────────────────────────────────────────────┤
+   │ TIER 1: Auto-approve (high confidence)                         │
+   │   • Content with explicit ADR/commit/doc links                 │
+   │   • User-stated facts about their own project                  │
+   │   • Decision discussions with clear context                    │
+   ├─────────────────────────────────────────────────────────────────┤
+   │ TIER 2: Flag for review (medium confidence)                    │
+   │   • AI-synthesized claims without citations                    │
+   │   • Factual assertions about external systems/APIs             │
+   │   → Queue for user confirmation before promotion               │
+   ├─────────────────────────────────────────────────────────────────┤
+   │ TIER 3: Block (low confidence)                                 │
+   │   • Speculative content ("maybe", "might", "could be")         │
+   │   • Content that contradicts existing memory                   │
+   │   → Reject with explanation, surface conflicts                 │
+   └─────────────────────────────────────────────────────────────────┘
+   ```
+
+   **Evidence Object Schema**:
+   ```python
+   class EvidenceObject:
+       claim: str                    # The memory content
+       source_id: Optional[str]      # ADR-XXX, commit hash, URL
+       capture_time: datetime        # When captured
+       validity_horizon: Optional[datetime]  # Expiration if time-bound
+       confidence: Literal["high", "medium", "low"]
+   ```
+
+   **Validation Checks** (lightweight, no external model calls):
+   - Citation presence: regex for `[ADR-XXX]`, commit hashes, URLs
+   - Hedge word detection: reject speculative language
+   - Deduplication: cosine similarity >0.92 rejects as redundant
+   - Contradiction detection: deferred to Phase 3 (requires reasoning)
+
 **Exit Criteria**:
 - 30% token efficiency improvement
 - Provenance available for all retrieved items
 - Stale memory detection operational
+- Zero hallucination write-back in grounded ingestion tests
 
 ---
 
@@ -977,6 +1040,38 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 - Entity extraction pipeline (async, not blocking)
 - Reciprocal Rank Fusion (vector + graph)
 - Neural reranker for final results
+
+**Hybrid Search Architecture** (Council Addition - January 2026)
+> **Intent**: Combine vector similarity with graph relationships and keyword matching. Specific parameters to be tuned based on Phase 2 learnings.
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    TWO-STAGE RETRIEVAL ARCHITECTURE                  │
+├─────────────────────────────────────────────────────────────────────┤
+│ STAGE 1: Candidate Generation (parallel)                           │
+│   • Vector Similarity (Dense)                                       │
+│   • Keyword BM25 (Sparse)                                           │
+│   • Knowledge Graph Traversal (Relationship-based)                  │
+├─────────────────────────────────────────────────────────────────────┤
+│ STAGE 2: Fusion + Reranking                                         │
+│   • Reciprocal Rank Fusion (RRF): Merge ranked lists                │
+│   • Cross-Encoder Reranker: Score top candidates on relevance       │
+│   • Return top 5 to context window                                  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Architectural Decisions** (to be validated in Phase 2):
+| Component | Intent | Parameters TBD |
+|-----------|--------|----------------|
+| RRF Formula | `Σ 1/(k + rank_i)` | `k` value (standard: 60) |
+| Multi-Query Expansion | Generate semantic variants | Max 3 variants (cost cap) |
+| Candidate Pool | Broad retrieval before filtering | Top 50-100 candidates |
+| Reranker | Cross-encoder for final ordering | Model choice TBD |
+
+**Phase 2 Learnings Required Before Implementation**:
+- What percentage of queries require graph traversal?
+- What's keyword search hit rate vs vector search?
+- Where are retrieval failures occurring? (measure first, optimize second)
 
 **Target Queries** (justify the investment):
 ```
@@ -1115,6 +1210,10 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 | **Latency Blowups** | Medium | High | Budgets per tier, caching, "fast path" vs "deep reasoning path" separation |
 | **Relevance Pollution** | High | Medium | Temporal decay (Option K), ranking algorithms, "forgetting curve" implementation |
 | **Schema Drift** | High | Medium | Async re-indexing on commit, version migrations, schema evolution plan |
+| **HNSW Silent Recall Degradation** *(Jan 2026)* | High | High | Recall@k monitoring against exact search baseline; automated reindex triggers; retuning milestones at 10k/50k/100k items |
+| **Filter-Induced Recall Collapse** *(Jan 2026)* | Medium | High | Evaluate recall with metadata filters applied (not just unfiltered); test heavy filtering scenarios (tenant, date, doc_type) |
+| **Embedding Model Drift** *(Jan 2026)* | Medium | High | Version-tag all embeddings; on model change, flag for re-embedding; strict index-to-model versioning |
+| **Retrieval Poisoning** *(Jan 2026)* | Low | High | Treat retrieved context as untrusted input; sanitization layer before injecting into system prompt; filter malicious instruction patterns |
 
 ### Organizational Risks
 
@@ -1167,6 +1266,8 @@ Per recent research (MEXTRA attack, February 2025), memory systems are vulnerabl
 - [HybridRAG: Integrating Knowledge Graphs](https://arxiv.org/html/2408.04948v1)
 - [MCP One Year Anniversary - November 2025 Spec](https://blog.modelcontextprotocol.io/posts/2025-11-25-first-mcp-anniversary/)
 - [Context Engineering for Agents](https://rlancemartin.github.io/2025/06/23/context_engineering/)
+- [HNSW at Scale: Why Your RAG System Gets Worse](https://towardsdatascience.com/hnsw-at-scale-why-your-rag-system-gets-worse-as-the-vector-database-grows/) *(Jan 2026)*
+- [12 Advanced Types of RAG](https://www.turingpost.com/p/12ragtypes) *(Jan 2026)*
 - [LangMem SDK Launch](https://blog.langchain.com/langmem-sdk-launch/)
 - [Beyond RAG: Context Engineering](https://towardsdatascience.com/beyond-rag/)
 - [ACE: Agentic Context Engineering](https://arxiv.org/abs/2510.04618)
@@ -1289,3 +1390,4 @@ The following questions have been investigated and resolved:
 | 4.4 | 2026-01-07 | **ADR-005 Compliance Fix**: Exported `MemoryProvider`, `ResponseFilter`, `MEMORY_PROVIDER_VERSION` from `src/extensions/__init__.py`. Council Round 4: No blocking issues, 10.0/10 accuracy. Fixed #117, unblocked #114. Test count: 1008 total (336 memory-specific). |
 | 4.5 | 2026-01-08 | **Phase 2 Complete**: Implemented Memory Blocks Architecture with 5-block layout (System, Project, Task, History, Knowledge). Added provenance tracking on all retrievals, line-preserving truncation, XML-safe delimiters. Met all exit criteria: 40% token efficiency (>30% target), provenance on all items, stale detection operational. Test count: 436 memory tests. Council verified across 8 rounds. |
 | 4.6 | 2026-01-08 | **Security Hardening (Council Rounds 13-19)**: Comprehensive DoS prevention in ProvenanceService. Added: bounded LRU storage, string identifier length limits, metadata bounds validation, recursive nested structure validation with early termination, strict JSON type safety, cycle detection, UTF-8 byte size validation, TOCTOU prevention via deep copy, score range validation (0.0-1.0). Test count: 490 memory tests (64 provenance-specific security tests). |
+| 4.7 | 2026-01-09 | **Research-Driven Strategy Update**: Council-validated additions based on January 2026 RAG research. **Phase 0**: Added HNSW Recall Health Monitoring (critical silent failure mode), recall@k against exact search baseline, retuning milestones at 10k/50k/100k items, embedding versioning. **Phase 2**: Added Grounded Memory Ingestion with 3-tier provenance model, Evidence Object schema. **Phase 3**: Added Two-Stage Retrieval Architecture intent (RRF, multi-query expansion, cross-encoder reranking). **Risks**: Added HNSW silent recall degradation, filter-induced recall collapse, embedding model drift, retrieval poisoning. **References**: HNSW at Scale (TDS), 12 RAG Types (TuringPost). |
