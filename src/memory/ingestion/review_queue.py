@@ -225,24 +225,39 @@ class ReviewQueue:
         self,
         queue_id: str,
         reviewer: str,
+        authorized_user_id: Optional[str] = None,
     ) -> Optional[str]:
         """Approve a pending memory.
 
         Removes from queue and optionally stores via callback.
+        SECURITY: Authorization check - reviewer must match memory owner
+        or be explicitly authorized via authorized_user_id.
 
         Args:
             queue_id: Queue ID to approve.
             reviewer: Who is approving.
+            authorized_user_id: User ID authorized to approve (for multi-tenant).
+                               If None, reviewer must own the memory.
 
         Returns:
             Memory ID if stored, queue_id otherwise.
 
         Raises:
-            ValueError: If queue_id not found.
+            ValueError: If queue_id not found or unauthorized.
         """
+        # SECURITY: Atomic lookup and authorization check
         pending = self._pending.get(queue_id)
         if not pending:
             raise ValueError(f"Pending memory not found: {queue_id}")
+
+        # SECURITY: Multi-tenant authorization check
+        # Reviewer must be the memory owner or explicitly authorized
+        is_owner = pending.user_id == reviewer
+        is_authorized = authorized_user_id is not None and pending.user_id == authorized_user_id
+        if not is_owner and not is_authorized:
+            raise ValueError(
+                f"Unauthorized: reviewer '{reviewer}' cannot approve memory for user '{pending.user_id}'"
+            )
 
         memory_id: Optional[str] = None
 
@@ -276,20 +291,34 @@ class ReviewQueue:
         queue_id: str,
         reviewer: str,
         reason: str,
+        authorized_user_id: Optional[str] = None,
     ) -> None:
         """Reject a pending memory.
+
+        SECURITY: Authorization check - reviewer must match memory owner
+        or be explicitly authorized.
 
         Args:
             queue_id: Queue ID to reject.
             reviewer: Who is rejecting.
             reason: Reason for rejection.
+            authorized_user_id: User ID authorized to reject (for multi-tenant).
 
         Raises:
-            ValueError: If queue_id not found.
+            ValueError: If queue_id not found or unauthorized.
         """
+        # SECURITY: Atomic lookup and authorization check
         pending = self._pending.get(queue_id)
         if not pending:
             raise ValueError(f"Pending memory not found: {queue_id}")
+
+        # SECURITY: Multi-tenant authorization check
+        is_owner = pending.user_id == reviewer
+        is_authorized = authorized_user_id is not None and pending.user_id == authorized_user_id
+        if not is_owner and not is_authorized:
+            raise ValueError(
+                f"Unauthorized: reviewer '{reviewer}' cannot reject memory for user '{pending.user_id}'"
+            )
 
         # Record action
         action = ReviewAction(
@@ -372,24 +401,29 @@ class ReviewQueue:
         self,
         queue_ids: list[str],
         reviewer: str,
+        authorized_user_id: Optional[str] = None,
     ) -> list[str]:
         """Approve multiple pending memories.
+
+        SECURITY: Authorization checked per-item.
 
         Args:
             queue_ids: List of queue IDs to approve.
             reviewer: Who is approving.
+            authorized_user_id: User ID authorized to approve.
 
         Returns:
             List of memory IDs (or queue IDs if no callback).
+            Items that fail authorization are skipped.
         """
         results = []
         for queue_id in queue_ids:
             try:
-                memory_id = await self.approve(queue_id, reviewer)
+                memory_id = await self.approve(queue_id, reviewer, authorized_user_id)
                 if memory_id:
                     results.append(memory_id)
             except ValueError:
-                # Skip not found
+                # Skip not found or unauthorized
                 continue
         return results
 
@@ -398,22 +432,28 @@ class ReviewQueue:
         queue_ids: list[str],
         reviewer: str,
         reason: str,
+        authorized_user_id: Optional[str] = None,
     ) -> int:
         """Reject multiple pending memories.
+
+        SECURITY: Authorization checked per-item.
 
         Args:
             queue_ids: List of queue IDs to reject.
             reviewer: Who is rejecting.
             reason: Reason for rejection.
+            authorized_user_id: User ID authorized to reject.
 
         Returns:
             Number of items rejected.
+            Items that fail authorization are skipped.
         """
         count = 0
         for queue_id in queue_ids:
             try:
-                await self.reject(queue_id, reviewer, reason)
+                await self.reject(queue_id, reviewer, reason, authorized_user_id)
                 count += 1
             except ValueError:
+                # Skip not found or unauthorized
                 continue
         return count

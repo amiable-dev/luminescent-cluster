@@ -569,7 +569,8 @@ class TestReviewQueue:
             validation_result=sample_result,
         )
 
-        result = await queue.approve(queue_id, "reviewer-1")
+        # Owner approves their own pending memory
+        result = await queue.approve(queue_id, "user-1")
         assert result is not None
 
         # Should be removed from queue
@@ -588,7 +589,8 @@ class TestReviewQueue:
             validation_result=sample_result,
         )
 
-        await queue.reject(queue_id, "reviewer-1", "Not grounded")
+        # Owner rejects their own pending memory
+        await queue.reject(queue_id, "user-1", "Not grounded")
 
         # Should be removed from queue
         pending = await queue.get_pending("user-1")
@@ -817,8 +819,8 @@ class TestIntegration:
             validation_result=result,
         )
 
-        # Approve after review
-        memory_id = await queue.approve(queue_id, "human-reviewer")
+        # Approve after review (owner approves their own)
+        memory_id = await queue.approve(queue_id, "user-1")
         assert memory_id is not None
 
     @pytest.mark.asyncio
@@ -838,3 +840,177 @@ class TestIntegration:
         assert result.tier == IngestionTier.BLOCK
         assert not result.approved
         assert result.is_speculative
+
+
+# =============================================================================
+# Security Tests - Multi-Tenant Authorization
+# =============================================================================
+
+
+class TestReviewQueueAuthorization:
+    """Security tests for multi-tenant authorization in ReviewQueue."""
+
+    @pytest.fixture
+    def queue(self):
+        """Create a ReviewQueue instance."""
+        return ReviewQueue()
+
+    @pytest.fixture
+    def evidence(self):
+        """Create a test EvidenceObject."""
+        return EvidenceObject.create(
+            claim="Test claim",
+            source_id=None,
+            confidence="medium",
+        )
+
+    @pytest.fixture
+    def validation_result(self, evidence):
+        """Create a test ValidationResult."""
+        return ValidationResult(
+            tier=IngestionTier.FLAG_REVIEW,
+            approved=False,
+            reason="Test",
+            evidence=evidence,
+            checks_passed=[],
+            checks_failed=["no_citation"],
+        )
+
+    @pytest.mark.asyncio
+    async def test_owner_can_approve_own_memory(
+        self, queue, evidence, validation_result
+    ):
+        """Memory owner should be able to approve their own pending memory."""
+        queue_id = await queue.enqueue(
+            user_id="user-1",
+            content="Test memory",
+            memory_type="fact",
+            source="test",
+            evidence=evidence,
+            validation_result=validation_result,
+        )
+
+        # Owner approves - should succeed
+        memory_id = await queue.approve(queue_id, "user-1")
+        assert memory_id is not None
+
+    @pytest.mark.asyncio
+    async def test_other_user_cannot_approve_memory(
+        self, queue, evidence, validation_result
+    ):
+        """Non-owner should not be able to approve another user's memory."""
+        queue_id = await queue.enqueue(
+            user_id="user-1",
+            content="Test memory",
+            memory_type="fact",
+            source="test",
+            evidence=evidence,
+            validation_result=validation_result,
+        )
+
+        # Different user tries to approve - should fail
+        with pytest.raises(ValueError, match="Unauthorized"):
+            await queue.approve(queue_id, "user-2")
+
+    @pytest.mark.asyncio
+    async def test_authorized_user_can_approve(
+        self, queue, evidence, validation_result
+    ):
+        """Explicitly authorized user can approve memories."""
+        queue_id = await queue.enqueue(
+            user_id="user-1",
+            content="Test memory",
+            memory_type="fact",
+            source="test",
+            evidence=evidence,
+            validation_result=validation_result,
+        )
+
+        # Admin approves with explicit authorization
+        memory_id = await queue.approve(
+            queue_id, "admin", authorized_user_id="user-1"
+        )
+        assert memory_id is not None
+
+    @pytest.mark.asyncio
+    async def test_other_user_cannot_reject_memory(
+        self, queue, evidence, validation_result
+    ):
+        """Non-owner should not be able to reject another user's memory."""
+        queue_id = await queue.enqueue(
+            user_id="user-1",
+            content="Test memory",
+            memory_type="fact",
+            source="test",
+            evidence=evidence,
+            validation_result=validation_result,
+        )
+
+        # Different user tries to reject - should fail
+        with pytest.raises(ValueError, match="Unauthorized"):
+            await queue.reject(queue_id, "user-2", "Not my memory")
+
+    @pytest.mark.asyncio
+    async def test_bulk_approve_skips_unauthorized(
+        self, queue, evidence, validation_result
+    ):
+        """Bulk approve should skip items the user is not authorized for."""
+        # User 1's memory
+        queue_id_1 = await queue.enqueue(
+            user_id="user-1",
+            content="User 1 memory",
+            memory_type="fact",
+            source="test",
+            evidence=evidence,
+            validation_result=validation_result,
+        )
+
+        # User 2's memory
+        queue_id_2 = await queue.enqueue(
+            user_id="user-2",
+            content="User 2 memory",
+            memory_type="fact",
+            source="test",
+            evidence=evidence,
+            validation_result=validation_result,
+        )
+
+        # User 1 tries to bulk approve both - only their own should succeed
+        results = await queue.bulk_approve([queue_id_1, queue_id_2], "user-1")
+        assert len(results) == 1  # Only one succeeded
+
+        # User 2's memory should still be pending
+        pending = await queue.get_pending("user-2")
+        assert len(pending) == 1
+
+
+class TestHedgeDetectorSecurity:
+    """Security tests for HedgeDetector."""
+
+    def test_generic_phrases_do_not_override_hedge_words(self):
+        """Generic assertion markers should not bypass hedge word detection."""
+        detector = HedgeDetector()
+
+        # "It is" should NOT override speculation
+        result = detector.analyze("It is maybe a good idea")
+        assert result.is_speculative is True
+        assert "maybe" in result.hedge_words_found
+
+        # "This is" should NOT override speculation
+        result = detector.analyze("This is probably wrong")
+        assert result.is_speculative is True
+        assert "probably" in result.hedge_words_found
+
+    def test_specific_assertions_do_override(self):
+        """Specific assertion markers should override hedge words."""
+        detector = HedgeDetector()
+
+        # "Confirmed" should override
+        result = detector.analyze("Confirmed: we might need this feature")
+        assert result.is_speculative is False
+        assert result.has_assertions is True
+
+        # "Per ADR" should override
+        result = detector.analyze("Per ADR-003, we should probably use this")
+        assert result.is_speculative is False
+        assert result.has_assertions is True

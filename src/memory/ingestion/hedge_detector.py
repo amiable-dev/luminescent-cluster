@@ -116,22 +116,22 @@ class HedgeDetector:
 
     # Strong assertion markers that can override hedge words
     # If these are present, the statement may still be grounded
+    # SECURITY: Only include specific, unambiguous assertion markers
+    # Generic phrases like "it is" are excluded as they match too broadly
     ASSERTION_MARKERS = [
         "definitely",
         "certainly",
         "absolutely",
-        "always",
-        "never",
         "confirmed",
         "verified",
-        "decided",
+        "decided to use",
         "we chose",
         "we selected",
+        "we decided",
         "the decision was",
-        "it is",
-        "it was",
-        "this is",
-        "that is",
+        "per adr",
+        "according to",
+        "as documented",
     ]
 
     # Patterns that look like hedge words but aren't in context
