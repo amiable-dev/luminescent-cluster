@@ -78,6 +78,8 @@ class HedgeDetector:
         "i imagine",
         "i suspect",
         "i wonder",
+        "i don't know",  # Strong speculation indicator
+        "i do not know",
         "not sure",
         "not certain",
         "uncertain",

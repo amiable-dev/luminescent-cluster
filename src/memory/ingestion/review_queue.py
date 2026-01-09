@@ -213,16 +213,28 @@ class ReviewQueue:
 
         return result
 
-    async def get_by_id(self, queue_id: str) -> Optional[PendingMemory]:
+    async def get_by_id(
+        self,
+        queue_id: str,
+        user_id: str,
+    ) -> Optional[PendingMemory]:
         """Get a specific pending memory.
+
+        SECURITY: Requires user_id for authorization check.
+        Returns None if memory doesn't exist OR user is not authorized.
 
         Args:
             queue_id: Queue ID to look up.
+            user_id: User ID for authorization (must match owner).
 
         Returns:
-            PendingMemory or None if not found.
+            PendingMemory if found and authorized, None otherwise.
         """
-        return self._pending.get(queue_id)
+        pending = self._pending.get(queue_id)
+        # SECURITY: Only return if user owns the memory (IDOR prevention)
+        if pending and pending.user_id == user_id:
+            return pending
+        return None
 
     async def approve(
         self,
@@ -340,27 +352,26 @@ class ReviewQueue:
 
     async def get_review_history(
         self,
-        user_id: Optional[str] = None,
+        user_id: str,
         limit: int = 50,
     ) -> list[ReviewAction]:
-        """Get review action history.
+        """Get review action history for a specific user.
 
-        SECURITY: When user_id is provided, only returns actions for that user.
-        This prevents cross-tenant data leakage.
+        SECURITY: user_id is REQUIRED to prevent cross-tenant data leakage.
+        Users can only see their own review history.
 
         Args:
-            user_id: Optional user ID filter (REQUIRED for user-facing APIs).
+            user_id: User ID to filter by (REQUIRED).
             limit: Maximum actions to return.
 
         Returns:
-            List of review actions, newest first.
+            List of review actions for the user, newest first.
         """
         history = self._review_history.copy()
         history.reverse()
 
-        # SECURITY: Filter by user_id when provided
-        if user_id:
-            history = [action for action in history if action.user_id == user_id]
+        # SECURITY: Always filter by user_id (fail-closed)
+        history = [action for action in history if action.user_id == user_id]
 
         return history[:limit]
 

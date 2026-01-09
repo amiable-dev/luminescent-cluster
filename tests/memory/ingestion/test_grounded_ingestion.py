@@ -1048,6 +1048,20 @@ class TestHedgeDetectorSecurity:
         result = detector.analyze("According to the API, maybe it works")
         assert result.is_speculative is True
 
+    def test_strong_speculation_phrases_are_detected(self):
+        """Strong speculation phrases must be detected and block ingestion."""
+        detector = HedgeDetector()
+
+        # "i don't know" must be detected
+        result = detector.analyze("I don't know if this will work")
+        assert result.is_speculative is True
+        assert "i don't know" in result.hedge_words_found
+
+        # "i do not know" must also be detected
+        result = detector.analyze("I do not know the answer")
+        assert result.is_speculative is True
+        assert "i do not know" in result.hedge_words_found
+
 
 class TestReviewQueueMultiTenant:
     """Multi-tenant security tests for ReviewQueue."""
@@ -1162,6 +1176,33 @@ class TestReviewQueueMultiTenant:
         assert queue.pending_count() == 2
         assert queue.pending_count("user-1") == 1
         assert queue.pending_count("user-2") == 1
+
+    @pytest.mark.asyncio
+    async def test_get_by_id_requires_authorization(self, evidence, validation_result):
+        """get_by_id should only return memories for authorized user.
+
+        SECURITY: Prevents IDOR vulnerability.
+        """
+        queue = ReviewQueue()
+
+        # Enqueue for user-1
+        queue_id = await queue.enqueue(
+            user_id="user-1",
+            content="Content 1",
+            memory_type="fact",
+            source="test",
+            evidence=evidence,
+            validation_result=validation_result,
+        )
+
+        # Owner can access
+        pending = await queue.get_by_id(queue_id, user_id="user-1")
+        assert pending is not None
+        assert pending.content == "Content 1"
+
+        # SECURITY: Other user cannot access (IDOR prevention)
+        pending = await queue.get_by_id(queue_id, user_id="user-2")
+        assert pending is None  # Silently returns None, no error leakage
 
 
 class TestDedupCheckerSecurity:
