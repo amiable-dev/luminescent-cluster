@@ -1049,6 +1049,121 @@ class TestHedgeDetectorSecurity:
         assert result.is_speculative is True
 
 
+class TestReviewQueueMultiTenant:
+    """Multi-tenant security tests for ReviewQueue."""
+
+    @pytest.fixture
+    def evidence(self):
+        from src.memory.ingestion.evidence import EvidenceObject
+
+        return EvidenceObject(
+            claim="Test claim",
+            capture_time=datetime.now(timezone.utc),
+            confidence="medium",
+        )
+
+    @pytest.fixture
+    def validation_result(self):
+        from src.memory.ingestion.result import IngestionTier, ValidationResult
+
+        return ValidationResult(
+            tier=IngestionTier.FLAG_REVIEW,
+            approved=False,
+            reason="Test",
+            evidence=None,
+            checks_passed=[],
+            checks_failed=[],
+        )
+
+    @pytest.mark.asyncio
+    async def test_get_review_history_filters_by_user(
+        self, evidence, validation_result
+    ):
+        """get_review_history should only return actions for the specified user.
+
+        SECURITY: Prevents cross-tenant data leakage.
+        """
+        queue = ReviewQueue()
+
+        # Enqueue items for two users
+        queue_id_1 = await queue.enqueue(
+            user_id="user-1",
+            content="Content 1",
+            memory_type="fact",
+            source="test",
+            evidence=evidence,
+            validation_result=validation_result,
+        )
+        queue_id_2 = await queue.enqueue(
+            user_id="user-2",
+            content="Content 2",
+            memory_type="fact",
+            source="test",
+            evidence=evidence,
+            validation_result=validation_result,
+        )
+
+        # Approve both
+        await queue.approve(queue_id_1, "user-1")
+        await queue.approve(queue_id_2, "user-2")
+
+        # SECURITY: User 1 should only see their own history
+        user1_history = await queue.get_review_history(user_id="user-1")
+        assert len(user1_history) == 1
+        assert user1_history[0].user_id == "user-1"
+
+        # SECURITY: User 2 should only see their own history
+        user2_history = await queue.get_review_history(user_id="user-2")
+        assert len(user2_history) == 1
+        assert user2_history[0].user_id == "user-2"
+
+    @pytest.mark.asyncio
+    async def test_queue_at_capacity_rejects_instead_of_evicting(
+        self, evidence, validation_result
+    ):
+        """When queue is at capacity, new items should be rejected.
+
+        SECURITY: Prevents cross-tenant DoS via eviction.
+        """
+        # Create queue with low max total
+        queue = ReviewQueue(max_pending_per_user=100)
+        queue.MAX_TOTAL_PENDING = 2  # Very low for testing
+
+        # Fill the queue
+        await queue.enqueue(
+            user_id="user-1",
+            content="Content 1",
+            memory_type="fact",
+            source="test",
+            evidence=evidence,
+            validation_result=validation_result,
+        )
+        await queue.enqueue(
+            user_id="user-2",
+            content="Content 2",
+            memory_type="fact",
+            source="test",
+            evidence=evidence,
+            validation_result=validation_result,
+        )
+
+        # SECURITY: Third item should be REJECTED, not evict user-1's item
+        with pytest.raises(ValueError, match="at capacity"):
+            await queue.enqueue(
+                user_id="user-3",
+                content="Content 3",
+                memory_type="fact",
+                source="test",
+                evidence=evidence,
+                validation_result=validation_result,
+            )
+
+        # Verify user-1 and user-2 items are still present
+        assert queue.pending_count() == 2
+        assert queue.pending_count("user-1") == 1
+        assert queue.pending_count("user-2") == 1
+
+
 class TestDedupCheckerSecurity:
     """Security tests for DedupChecker."""
 

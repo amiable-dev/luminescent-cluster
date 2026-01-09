@@ -73,6 +73,7 @@ class ReviewAction:
         action: Either "approved" or "rejected".
         reviewer: Who performed the review.
         timestamp: When the review happened.
+        user_id: User who owned the memory (for filtering).
         reason: Optional reason for rejection.
         memory_id: ID of created memory (if approved).
     """
@@ -81,6 +82,7 @@ class ReviewAction:
     action: str
     reviewer: str
     timestamp: datetime
+    user_id: str  # SECURITY: Track user_id for proper filtering
     reason: Optional[str] = None
     memory_id: Optional[str] = None
 
@@ -156,11 +158,12 @@ class ReviewQueue:
                 f"User {user_id} has reached maximum pending items ({self.max_pending_per_user})"
             )
 
-        # Check total limit
+        # SECURITY: Check total limit - reject instead of evicting to prevent
+        # cross-tenant DoS (user A filling queue to evict user B's items)
         if len(self._pending) >= self.MAX_TOTAL_PENDING:
-            # Evict oldest item
-            oldest_id = next(iter(self._pending))
-            await self._remove_pending(oldest_id)
+            raise ValueError(
+                "Review queue is at capacity. Please try again later."
+            )
 
         # Create pending memory
         queue_id = str(uuid.uuid4())
@@ -266,12 +269,13 @@ class ReviewQueue:
                 evidence=pending.evidence,
             )
 
-        # Record action
+        # Record action (include user_id for proper filtering)
         action = ReviewAction(
             queue_id=queue_id,
             action="approved",
             reviewer=reviewer,
             timestamp=datetime.now(timezone.utc),
+            user_id=pending.user_id,
             memory_id=memory_id,
         )
         self._review_history.append(action)
@@ -308,12 +312,13 @@ class ReviewQueue:
         if pending.user_id != reviewer:
             raise ValueError("Unauthorized: cannot reject this pending memory")
 
-        # Record action
+        # Record action (include user_id for proper filtering)
         action = ReviewAction(
             queue_id=queue_id,
             action="rejected",
             reviewer=reviewer,
             timestamp=datetime.now(timezone.utc),
+            user_id=pending.user_id,
             reason=reason,
         )
         self._review_history.append(action)
@@ -340,8 +345,11 @@ class ReviewQueue:
     ) -> list[ReviewAction]:
         """Get review action history.
 
+        SECURITY: When user_id is provided, only returns actions for that user.
+        This prevents cross-tenant data leakage.
+
         Args:
-            user_id: Optional user ID filter.
+            user_id: Optional user ID filter (REQUIRED for user-facing APIs).
             limit: Maximum actions to return.
 
         Returns:
@@ -350,11 +358,9 @@ class ReviewQueue:
         history = self._review_history.copy()
         history.reverse()
 
+        # SECURITY: Filter by user_id when provided
         if user_id:
-            # Filter by user - need to check pending memory user_id
-            # Since pending is removed, we can't filter accurately
-            # Just return all for now
-            pass
+            history = [action for action in history if action.user_id == user_id]
 
         return history[:limit]
 

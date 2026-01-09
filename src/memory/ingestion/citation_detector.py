@@ -11,6 +11,20 @@ Supported citation types:
 - Commit hashes: 7-40 hex characters
 - URLs: http:// or https://
 - Issue/PR references: #123, GH-123
+
+SECURITY NOTE: Citation detection is for PROVENANCE TRACKING, not truth verification.
+A citation means "this claim references an external artifact" - it does NOT verify
+that the artifact exists or that the claim accurately represents it.
+
+Design Trade-off (ADR-003):
+- Pro: Provides audit trail for claims, enables post-hoc verification
+- Pro: No external API calls (fast, reliable, no dependencies)
+- Con: Fake citations can be added to bypass checks
+- Mitigation: Citations create an auditable trail; abuse can be detected and actioned
+
+If strict verification is needed, callers should validate citations against
+actual artifacts (e.g., verify ADR-003 exists, verify commit hash is real).
+This detector provides the FIRST line of defense; external verification is SECOND.
 """
 
 import re
