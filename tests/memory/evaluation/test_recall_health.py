@@ -481,13 +481,14 @@ class TestRecallHealthMonitor:
         brute_force.index_corpus(sample_documents)
         baseline_store = BaselineStore(temp_dir)
 
-        # Save a high baseline
+        # Save a high baseline with matching model/version
+        # Must match the monitor's settings for drift detection to work
         baseline = RecallBaseline(
             recall_at_k=1.0,
-            k=10,
+            k=3,  # Must match the k used in check_health
             query_count=50,
-            embedding_model="test",
-            embedding_version="v1",
+            embedding_model="test-model",
+            embedding_version="test-version",
             created_at=datetime.now(),
             corpus_size=5,
         )
@@ -501,6 +502,8 @@ class TestRecallHealthMonitor:
             brute_force=brute_force,
             hnsw_search=degraded_hnsw,
             baseline_store=baseline_store,
+            embedding_model="test-model",
+            embedding_version="test-version",
         )
 
         result = monitor.check_health(["query1"], k=3)

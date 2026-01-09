@@ -219,6 +219,18 @@ class RecallHealthMonitor:
         passed_drift = True
 
         if baseline:
+            # Validate baseline compatibility before using for drift detection
+            if baseline.k != k:
+                # k-value mismatch - baseline not comparable
+                baseline = None
+            elif baseline.embedding_model != self._embedding_model:
+                # Model mismatch - baseline not comparable
+                baseline = None
+            elif baseline.embedding_version != self._embedding_version:
+                # Version mismatch - baseline not comparable
+                baseline = None
+
+        if baseline:
             baseline_recall = baseline.recall_at_k
             drift_pct = self._baseline_store.compute_drift(avg_recall, baseline)
             passed_drift = drift_pct <= self.DRIFT_THRESHOLD
@@ -336,6 +348,14 @@ class RecallHealthMonitor:
             queries, k, filter_fn=filter_fn, filter_name=filter_name
         )
 
+        # Use sanitized filter name to avoid storing PII in baseline files
+        # The sanitized name is safe for filenames and won't contain sensitive data
+        sanitized_filter_name = None
+        if filter_name:
+            sanitized_filter_name = self._baseline_store._sanitize_filter_name(
+                filter_name
+            )
+
         baseline = RecallBaseline(
             recall_at_k=result.recall_at_k,
             k=k,
@@ -345,7 +365,7 @@ class RecallHealthMonitor:
             created_at=datetime.now(),
             corpus_size=self._brute_force.corpus_size,
             filtered=result.filtered,
-            filter_description=filter_name,
+            filter_description=sanitized_filter_name,  # Sanitized, not raw
         )
 
         self._baseline_store.save_baseline(baseline, filter_name)
