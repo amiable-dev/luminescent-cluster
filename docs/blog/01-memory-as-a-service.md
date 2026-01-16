@@ -170,6 +170,44 @@ Handoffs have lifecycle states: `PENDING → ACCEPTED → COMPLETED` (or `REJECT
 
 MaaS was designed with multi-tenant security in mind.
 
+### Trust Boundary
+
+MaaS APIs are **internal interfaces** designed to be called by a trusted orchestrator layer (MCP server, CLI, etc.). Authentication happens at that layer, not in MaaS itself.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  EXTERNAL (Untrusted)     │  INTERNAL (Trusted)            │
+│  ─────────────────────    │  ────────────────────          │
+│  • End users              │  • MCP Server layer            │
+│  • Network requests       │  • CLI orchestrator            │
+│                           │  • MaaS Registries             │
+│          │                │         │                      │
+│          ▼                │         ▼                      │
+│  ┌───────────────┐        │  ┌───────────────┐             │
+│  │ Auth Layer    │────────┼─▶│ Orchestrator  │             │
+│  │ (MCP Server)  │        │  │ (Trusted)     │             │
+│  └───────────────┘        │  └───────────────┘             │
+│                           │         │                      │
+│  Auth happens HERE        │         ▼                      │
+│                           │  ┌───────────────┐             │
+│                           │  │ MaaS APIs     │             │
+│                           │  └───────────────┘             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**What MaaS assumes** (provided by orchestrator):
+- `owner_id` is verified
+- Capabilities are appropriate for the auth context
+- Pool IDs are authorized for the agent
+
+**What MaaS enforces** (defense in depth):
+- Capability checks on every operation
+- Scope hierarchy (agents can't read above their level)
+- Capacity limits (DoS prevention)
+- Audit logging for forensics
+- 128-bit UUIDs (prevents ID guessing)
+- Defensive copies (prevents state mutation)
+
 ### Capability Enforcement
 
 Agents can only perform actions they have capabilities for:
@@ -373,4 +411,4 @@ MaaS is part of ADR-003 Phase 4.2. Future phases will add:
 
 ---
 
-*MaaS is part of the luminescent-cluster memory architecture. See [ADR-003](../adrs/ADR-003-memory-architecture.md) for the full design.*
+*MaaS is part of the luminescent-cluster memory architecture. See [ADR-003](../adrs/ADR-003-project-intent-persistent-context.md) for the full design, including the detailed Trust Model documentation.*
