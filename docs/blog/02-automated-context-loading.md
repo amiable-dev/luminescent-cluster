@@ -73,9 +73,19 @@ The failure modes are predictable:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Agent Skills: The Open Standard
+## Prerequisites: MCP Servers
 
-Agent Skills is an open standard (released December 2025) for packaging AI agent capabilities. Think of it as a portable playbook that any compliant agent can discover and execute.
+This system requires two MCP (Model Context Protocol) servers:
+
+**Session Memory MCP** (`session-memory`): Short-term memory for task context, recent activity, and session state. Think of it as the agent's working memory—what you're currently doing.
+
+**Pixeltable Memory MCP** (`pixeltable-memory`): Long-term organizational knowledge base powered by [Pixeltable](https://pixeltable.com). Stores ADRs, documentation, incident history, and code patterns. This is where ingested content goes.
+
+Both are included in the Luminescent Cluster repository. See the [MCP Server setup guide](../operations/mcp-setup.md) for installation.
+
+## Agent Skills: A Portable Standard
+
+Agent Skills is a format for packaging AI agent capabilities as discoverable markdown files. Any agent that supports the format can auto-discover skills in `.claude/skills/` directories.
 
 ### Why Skills, Not Custom Workflows?
 
@@ -167,9 +177,11 @@ INGESTIBLE_PATTERNS="\.md$|\.txt$|\.rst$|docs/|adr/|ADR-"
 # Denylist patterns
 EXCLUDED_PATTERNS="node_modules/|\.venv/|dist/|build/|__pycache__/"
 
-# Secrets protection
+# Secrets protection (filename patterns)
 SECRETS_PATTERNS="\.env|secret|\.key$|\.pem$|password|token|credential"
 ```
+
+**Note:** Filename-based filtering catches obvious secrets but isn't sufficient alone. The ingestion pipeline also performs content scanning for high-entropy strings (potential API keys) and common secret patterns. See the [security deep dive](./08-security-deep-dive.md) for the full detection strategy.
 
 Each ingested file includes metadata:
 - `path`: Relative path in repo
@@ -201,20 +213,25 @@ The ingestion pipeline underwent 10 rounds of LLM Council security review. Here'
 ### Path Security
 
 ```python
-# Path traversal prevention
+# Layer 1: Check raw input BEFORE resolution (catches obvious attempts)
+if ".." in str(file_path) or "\x00" in str(file_path):
+    return {"success": False, "reason": "Rejected suspicious path characters"}
+
+# Layer 2: Resolve to canonical path
 canonical_path = file_path.resolve()
-relative_path = canonical_path.relative_to(project_root)
 
-# Defense in depth
-if ".." in relative_path:
-    return {"success": False, "reason": "Rejected path with traversal"}
+# Layer 3: Verify result is under project root (the authoritative check)
+try:
+    relative_path = canonical_path.relative_to(project_root.resolve())
+except ValueError:
+    return {"success": False, "reason": "Path escapes project boundary"}
 
-if "\x00" in relative_path:
-    return {"success": False, "reason": "Rejected path with null bytes"}
-
-if relative_path.startswith("-"):
+# Layer 4: Prevent git argument injection
+if str(relative_path).startswith("-"):
     return {"success": False, "reason": "Rejected hyphen prefix (git injection)"}
 ```
+
+**Why layered checks?** The `relative_to()` check is authoritative, but checking raw input first provides defense in depth and clearer audit logs for attack attempts.
 
 ### Provenance Integrity
 
@@ -272,6 +289,14 @@ def _matches_pattern(file_path: str, pattern: str) -> bool:
     return fnmatch(file_path, pattern)
 ```
 
+## Access Control
+
+**Who can read memory?** In single-user mode (self-hosted), the MCP servers run locally and are only accessible to processes on your machine. There's no network exposure.
+
+**Who can write memory?** Only the git hooks and MCP server tools can write. The hooks run in your shell context with your git credentials. The MCP servers validate that writes come from authorized MCP clients.
+
+**Multi-tenant deployments** use the cloud tier, which adds authentication, tenant isolation, and audit logging. See [Memory-as-a-Service](./01-memory-as-a-service.md) for the trust model.
+
 ## Configuration
 
 All behavior is controlled via `.agent/config.yaml`:
@@ -298,13 +323,15 @@ skills:
 
 ## Getting Started
 
+**Platform support:** The shell scripts target Unix-like systems (Linux, macOS). Windows users can run them via WSL or Git Bash, or manually copy the hook files to `.git/hooks/`.
+
 ### 1. Install Hooks
 
 ```bash
 ./scripts/install_hooks.sh
 ```
 
-This installs `post-commit`, `post-merge`, and `post-rewrite` hooks.
+This installs `post-commit`, `post-merge`, and `post-rewrite` hooks. The script backs up any existing hooks before replacement.
 
 ### 2. Bootstrap KB (Fresh Clone)
 
@@ -386,6 +413,16 @@ ADR-002 is complete, but future enhancements could include:
 - **IDE integration**: VS Code extension for skill invocation
 - **Real-time sync**: File watcher for uncommitted changes
 - **Skill marketplace**: Community-contributed skills
+
+## Repository
+
+All scripts, hooks, and skills referenced in this post are in the [Luminescent Cluster repository](https://github.com/amiable-dev/luminescent-cluster):
+
+- **Hooks**: `.agent/hooks/post-commit`, `post-merge`, `post-rewrite`
+- **Skills**: `.claude/skills/session-init/`, `.claude/skills/session-save/`
+- **Scripts**: `scripts/install_hooks.sh`, `scripts/init_memory.py`
+- **Config**: `.agent/config.yaml`
+- **Source**: `src/workflows/config.py`, `src/workflows/ingestion.py`
 
 ---
 
