@@ -927,6 +927,114 @@ class MemoryProvider(Protocol):
 
 
 # =============================================================================
+# MaaS Provider Protocol (ADR-003 Phase 4.2)
+# =============================================================================
+
+MAAS_PROVIDER_VERSION = "1.0.0"
+
+
+@runtime_checkable
+class MaaSProvider(Protocol):
+    """
+    Extension point for Memory as a Service (MaaS) multi-agent collaboration.
+
+    Implementations provide multi-agent memory sharing, handoffs, and
+    pool management for cross-agent collaboration.
+
+    OSS Behavior: Local in-memory implementation.
+    Cloud Behavior: Distributed implementation with persistence.
+
+    Version: 1.0.0
+
+    Related: ADR-003 Memory Architecture, Phase 4.2
+
+    Example:
+        class CloudMaaSProvider:
+            async def register_agent(
+                self,
+                agent_type: str,
+                owner_id: str,
+            ) -> str:
+                # Register agent in distributed registry
+                ...
+
+        registry = ExtensionRegistry.get()
+        registry.maas_provider = CloudMaaSProvider()
+    """
+
+    async def register_agent(
+        self,
+        agent_type: str,
+        owner_id: str,
+        capabilities: Optional[list[str]] = None,
+        metadata: Optional[dict] = None,
+    ) -> str:
+        """
+        Register an agent in the MaaS system.
+
+        Args:
+            agent_type: Type of agent (claude_code, gpt_agent, etc.)
+            owner_id: User ID that owns this agent
+            capabilities: Optional custom capabilities
+            metadata: Optional agent metadata
+
+        Returns:
+            The registered agent ID.
+        """
+        ...
+
+    async def get_agent(self, agent_id: str) -> Optional[dict]:
+        """
+        Get agent information by ID.
+
+        Args:
+            agent_id: Agent identifier
+
+        Returns:
+            Agent info dict or None if not found.
+        """
+        ...
+
+    async def initiate_handoff(
+        self,
+        source_agent_id: str,
+        target_agent_id: str,
+        context: dict,
+    ) -> Optional[str]:
+        """
+        Initiate a handoff between agents.
+
+        Args:
+            source_agent_id: Agent initiating the handoff
+            target_agent_id: Agent receiving the handoff
+            context: Handoff context with task details
+
+        Returns:
+            Handoff ID if successful, None otherwise.
+        """
+        ...
+
+    async def create_pool(
+        self,
+        name: str,
+        owner_id: str,
+        scope: str,
+    ) -> str:
+        """
+        Create a shared memory pool.
+
+        Args:
+            name: Pool name
+            owner_id: User ID that owns the pool
+            scope: Visibility scope
+
+        Returns:
+            The created pool ID.
+        """
+        ...
+
+
+# =============================================================================
 # Exports
 # =============================================================================
 
@@ -941,6 +1049,7 @@ __all__ = [
     "CONTEXT_STORE_VERSION",
     "RESPONSE_FILTER_VERSION",
     "MEMORY_PROVIDER_VERSION",
+    "MAAS_PROVIDER_VERSION",
     # Core protocols
     "TenantProvider",
     "UsageTracker",
@@ -955,4 +1064,6 @@ __all__ = [
     "ResponseFilter",
     # Memory protocol (ADR-003)
     "MemoryProvider",
+    # MaaS protocol (ADR-003 Phase 4.2)
+    "MaaSProvider",
 ]

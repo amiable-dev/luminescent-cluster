@@ -46,6 +46,7 @@ if TYPE_CHECKING:
         ContextStore,
         ResponseFilter,
         MemoryProvider,
+        MaaSProvider,
     )
 
 
@@ -94,6 +95,9 @@ class ExtensionRegistry:
 
     # Memory extension (ADR-003)
     memory_provider: Optional["MemoryProvider"] = None
+
+    # MaaS extension (ADR-003 Phase 4.2)
+    maas_provider: Optional["MaaSProvider"] = None
 
     # Singleton management (ClassVars are not dataclass fields)
     _instance: ClassVar[Optional["ExtensionRegistry"]] = None
@@ -198,6 +202,18 @@ class ExtensionRegistry:
         """
         return self.memory_provider is not None
 
+    def has_maas_provider(self) -> bool:
+        """
+        Check if MaaS provider is registered.
+
+        Returns:
+            True if a MaaSProvider is registered.
+
+        Note:
+            MaaS enables multi-agent collaboration (ADR-003 Phase 4.2).
+        """
+        return self.maas_provider is not None
+
     def get_status(self) -> dict:
         """
         Get status of all registered extensions.
@@ -236,6 +252,7 @@ class ExtensionRegistry:
             "context_store": self.context_store is not None,
             "response_filter": self.response_filter is not None,
             "memory_provider": self.memory_provider is not None,
+            "maas_provider": self.maas_provider is not None,
             "mode": "cloud" if has_core else "oss",
             "chatbot_mode": "cloud" if has_chatbot else "oss",
         }

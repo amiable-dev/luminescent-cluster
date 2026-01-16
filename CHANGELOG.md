@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-01-16
+
+### Added
+- **Memory as a Service - MaaS (ADR-003 Phase 4.2)**
+  - Multi-agent collaboration infrastructure for shared memory
+  - `AgentType` enum: CLAUDE_CODE, GPT_AGENT, CUSTOM_PIPELINE, HUMAN
+  - `AgentCapability` enum: MEMORY_READ, MEMORY_WRITE, MEMORY_DELETE, KB_SEARCH, HANDOFF_INITIATE, HANDOFF_RECEIVE
+  - `SharedScope` enum: AGENT_PRIVATE, USER, PROJECT, TEAM, GLOBAL (hierarchical visibility)
+  - `AgentIdentity` dataclass with capability checking and serialization
+  - `AgentRegistry` singleton: register, deactivate, session management (thread-safe)
+  - `PoolRegistry` singleton: shared memory pools with membership and permissions
+  - `HandoffManager` singleton: task handoffs between specialized agents
+  - `MaaSMemoryProvider`: provider wrapper with agent context
+  - `CodeKBService`, `DecisionService`, `IncidentService`: knowledge base services
+  - MCP tools: 15 async functions for agent/pool/handoff management
+  - Security: `MEXTRAValidator` (injection detection), `MemoryPoisoningDefense` (output filtering), `AgentRateLimiter`, `MaaSAuditLogger`
+  - `MaaSProvider` protocol added to extensions
+  - 150 MaaS tests (TDD approach)
+  - Exit criteria benchmarks: sync <500ms p95, handoff <2s p95, registry lookup <50ms
+
+### Changed
+- ADR-003 updated to v6.7 with Phase 4.2 implementation tracker
+
 ## [0.2.0] - 2026-01-16
 
 ### Added
