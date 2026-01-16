@@ -50,9 +50,11 @@ class RRFFusion:
     """Reciprocal Rank Fusion for combining retrieval results.
 
     Fuses multiple ranked lists into a single ranked list using
-    the RRF scoring formula.
+    the RRF scoring formula. Supports optional per-source weights
+    for tuning the contribution of each retrieval source.
 
     Example:
+        >>> # Standard RRF
         >>> fusion = RRFFusion(k=60)
         >>> bm25_results = [("doc1", 0.8), ("doc2", 0.6), ("doc3", 0.4)]
         >>> vector_results = [("doc2", 0.9), ("doc1", 0.7), ("doc4", 0.5)]
@@ -60,29 +62,42 @@ class RRFFusion:
         >>> for item, score in fused:
         ...     print(f"{item}: {score:.4f}")
 
+        >>> # Weighted RRF (boost vector results)
+        >>> fusion = RRFFusion(k=60, weights={"bm25": 1.0, "vector": 1.5})
+        >>> fused = fusion.fuse(bm25=bm25_results, vector=vector_results)
+
     Attributes:
         k: RRF constant (default 60). Higher values reduce impact of rank.
+        weights: Per-source weights for tuning contribution.
     """
 
     # Default k value from the original RRF paper
     DEFAULT_K = 60
 
-    def __init__(self, k: int = DEFAULT_K):
+    def __init__(
+        self,
+        k: int = DEFAULT_K,
+        weights: dict[str, float] | None = None,
+    ):
         """Initialize RRF fusion.
 
         Args:
             k: RRF constant. Higher values reduce the importance of
                top ranks relative to lower ranks.
+            weights: Optional per-source weights. Keys are source names
+                (e.g., "bm25", "vector", "graph"), values are weights.
+                Default weight is 1.0 for unspecified sources.
         """
         if k < 0:
             raise ValueError("k must be non-negative")
         self.k = k
+        self.weights = weights or {}
 
     def fuse(
         self,
         **ranked_lists: list[tuple[str, float]],
     ) -> list[tuple[str, float]]:
-        """Fuse multiple ranked lists using RRF.
+        """Fuse multiple ranked lists using weighted RRF.
 
         Args:
             **ranked_lists: Named ranked lists, each a list of
@@ -94,12 +109,13 @@ class RRFFusion:
         if not ranked_lists:
             return []
 
-        # Calculate RRF scores
+        # Calculate RRF scores with optional weights
         rrf_scores: dict[str, float] = {}
 
         for list_name, results in ranked_lists.items():
+            weight = self.weights.get(list_name, 1.0)
             for rank, (item_id, _) in enumerate(results, start=1):
-                score = 1.0 / (self.k + rank)
+                score = weight * (1.0 / (self.k + rank))
                 rrf_scores[item_id] = rrf_scores.get(item_id, 0.0) + score
 
         # Sort by RRF score descending
@@ -138,8 +154,9 @@ class RRFFusion:
                 item_ranks[item_id][list_name] = rank
                 item_scores[item_id][list_name] = score
 
-                # Calculate RRF contribution
-                rrf_contribution = 1.0 / (self.k + rank)
+                # Calculate weighted RRF contribution
+                weight = self.weights.get(list_name, 1.0)
+                rrf_contribution = weight * (1.0 / (self.k + rank))
                 rrf_scores[item_id] = rrf_scores.get(item_id, 0.0) + rrf_contribution
 
         # Build results sorted by RRF score

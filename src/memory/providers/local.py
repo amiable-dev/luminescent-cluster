@@ -8,12 +8,16 @@ storing memories in-memory with optional two-stage hybrid retrieval
 (BM25 + Vector + RRF + Cross-Encoder). For production use with
 Pixeltable-backed storage, see the cloud implementation.
 
+Supports optional caching for 75-90% cost reduction on repeated queries
+(ADR-003 Option G).
+
 Related GitHub Issues:
 - #85: Implement LocalMemoryProvider
 
 ADR Reference: ADR-003 Memory Architecture
 - Phase 1a: Storage
 - Phase 3: Two-Stage Retrieval Architecture
+- Option G: Context Caching
 """
 
 import asyncio
@@ -26,6 +30,7 @@ from src.memory.schemas import Memory, MemoryType
 if TYPE_CHECKING:
     from src.memory.graph.graph_builder import GraphBuilder
     from src.memory.graph.graph_search import GraphSearch
+    from src.memory.retrieval.cache import RetrievalCache
     from src.memory.retrieval.hybrid import HybridRetriever, RetrievalMetrics
 
 
@@ -62,10 +67,16 @@ class LocalMemoryProvider:
         >>> provider = LocalMemoryProvider(use_hybrid_retrieval=True, use_graph=True)
         >>> result = await provider.retrieve("services using PostgreSQL", "user-123")
 
+        >>> # Cached mode (75-90% cost reduction)
+        >>> provider = LocalMemoryProvider(use_cache=True)
+        >>> result = await provider.retrieve("auth decisions", "user-123")  # Cache miss
+        >>> result = await provider.retrieve("auth decisions", "user-123")  # Cache hit
+
     Attributes:
         use_hybrid_retrieval: If True, use two-stage hybrid retrieval.
         use_cross_encoder: If True, use cross-encoder reranking (slower but better).
         use_graph: If True, enable Knowledge Graph for multi-hop queries.
+        use_cache: If True, enable retrieval caching.
     """
 
     def __init__(
@@ -74,6 +85,9 @@ class LocalMemoryProvider:
         use_cross_encoder: bool = True,
         use_query_rewriter: bool = True,
         use_graph: bool = False,
+        use_cache: bool = False,
+        cache_ttl_seconds: float = 3600,
+        cache_max_size: int = 1000,
     ):
         """Initialize the local memory provider.
 
@@ -87,6 +101,10 @@ class LocalMemoryProvider:
                 Default: True.
             use_graph: Enable Knowledge Graph for multi-hop queries.
                 Requires hybrid retrieval. Default: False.
+            use_cache: Enable retrieval caching for 75-90% cost reduction.
+                Default: False.
+            cache_ttl_seconds: Cache TTL in seconds. Default: 3600 (1 hour).
+            cache_max_size: Maximum cache entries. Default: 1000.
         """
         self._memories: dict[str, Memory] = {}
         self._memory_ids_by_user: dict[str, list[str]] = {}
@@ -98,8 +116,26 @@ class LocalMemoryProvider:
         self._graph_search: Optional["GraphSearch"] = None
         self._graph_builders: dict[str, "GraphBuilder"] = {}
 
+        # Cache configuration
+        self._use_cache = use_cache
+        self._cache_ttl_seconds = cache_ttl_seconds
+        self._cache_max_size = cache_max_size
+        self._cache: Optional["RetrievalCache"] = None
+
+        if use_cache:
+            self._init_cache()
+
         if use_hybrid_retrieval:
             self._init_hybrid_retriever()
+
+    def _init_cache(self) -> None:
+        """Initialize the retrieval cache."""
+        from src.memory.retrieval.cache import RetrievalCache
+
+        self._cache = RetrievalCache(
+            max_size=self._cache_max_size,
+            ttl_seconds=self._cache_ttl_seconds,
+        )
 
     def _init_hybrid_retriever(self) -> None:
         """Initialize the hybrid retriever lazily."""
@@ -156,6 +192,10 @@ class LocalMemoryProvider:
         if self._use_graph and self._graph_search is not None:
             self._update_graph(user_id, stored_memory, memory_id)
 
+        # Invalidate cache for user (new memory may affect results)
+        if self._cache is not None:
+            self._cache.invalidate_user(user_id)
+
         return memory_id
 
     def _update_graph(self, user_id: str, memory: Memory, memory_id: str) -> None:
@@ -185,6 +225,9 @@ class LocalMemoryProvider:
     ) -> list[Memory]:
         """Retrieve memories matching a query for a user.
 
+        When caching is enabled, checks cache first and returns
+        cached results if available.
+
         When hybrid retrieval is enabled, uses two-stage retrieval:
         - Stage 1: BM25 + Vector search (parallel)
         - Stage 2: RRF fusion + optional Cross-Encoder reranking
@@ -199,12 +242,31 @@ class LocalMemoryProvider:
         Returns:
             List of matching Memory objects.
         """
+        # Check cache first
+        if self._cache is not None:
+            cached = self._cache.get(user_id=user_id, query=query, limit=limit)
+            if cached is not None:
+                # Return copies of cached memories
+                return [Memory(**m) if isinstance(m, dict) else m.model_copy() for m in cached]
+
         # Use hybrid retrieval if enabled
         if self._hybrid_retriever is not None:
-            return await self._retrieve_hybrid(query, user_id, limit)
+            results = await self._retrieve_hybrid(query, user_id, limit)
+        else:
+            # Fallback to simple substring matching
+            results = self._retrieve_simple(query, user_id, limit)
 
-        # Fallback to simple substring matching
-        return self._retrieve_simple(query, user_id, limit)
+        # Cache results
+        if self._cache is not None and results:
+            # Store serializable versions
+            self._cache.set(
+                user_id=user_id,
+                query=query,
+                limit=limit,
+                results=[m.model_dump() for m in results],
+            )
+
+        return results
 
     async def _retrieve_hybrid(
         self, query: str, user_id: str, limit: int
@@ -320,6 +382,10 @@ class LocalMemoryProvider:
         if self._hybrid_retriever is not None:
             self._hybrid_retriever.remove_memory(user_id, memory_id)
 
+        # Invalidate cache for user
+        if self._cache is not None:
+            self._cache.invalidate_user(user_id)
+
         return True
 
     async def search(
@@ -432,6 +498,10 @@ class LocalMemoryProvider:
                 self._graph_search.clear(user_id)
             self._graph_builders.clear()
 
+        # Clear cache
+        if self._cache is not None:
+            self._cache.invalidate_all()
+
         self._memories.clear()
         self._memory_ids_by_user.clear()
 
@@ -448,6 +518,49 @@ class LocalMemoryProvider:
     def is_graph_enabled(self) -> bool:
         """Check if Knowledge Graph is enabled."""
         return self._use_graph and self._graph_search is not None
+
+    @property
+    def use_cache(self) -> bool:
+        """Check if caching is enabled."""
+        return self._use_cache
+
+    @property
+    def cache_ttl_seconds(self) -> float:
+        """Get cache TTL in seconds."""
+        return self._cache_ttl_seconds
+
+    @property
+    def cache_max_size(self) -> int:
+        """Get cache maximum size."""
+        return self._cache_max_size
+
+    def get_cache_metrics(self) -> dict[str, Any]:
+        """Get cache metrics.
+
+        Returns:
+            Dictionary with cache statistics:
+            - enabled: Whether caching is enabled
+            - size: Current number of cached entries
+            - max_size: Maximum cache size
+            - hits: Number of cache hits
+            - misses: Number of cache misses
+            - hit_rate: Cache hit rate (0.0-1.0)
+        """
+        if self._cache is None:
+            return {
+                "enabled": False,
+                "size": 0,
+                "max_size": 0,
+                "hits": 0,
+                "misses": 0,
+                "hit_rate": 0.0,
+            }
+
+        metrics = self._cache.get_metrics()
+        return {
+            "enabled": True,
+            **metrics,
+        }
 
     async def retrieve_with_scores(
         self, query: str, user_id: str, limit: int = 5

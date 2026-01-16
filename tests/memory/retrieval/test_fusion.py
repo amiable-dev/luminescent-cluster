@@ -404,3 +404,104 @@ class TestRRFMultipleSources:
         # Score should be 10 * 1/61
         expected = 10.0 / 61
         assert fused[0][1] == pytest.approx(expected)
+
+
+class TestRRFWeightedFusion:
+    """Tests for weighted RRF fusion (ADR-003 Phase D)."""
+
+    def test_weighted_fusion_basic(self) -> None:
+        """Test weighted fusion with custom weights."""
+        fusion = RRFFusion(k=60, weights={"bm25": 1.0, "vector": 2.0})
+
+        bm25_results = [("a", 1.0)]
+        vector_results = [("a", 1.0)]
+
+        fused = fusion.fuse(bm25=bm25_results, vector=vector_results)
+
+        # Score should be 1*1/61 + 2*1/61 = 3/61
+        expected = 3.0 / 61
+        assert fused[0][1] == pytest.approx(expected)
+
+    def test_weighted_fusion_boosts_source(self) -> None:
+        """Test that higher weight boosts a source's contribution."""
+        # Without weights: both sources equal
+        unweighted = RRFFusion(k=60)
+        # With weights: vector gets 2x
+        weighted = RRFFusion(k=60, weights={"vector": 2.0})
+
+        bm25_results = [("a", 1.0)]
+        vector_results = [("b", 1.0)]
+
+        unweighted_fused = unweighted.fuse(bm25=bm25_results, vector=vector_results)
+        weighted_fused = weighted.fuse(bm25=bm25_results, vector=vector_results)
+
+        # In unweighted, both have same score
+        assert unweighted_fused[0][1] == unweighted_fused[1][1]
+
+        # In weighted, vector's 'b' should have higher score
+        weighted_dict = dict(weighted_fused)
+        assert weighted_dict["b"] > weighted_dict["a"]
+
+    def test_weighted_fusion_default_weight(self) -> None:
+        """Test that unspecified sources get default weight of 1.0."""
+        fusion = RRFFusion(k=60, weights={"bm25": 2.0})  # vector not specified
+
+        bm25_results = [("a", 1.0)]
+        vector_results = [("b", 1.0)]
+
+        fused = fusion.fuse(bm25=bm25_results, vector=vector_results)
+        fused_dict = dict(fused)
+
+        # bm25 has weight 2, vector has default weight 1
+        # a gets 2/61, b gets 1/61
+        assert fused_dict["a"] == pytest.approx(2.0 / 61)
+        assert fused_dict["b"] == pytest.approx(1.0 / 61)
+
+    def test_weighted_fusion_with_details(self) -> None:
+        """Test fuse_with_details respects weights."""
+        fusion = RRFFusion(k=60, weights={"bm25": 1.5, "vector": 1.0})
+
+        bm25_results = [("a", 1.0)]
+        vector_results = [("a", 0.9)]
+
+        fused = fusion.fuse_with_details(bm25=bm25_results, vector=vector_results)
+
+        # Score should be 1.5*1/61 + 1.0*1/61 = 2.5/61
+        expected = 2.5 / 61
+        assert fused[0].score == pytest.approx(expected)
+        assert fused[0].source_ranks == {"bm25": 1, "vector": 1}
+
+    def test_weighted_fusion_three_sources(self) -> None:
+        """Test weighted fusion with three sources (BM25, Vector, Graph)."""
+        fusion = RRFFusion(
+            k=60,
+            weights={"bm25": 1.0, "vector": 1.5, "graph": 2.0},
+        )
+
+        bm25_results = [("a", 1.0)]
+        vector_results = [("a", 0.9)]
+        graph_results = [("a", 0.8)]
+
+        fused = fusion.fuse(
+            bm25=bm25_results,
+            vector=vector_results,
+            graph=graph_results,
+        )
+
+        # Score should be 1.0*1/61 + 1.5*1/61 + 2.0*1/61 = 4.5/61
+        expected = 4.5 / 61
+        assert fused[0][1] == pytest.approx(expected)
+
+    def test_zero_weight_excludes_source(self) -> None:
+        """Test that zero weight effectively excludes a source."""
+        fusion = RRFFusion(k=60, weights={"bm25": 0.0, "vector": 1.0})
+
+        bm25_results = [("a", 1.0)]
+        vector_results = [("b", 1.0)]
+
+        fused = fusion.fuse(bm25=bm25_results, vector=vector_results)
+        fused_dict = dict(fused)
+
+        # a gets 0 from bm25, b gets 1/61 from vector
+        assert fused_dict["a"] == 0.0
+        assert fused_dict["b"] == pytest.approx(1.0 / 61)

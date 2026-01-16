@@ -4,7 +4,7 @@
 **Date**: 2025-12-28
 **Decision Makers**: Development Team
 **Owners**: @christopherjoseph
-**Version**: 1.1 (Council Validated)
+**Version**: 1.4 (ADR-003 Sync)
 
 ## Decision Summary
 
@@ -426,6 +426,18 @@ ADR-003 (Memory) and ADR-006 (Chatbot) phases now aligned with **explicit depend
 | Phase 4 (Enterprise) | Phase 2 (Context Eng) | HARD |
 | V2 (Voice) | Phase 3 (HybridRAG) | Soft |
 
+**ADR-003 Phase Status** (as of v1.4):
+
+| ADR-003 Phase | Status | Tests | Notes |
+|---------------|--------|-------|-------|
+| Phase 0 (Foundations) | ✅ Complete | 128 | Eval harness, HNSW monitoring |
+| Phase 1 (Conversational Memory) | ✅ Complete | 225 | Storage, extraction, janitor |
+| Phase 2 (Context Engineering) | ✅ Complete | 68 | Memory blocks, grounded ingestion |
+| Phase 3 (HybridRAG) | ✅ Complete | 249 | Two-stage retrieval, entity extraction |
+| Phase 4.1 (Knowledge Graph) | ✅ Complete | 96 | NetworkX backend, multi-hop queries |
+| Phase 4.2 (Hindsight) | 📝 Not Started | - | Temporal reasoning |
+| Phase 4.3 (MaaS) | 📝 Not Started | - | Multi-agent support |
+
 ### 4. Compliance Responsibilities by Deployment Type
 
 **ADR-004 Monetization Tier + ADR-006 GDPR Integration**:
@@ -485,8 +497,13 @@ Unified status format across ADRs:
 |-----|-----------|--------|-------|----------|------------|----------|
 | **ADR-003** | Session Memory MCP | Implemented | 45 | 89% | Validated | `src/session_memory_server.py` |
 | ADR-003 | Pixeltable MCP | Implemented | 62 | 91% | Validated | `src/pixeltable_mcp_server.py` |
-| ADR-003 | Phase 0 (Eval harness) | Not started | - | - | Pending | - |
-| ADR-003 | Phase 1 (Conversational Memory) | Not started | - | - | Pending | - |
+| ADR-003 | Phase 0 (Eval harness) | Implemented | 128 | 92% | Validated | `src/memory/evaluation/` |
+| ADR-003 | Phase 1 (Conversational Memory) | Implemented | 225 | 91% | Validated | `src/memory/` |
+| ADR-003 | Phase 2 (Context Engineering) | Implemented | 68 | 90% | Validated | `src/memory/blocks/`, `src/memory/ingestion/` |
+| ADR-003 | Phase 3 (HybridRAG) | Implemented | 249 | 93% | Validated | `src/memory/retrieval/`, `src/memory/extraction/entities/` |
+| ADR-003 | Phase 4.1 (Knowledge Graph) | Implemented | 96 | 94% | Validated | `src/memory/graph/` |
+| ADR-003 | Phase 4.2 (Hindsight) | Not started | - | - | Pending | - |
+| ADR-003 | Phase 4.3 (MaaS) | Not started | - | - | Pending | - |
 | **ADR-005** | Extension Protocols | Implemented | 18 | 95% | Validated | `src/extensions/` |
 | ADR-005 | CloudTenantProvider | Implemented | 12 | 88% | Validated | `cloud/extensions/` |
 | ADR-005 | StripeUsageTracker | Implemented | 8 | 82% | Validated | `cloud/extensions/` |
@@ -500,7 +517,7 @@ Unified status format across ADRs:
 | ADR-006 | CloudAccessController | Implemented | 18 | 96% | Validated | `cloud/chatbot/access_controller.py` |
 | ADR-006 | GDPRService | Implemented | 19 | 94% | Validated | `cloud/chatbot/gdpr_service.py` |
 
-**Total Tests**: 1303 (1168 cluster + 135 cloud)
+**Total Tests**: 1859 (1724 cluster + 135 cloud)
 
 ---
 
@@ -692,6 +709,7 @@ The Council finds ADR-007 **fundamentally sound and highly effective** at resolv
 | 1.1 | 2025-12-28 | **Council Validated**: Added Security Overlay (1a), Error Handling & Resilience (1b), Migration Strategy (1c). Updated Phase Matrix with explicit dependencies. Added Protocol Versioning (SemVer). Added GDPR auto-deletion policy by tier. Updated status tracking with hybrid approach. Resolved all 4 open questions. |
 | 1.2 | 2025-12-28 | **Implementation Complete**: All protocol layer changes (OSS) and cloud implementations (Private) completed via TDD. All issues closed. |
 | 1.3 | 2026-01-08 | **Maintenance**: Updated test counts (1168 OSS, 135 cloud). Consolidated duplicate MemoryProvider to single source in extensions. |
+| 1.4 | 2026-01-16 | **ADR-003 Sync**: Updated Integration Status Table to reflect ADR-003 completion through Phase 4 Knowledge Graph. Added rows for Phase 2 (Context Engineering), Phase 3 (HybridRAG), Phase 4.1 (Knowledge Graph). Phase 4.2 (Hindsight) and Phase 4.3 (MaaS) remain Not Started. Updated test counts (1724 OSS, 135 cloud = 1859 total). Added ADR-003 Phase Status table to Section 3 to avoid source-of-truth conflicts. Council review: balanced tier, unanimous recommendation to update Phase Alignment Matrix. |
 
 ---
 
