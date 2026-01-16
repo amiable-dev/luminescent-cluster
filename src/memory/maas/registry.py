@@ -440,6 +440,8 @@ class AgentRegistry:
     def get_session(self, session_id: str) -> Optional[dict[str, Any]]:
         """Get session information.
 
+        Returns a defensive copy with copied metadata to prevent external mutation.
+
         Args:
             session_id: The session ID to look up.
 
@@ -455,7 +457,7 @@ class AgentRegistry:
                 "session_id": session.session_id,
                 "agent_id": session.agent_id,
                 "started_at": session.started_at.isoformat(),
-                "metadata": session.metadata,
+                "metadata": session.metadata.copy(),  # Defensive copy
             }
 
     def agent_count(self) -> int:

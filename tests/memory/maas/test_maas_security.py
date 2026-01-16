@@ -624,6 +624,28 @@ class TestDefensiveCopies:
         assert "evil" not in handoff2.context.current_state
         assert handoff2.context.task_description == "Test task"
 
+    def test_get_session_returns_defensive_copy(self):
+        """Verify modifying returned session metadata doesn't affect internal state."""
+        from src.memory.maas.registry import AgentRegistry
+        from src.memory.maas.types import AgentType
+
+        registry = AgentRegistry.get()
+        agent_id = registry.register_agent(
+            agent_type=AgentType.CLAUDE_CODE,
+            owner_id="user-123",
+        )
+
+        session_id = registry.start_session(agent_id, metadata={"key": "value"})
+
+        # Get session and modify it
+        session = registry.get_session(session_id)
+        session["metadata"]["evil"] = "data"
+
+        # Get again - should not have the modification
+        session2 = registry.get_session(session_id)
+        assert "evil" not in session2["metadata"]
+        assert session2["metadata"]["key"] == "value"
+
 
 class TestSecurityIntegration:
     """Integration tests for security components."""

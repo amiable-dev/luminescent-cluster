@@ -329,7 +329,7 @@ class PoolRegistry:
             permission: Requested permission level.
 
         Returns:
-            True if joined successfully, False if pool not found or capacity exceeded.
+            True if joined successfully, False if pool/agent not found.
 
         Note:
             If the agent's owner matches the pool owner, they get ADMIN.
@@ -340,6 +340,26 @@ class PoolRegistry:
         with self._rlock:
             pool = self._pools.get(pool_id)
             if pool is None:
+                self._log_event(
+                    event_type="POOL_OPERATION",
+                    agent_id=agent_id,
+                    action="join_pool",
+                    outcome="failed",
+                    details={"pool_id": pool_id, "reason": "pool_not_found"},
+                )
+                return False
+
+            # Verify agent exists in registry (integrity check)
+            agent_registry = AgentRegistry.get()
+            agent = agent_registry.get_agent(agent_id)
+            if agent is None:
+                self._log_event(
+                    event_type="POOL_OPERATION",
+                    agent_id=agent_id,
+                    action="join_pool",
+                    outcome="failed",
+                    details={"pool_id": pool_id, "reason": "agent_not_found"},
+                )
                 return False
 
             # Check membership capacity (DoS prevention) - only for new members
@@ -360,9 +380,7 @@ class PoolRegistry:
                     raise PoolCapacityError("memberships_per_pool", self._max_memberships_per_pool)
 
             # Check if agent's owner matches pool owner -> grant ADMIN
-            agent_registry = AgentRegistry.get()
-            agent = agent_registry.get_agent(agent_id)
-            if agent and agent.owner_id == pool.owner_id:
+            if agent.owner_id == pool.owner_id:
                 permission = PermissionModel.ADMIN
 
             membership = PoolMembership(

@@ -177,6 +177,23 @@ class TestPoolMembership:
 
         assert result is False
 
+    def test_join_pool_nonexistent_agent(self):
+        """Verify joining pool with nonexistent agent returns False."""
+        from src.memory.maas.pool import PoolRegistry
+
+        registry = PoolRegistry.get()
+
+        pool_id = registry.create_pool(
+            name="test-pool",
+            owner_id="user-123",
+            scope=SharedScope.PROJECT,
+        )
+
+        # Try to join with a non-existent agent ID
+        result = registry.join_pool(pool_id, "fake-agent-id", PermissionModel.READ)
+
+        assert result is False
+
     def test_leave_pool(self):
         """Verify agent can leave a pool."""
         from src.memory.maas.pool import PoolRegistry
