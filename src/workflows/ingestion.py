@@ -77,10 +77,24 @@ def ingest_file(
             file_path = project_root / file_path
 
         # Calculate relative path for storage
+        # Use canonical path to prevent traversal attacks (e.g., docs/../secrets.env)
         try:
-            relative_path = str(file_path.relative_to(project_root))
+            canonical_path = file_path.resolve()
+            canonical_root = project_root.resolve()
+            relative_path = str(canonical_path.relative_to(canonical_root))
         except ValueError:
             relative_path = file_path.name
+
+        # Normalize path separators and remove any remaining traversal
+        relative_path = relative_path.replace("\\", "/")
+        # Reject paths that still contain .. after resolution (shouldn't happen but defense in depth)
+        if ".." in relative_path:
+            return {
+                "success": False,
+                "skipped": True,
+                "reason": f"Rejected path with traversal: {relative_path}",
+                "path": relative_path,
+            }
 
         # Load config if not provided
         if config is None:
@@ -118,29 +132,28 @@ def ingest_file(
                 "path": relative_path,
             }
 
+        # Check blob size BEFORE reading content (DoS prevention)
+        # This prevents loading large files into memory before checking size
+        blob_size = _get_blob_size(relative_path, commit_sha, project_root)
+        if blob_size is not None:
+            blob_size_kb = blob_size / 1024
+            if blob_size_kb > config.max_file_size_kb:
+                return {
+                    "success": False,
+                    "skipped": True,
+                    "reason": f"File too large ({blob_size_kb:.1f}KB > {config.max_file_size_kb}KB)",
+                    "path": relative_path,
+                }
+
         # Read content from git object database (not working tree) for provenance integrity
         # This ensures we ingest exactly what was committed, not potentially modified working tree
-        # Also avoids TOCTOU by doing all checks on the committed content, not working tree
-        try:
-            content = _read_committed_content(relative_path, commit_sha, project_root)
-            if content is None:
-                # Fallback to working tree if git show fails (e.g., file not in git yet)
-                content = file_path.read_text(encoding="utf-8")
-        except UnicodeDecodeError:
+        # NO FALLBACK to working tree - if git fails, we skip (maintains provenance integrity)
+        content = _read_committed_content(relative_path, commit_sha, project_root)
+        if content is None:
             return {
                 "success": False,
                 "skipped": True,
-                "reason": "Could not decode file as UTF-8 (likely binary)",
-                "path": relative_path,
-            }
-
-        # Check file size on committed content (avoid TOCTOU with working tree)
-        content_size_kb = len(content.encode("utf-8")) / 1024
-        if content_size_kb > config.max_file_size_kb:
-            return {
-                "success": False,
-                "skipped": True,
-                "reason": f"File too large ({content_size_kb:.1f}KB > {config.max_file_size_kb}KB)",
+                "reason": f"Could not read from git object database (commit: {commit_sha[:8]})",
                 "path": relative_path,
             }
 
@@ -214,6 +227,34 @@ def ingest_file(
             "reason": f"Ingestion error: {e}",
             "path": str(file_path),
         }
+
+
+def _get_blob_size(relative_path: str, commit_sha: str, project_root: Path) -> Optional[int]:
+    """Get the size of a blob in the git object database.
+
+    Used for DoS prevention - check size before loading content into memory.
+
+    Args:
+        relative_path: Path relative to project root
+        commit_sha: Git commit SHA
+        project_root: Project root directory
+
+    Returns:
+        Blob size in bytes, or None if git command fails
+    """
+    try:
+        result = subprocess.run(
+            ["git", "cat-file", "-s", f"{commit_sha}:{relative_path}"],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            return int(result.stdout.strip())
+        return None
+    except (subprocess.SubprocessError, FileNotFoundError, ValueError):
+        return None
 
 
 def _read_committed_content(relative_path: str, commit_sha: str, project_root: Path) -> Optional[str]:

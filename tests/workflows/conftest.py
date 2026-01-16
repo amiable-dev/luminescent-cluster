@@ -118,8 +118,15 @@ def mock_pixeltable_kb():
 
 
 @pytest.fixture
-def mock_git_commands(temp_project_dir):
-    """Mock git commands for testing."""
+def mock_git_commands(temp_project_dir, sample_markdown_file):
+    """Mock git commands for testing.
+
+    This fixture mocks git commands so tests work without a real git repo.
+    It handles: rev-parse, branch, diff-tree, show (for content), cat-file -s (for size)
+    """
+    # Read the sample content for git show mocking
+    sample_content = sample_markdown_file.read_text() if sample_markdown_file.exists() else "# Test"
+
     def mock_run(cmd, **kwargs):
         result = MagicMock()
         result.returncode = 0
@@ -132,9 +139,38 @@ def mock_git_commands(temp_project_dir):
             result.stdout = "main"
         elif "diff-tree" in cmd:
             result.stdout = ""
+        elif "show" in cmd:
+            # git show <commit>:<path> - return the file content
+            result.stdout = sample_content
+        elif "cat-file" in cmd and "-s" in cmd:
+            # git cat-file -s <commit>:<path> - return file size
+            result.stdout = str(len(sample_content.encode("utf-8")))
         else:
             result.stdout = ""
 
         return result
 
     return mock_run
+
+
+@pytest.fixture
+def mock_git_for_ingestion(temp_project_dir):
+    """Context manager fixture to mock all git calls in ingestion module."""
+    def create_mock(file_content="# Test Document\n\nThis is a test document for ingestion."):
+        def mock_run(cmd, **kwargs):
+            result = MagicMock()
+            result.returncode = 0
+
+            if "show" in cmd:
+                result.stdout = file_content
+            elif "cat-file" in cmd and "-s" in cmd:
+                result.stdout = str(len(file_content.encode("utf-8")))
+            elif "branch" in cmd and "--show-current" in cmd:
+                result.stdout = "main"
+            else:
+                result.stdout = ""
+
+            return result
+        return mock_run
+
+    return create_mock

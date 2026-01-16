@@ -21,6 +21,31 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime
 
 
+def create_git_mock(file_content):
+    """Create a mock for subprocess.run that handles git commands.
+
+    Used to simulate git operations in tests without a real git repo.
+    Handles: git show, git cat-file -s, git branch --show-current
+    """
+    def mock_run(cmd, **kwargs):
+        result = MagicMock()
+        result.returncode = 0
+
+        if "show" in cmd:
+            # git show <commit>:<path>
+            result.stdout = file_content
+        elif "cat-file" in cmd and "-s" in cmd:
+            # git cat-file -s <commit>:<path>
+            result.stdout = str(len(file_content.encode("utf-8")))
+        elif "branch" in cmd and "--show-current" in cmd:
+            result.stdout = "main"
+        else:
+            result.stdout = ""
+
+        return result
+    return mock_run
+
+
 class TestIngestFileFunction:
     """TDD: Tests for ingest_file function existence and basic behavior."""
 
@@ -40,7 +65,10 @@ class TestIngestFileFunction:
         """
         from src.workflows.ingestion import ingest_file
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        file_content = sample_markdown_file.read_text()
+
+        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -61,7 +89,10 @@ class TestIngestFileFunction:
         """
         from src.workflows.ingestion import ingest_file
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        file_content = sample_markdown_file.read_text()
+
+        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -90,7 +121,10 @@ class TestIngestFileContent:
         """
         from src.workflows.ingestion import ingest_file
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        file_content = sample_markdown_file.read_text()
+
+        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -113,7 +147,10 @@ class TestIngestFileContent:
         """
         from src.workflows.ingestion import ingest_file
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        file_content = sample_markdown_file.read_text()
+
+        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -140,7 +177,10 @@ class TestIngestFileMetadata:
         """
         from src.workflows.ingestion import ingest_file
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        file_content = sample_markdown_file.read_text()
+
+        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -163,22 +203,19 @@ class TestIngestFileMetadata:
         """
         from src.workflows.ingestion import ingest_file
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        file_content = sample_markdown_file.read_text()
+
+        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
 
-            with patch("subprocess.run") as mock_run:
-                mock_result = MagicMock()
-                mock_result.returncode = 0
-                mock_result.stdout = "main\n"
-                mock_run.return_value = mock_result
-
-                ingest_file(
-                    str(sample_markdown_file),
-                    commit_sha="abc123",
-                    project_root=temp_project_dir
-                )
+            ingest_file(
+                str(sample_markdown_file),
+                commit_sha="abc123",
+                project_root=temp_project_dir
+            )
 
         call_args = mock_kb.insert.call_args[0][0][0]
         assert "branch" in call_args["metadata"]
@@ -190,7 +227,10 @@ class TestIngestFileMetadata:
         """
         from src.workflows.ingestion import ingest_file
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        file_content = sample_markdown_file.read_text()
+
+        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -212,7 +252,11 @@ class TestIngestFileMetadata:
         """
         from src.workflows.ingestion import ingest_file
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        md_content = sample_markdown_file.read_text()
+        adr_content = sample_adr_file.read_text()
+
+        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(md_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -227,8 +271,13 @@ class TestIngestFileMetadata:
             call_args = mock_kb.insert.call_args[0][0][0]
             assert call_args["type"] == "documentation"
 
-            # ADR file should be 'decision'
-            mock_kb.reset_mock()
+        # ADR file should be 'decision'
+        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(adr_content)):
+            mock_kb = MagicMock()
+            mock_kb.where.return_value.select.return_value.collect.return_value = []
+            mock_get_kb.return_value = mock_kb
+
             ingest_file(
                 str(sample_adr_file),
                 commit_sha="abc123",
@@ -252,7 +301,8 @@ class TestIngestFileIdempotency:
         content = sample_markdown_file.read_text()
         content_hash = hashlib.sha256(content.encode()).hexdigest()
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(content)):
             mock_kb = MagicMock()
             # Simulate existing entry with same hash
             mock_kb.where.return_value.select.return_value.collect.return_value = [
@@ -278,7 +328,10 @@ class TestIngestFileIdempotency:
         """
         from src.workflows.ingestion import ingest_file
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        content = sample_markdown_file.read_text()
+
+        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(content)):
             mock_kb = MagicMock()
             # Simulate existing entry with different hash
             mock_kb.where.return_value.select.return_value.collect.return_value = [
@@ -341,12 +394,15 @@ class TestIngestFileSecurity:
         import os
         from src.workflows.ingestion import ingest_file
 
+        file_content = sample_markdown_file.read_text()
+
         # Create a symlink pointing to another file within the project
         symlink_path = temp_project_dir / "docs" / "link-to-test.md"
         try:
             os.symlink(sample_markdown_file, symlink_path)
 
-            with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+            with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+                 patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
                 mock_kb = MagicMock()
                 mock_kb.where.return_value.select.return_value.collect.return_value = []
                 mock_get_kb.return_value = mock_kb
