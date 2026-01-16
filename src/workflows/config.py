@@ -130,7 +130,8 @@ def should_ingest_file(file_path: str, config: WorkflowConfig) -> bool:
     file_path = file_path.replace("\\", "/")
 
     # Check if it's a secrets file first (highest priority)
-    if is_secret_file(file_path):
+    # Pass config's secrets_patterns to use user-defined patterns
+    if is_secret_file(file_path, config.secrets_patterns):
         return False
 
     # Check exclude patterns

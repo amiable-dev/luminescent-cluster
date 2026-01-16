@@ -137,9 +137,13 @@ def ingest_file(
                 "path": relative_path,
             }
 
-        # Read content
+        # Read content from git object database (not working tree) for provenance integrity
+        # This ensures we ingest exactly what was committed, not potentially modified working tree
         try:
-            content = file_path.read_text(encoding="utf-8")
+            content = _read_committed_content(relative_path, commit_sha, project_root)
+            if content is None:
+                # Fallback to working tree if git show fails (e.g., file not in git yet)
+                content = file_path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             return {
                 "success": False,
@@ -209,6 +213,35 @@ def ingest_file(
             "reason": f"Ingestion error: {e}",
             "path": str(file_path),
         }
+
+
+def _read_committed_content(relative_path: str, commit_sha: str, project_root: Path) -> Optional[str]:
+    """Read file content from git object database at specific commit.
+
+    This ensures we ingest exactly what was committed, not working tree state.
+    Prevents race conditions where files are modified between commit and ingestion.
+
+    Args:
+        relative_path: Path relative to project root
+        commit_sha: Git commit SHA to read from
+        project_root: Project root directory
+
+    Returns:
+        File content as string, or None if git show fails
+    """
+    try:
+        result = subprocess.run(
+            ["git", "show", f"{commit_sha}:{relative_path}"],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode == 0:
+            return result.stdout
+        return None
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return None
 
 
 def _is_binary_file(file_path: Path, sample_size: int = 8192) -> bool:
