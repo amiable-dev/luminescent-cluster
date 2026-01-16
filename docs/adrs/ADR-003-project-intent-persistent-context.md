@@ -4,7 +4,7 @@
 **Date**: 2025-12-22
 **Decision Makers**: Development Team
 **Owners**: @christopherjoseph
-**Version**: 6.6 (Production Optimization)
+**Version**: 6.7 (MaaS Trust Model)
 
 ## Decision Summary
 
@@ -1100,6 +1100,89 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 
 **Approach**: Cherry-pick techniques from Hindsight rather than wholesale adoption
 
+#### Phase 4.2: MaaS Trust Model (Council-Documented Decision)
+
+**Context**: The LLM Council raised design-level concerns during security verification:
+- Callers can specify arbitrary capabilities
+- Agents can join pools by knowing the pool ID
+- Arbitrary `owner_id` assignment without verification
+
+**Decision**: These are intentional architectural decisions, not security gaps.
+
+**Trust Boundary**: MaaS APIs are **internal interfaces**, not public-facing endpoints.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           TRUST BOUNDARY MODEL                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   EXTERNAL (Untrusted)          │  INTERNAL (Trusted)                       │
+│   ─────────────────────         │  ────────────────────                     │
+│   • End users                   │  • MCP Server layer                       │
+│   • External APIs               │  • CLI orchestrator                       │
+│   • Network requests            │  • Extension Registry                     │
+│                                 │  • MaaS Registries                        │
+│           │                     │          │                                │
+│           ▼                     │          ▼                                │
+│   ┌───────────────┐             │  ┌───────────────┐                        │
+│   │ Auth Layer    │─────────────┼─▶│ Orchestrator  │                        │
+│   │ (MCP Server)  │             │  │ (Trusted)     │                        │
+│   └───────────────┘             │  └───────────────┘                        │
+│                                 │          │                                │
+│   Authentication happens HERE   │          ▼                                │
+│                                 │  ┌───────────────┐                        │
+│                                 │  │ MaaS APIs     │                        │
+│                                 │  │ (No auth)     │                        │
+│                                 │  └───────────────┘                        │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**What MaaS APIs Assume** (Trusted Orchestrator Pattern):
+
+| Assumption | Rationale |
+|------------|-----------|
+| `owner_id` is verified | Orchestrator authenticated the user before calling MaaS |
+| Capabilities are appropriate | Orchestrator determines agent permissions based on auth context |
+| Pool IDs are authorized | Orchestrator controls which pool IDs are exposed to which agents |
+| Agent IDs are valid | Orchestrator manages agent lifecycle and provides valid IDs |
+
+**What MaaS APIs Enforce** (Defense in Depth):
+
+| Enforcement | Implementation |
+|-------------|----------------|
+| Capability checks | `AgentIdentity.has_capability()` - agents can only perform allowed actions |
+| Scope hierarchy | `SharedScope` enum - agents cannot read above their max scope |
+| Capacity limits | `RegistryCapacityError`, `PoolCapacityError`, `HandoffCapacityError` |
+| Audit logging | All operations logged via `MaaSAuditLogger` for forensics |
+| ID entropy | 128-bit UUIDs prevent ID guessing attacks |
+| Defensive copies | All inputs/outputs copied to prevent state mutation |
+| Handoff lifecycle | State machine prevents invalid transitions |
+
+**What MaaS APIs Do NOT Enforce**:
+
+| Not Enforced | Why |
+|--------------|-----|
+| User authentication | Handled by MCP server / CLI layer |
+| `owner_id` verification | Orchestrator responsibility (has auth context) |
+| Pool membership authorization | Orchestrator controls pool ID exposure |
+| Capability assignment policy | Business logic varies by deployment |
+
+**Rationale**: This follows the same pattern as other internal registries:
+- `ExtensionRegistry` (src/extensions/registry.py) - no auth checks
+- `LocalMemoryProvider` (src/memory/providers/local.py) - trusts `user_id`
+- `MemoryStore` - trusts caller-provided identifiers
+
+**Security Model Summary**:
+```
+Authentication:     MCP Server / CLI Layer (EXTERNAL)
+Authorization:      Orchestrator Layer (decides what to call)
+Capability Checks:  MaaS API Layer (enforces what agents CAN do)
+Audit Trail:        MaaS Audit Logger (records what DID happen)
+```
+
+**Council Verification**: This trust model was documented following LLM Council feedback during v0.3.0 security hardening. The council's concerns were valid observations about the API surface, but represent intentional design decisions for internal interfaces rather than security vulnerabilities.
+
 ---
 
 ### Roadmap Visualization
@@ -1178,7 +1261,13 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 | Phase 4 | Hindsight Types | ✅ Complete | NetworkType, TimeRange, TemporalEvent, TemporalMemory, StateChange |
 | Phase 4 | Hindsight Timeline | ✅ Complete | Event storage, state reconstruction, time queries |
 | Phase 4 | Hindsight Temporal Search | ✅ Complete | NL temporal query parsing, relevance scoring |
-| Phase 4 | MaaS Architecture | 📝 Not Started | Multi-agent support |
+| Phase 4.2 | MaaS Architecture | ✅ Complete | `src/memory/maas/` - 149 tests, Trust Model documented |
+| Phase 4.2 | Agent Registry | ✅ Complete | `registry.py` - agent identity, capabilities, sessions |
+| Phase 4.2 | Pool Registry | ✅ Complete | `pool.py` - shared memory pools, membership, permissions |
+| Phase 4.2 | Handoff Manager | ✅ Complete | `handoff.py` - task handoffs, lifecycle management |
+| Phase 4.2 | MCP Tools | ✅ Complete | `mcp_tools.py` - 15 async tools for agent/pool/handoff |
+| Phase 4.2 | Security Hardening | ✅ Complete | 128-bit IDs, capacity limits, audit logging, defensive copies |
+| Phase 4.2 | Trust Model | ✅ Complete | Council-documented architectural decisions (see Phase 4.2 section) |
 | **Option G** | Context Caching | ✅ Complete | `src/memory/retrieval/cache.py` - 37 tests, LRU+TTL |
 | Option G | RetrievalCache | ✅ Complete | LRU eviction, configurable TTL, thread-safe, metrics |
 | Option G | Provider Integration | ✅ Complete | LocalMemoryProvider use_cache, auto-invalidation |
@@ -1188,7 +1277,7 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 | Phase D | Graph Query Monitoring | ✅ Complete | `graph_metrics.py` - hop latency, size tracking - 27 tests |
 | Phase D | Operations Runbook | ✅ Complete | `docs/operations/memory-runbook.md` |
 
-**Test Summary**: 1133 memory tests passing (as of 2026-01-16) - 69 new Phase D tests
+**Test Summary**: 1282 memory tests passing (as of 2026-01-16) - 149 new MaaS tests
 
 **Legend**: ✅ Complete | 🔄 Partial | 📝 Not Started | ❌ Blocked
 
@@ -1424,3 +1513,4 @@ The following questions have been investigated and resolved:
 | 6.4 | 2026-01-16 | **Hindsight Temporal Memory Complete (Phase 4)**: Implemented four-network temporal memory for time-based queries. **New Module**: `src/memory/hindsight/` with 4 files. **Types**: `NetworkType` enum (WORLD, BANK, OPINION, OBSERVATION), `TimeRange` with relative time support, `TemporalEvent` with validity periods, `TemporalMemory` wrapper, `StateChange` for transitions. **Timeline**: Event storage with indexing by entity/network/time, state reconstruction at any point in time. **Temporal Search**: NL temporal query parsing ("last month", "Q4 2025", "before incident-123"), relevance scoring with temporal context. **Target Queries**: "What changed last month?", "What was auth-service status before incident-123?", "Show me decisions made in Q4 2025". **Council Review**: Four-network architecture validated, security recommendations noted, HybridRetriever integration recommended. **GitHub Issues**: Closed #123, #124, #125, #126. Test count: 1030 memory tests (75 new Hindsight tests). TDD approach. |
 | 6.5 | 2026-01-16 | **Context Caching Complete (Option G)**: Implemented provider-side caching for 75-90% cost reduction. **RetrievalCache**: `src/memory/retrieval/cache.py` with LRU eviction, configurable TTL (default 3600s), thread-safe operations (RLock), per-user invalidation, hit/miss metrics, serialization support. **Provider Integration**: LocalMemoryProvider `use_cache` parameter (default: False), automatic invalidation on store/delete/clear, `get_cache_metrics()` for monitoring. **Council Review**: Unanimous approval, invalidation strategy validated, auth drift concern noted (recommend invalidate on permission changes), default TTL 5 minutes recommended. **GitHub Issues**: Closed #127, #128. Test count: 1067 memory tests (37 new Caching tests). TDD approach. |
 | 6.6 | 2026-01-16 | **Production Optimization Complete (Phase D)**: Implemented operational monitoring and documentation for production readiness. **HNSW Scale Monitoring**: `src/memory/observability/scale_milestones.py` with ScaleMilestoneTracker (10k/50k/100k items), MilestoneCheckResult for health checks, configurable recall/latency thresholds, callback-based health check triggers. **RRF Weight Tuning**: Updated `fusion.py` with per-source weights parameter for tunable multi-source retrieval. **Graph Query Monitoring**: `src/memory/observability/graph_metrics.py` with GraphMetricsCollector (p50/p95/p99 latency), hop-level latency breakdown (direct/neighbor/predecessor), QueryMeasurementContext for easy instrumentation, GraphSizeSnapshot for node/edge tracking. **Operations Runbook**: `docs/operations/memory-runbook.md` with architecture overview, key metrics, troubleshooting guides, scaling guidelines, health check procedures. **GitHub Issues**: Closed #129, #130, #131. Test count: 1133 memory tests (69 new Phase D tests: 36 scale milestones, 6 RRF weights, 27 graph metrics). TDD approach. |
+| 6.7 | 2026-01-16 | **MaaS Trust Model Documented (Phase 4.2)**: Added Trust Model section documenting architectural decisions raised by LLM Council. **Trust Boundary**: MaaS APIs are internal interfaces called by trusted orchestrator layer. **What's Enforced**: Capability checks, scope hierarchy, capacity limits (DoS prevention), audit logging, 128-bit ID entropy, defensive copies, handoff lifecycle. **What's NOT Enforced**: Authentication (MCP server layer), owner_id verification (orchestrator responsibility), pool membership authorization (orchestrator controls exposure). **Rationale**: Follows same pattern as ExtensionRegistry, LocalMemoryProvider. **Implementation Tracker**: Updated with 7 MaaS completion entries. Test count: 1282 memory tests (149 MaaS tests). Council feedback incorporated. |
