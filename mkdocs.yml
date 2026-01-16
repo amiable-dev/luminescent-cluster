@@ -1,0 +1,166 @@
+# MkDocs configuration for Luminescent Cluster
+# See: https://www.mkdocs.org/user-guide/configuration/
+
+site_name: Luminescent Cluster
+site_description: Context-aware AI development with persistent memory
+site_url: https://amiable-dev.github.io/luminescent-cluster
+repo_url: https://github.com/amiable-dev/luminescent-cluster
+repo_name: amiable-dev/luminescent-cluster
+edit_uri: edit/main/docs/
+
+# Copyright
+copyright: Copyright &copy; 2025-2026 Amiable
+
+# Theme configuration
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  icon:
+    repo: fontawesome/brands/github
+
+# Plugins
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
+  - tags
+
+# Markdown extensions
+markdown_extensions:
+  # Python Markdown
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+  # Python Markdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: amiable-dev
+      repo: luminescent-cluster
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Navigation structure
+nav:
+  - Home: index.md
+  - Getting Started:
+      - getting-started/index.md
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+      - Configuration: getting-started/configuration.md
+  - Architecture:
+      - architecture/index.md
+      - Overview: architecture/overview.md
+      - Memory Tiers: architecture/memory-tiers.md
+  - MCP Servers:
+      - mcp/index.md
+      - Session Memory: mcp/session-memory.md
+      - Pixeltable Memory: mcp/pixeltable-memory.md
+  - Memory System:
+      - memory/index.md
+      - Overview: memory/overview.md
+      - Providers: memory/providers.md
+      - MaaS: memory/maas.md
+  - ADRs:
+      - adrs/index.md
+      - ADR-001 Python Version: adrs/ADR-001-python-version-requirement-for-mcp-servers.md
+      - ADR-002 Workflow Integration: adrs/ADR-002-workflow-integration.md
+      - ADR-003 Project Intent: adrs/ADR-003-project-intent-persistent-context.md
+      - ADR-004 Monetization: adrs/ADR-004-monetization-strategy.md
+      - ADR-005 Repository Organization: adrs/ADR-005-repository-organization-strategy.md
+      - ADR-006 Chatbot Integrations: adrs/ADR-006-chatbot-platform-integrations.md
+      - ADR-007 Cross-ADR Integration: adrs/ADR-007-cross-adr-integration-guide.md
+      - ADR-008 MkDocs Site: adrs/ADR-008-docs-ledger-reconciliation.md
+      - ADR-009 Spec/Ledger: adrs/ADR-009-spec-ledger-reconciliation.md
+  - Blog:
+      - blog/index.md
+      - Memory as a Service: blog/01-memory-as-a-service.md
+      - Automated Context Loading: blog/02-automated-context-loading.md
+      - HybridRAG Two-Stage Retrieval: blog/03-hybridrag-two-stage-retrieval.md
+      - Grounded Ingestion: blog/04-grounded-ingestion.md
+      - Multi-Platform Chatbots: blog/05-multi-platform-chatbots.md
+      - Memory Blocks Architecture: blog/06-memory-blocks-structuring-context.md
+      - Open Source Strategy: blog/07-open-source-strategy.md
+      - Security Deep Dive: blog/08-security-deep-dive.md
+  - Operations:
+      - operations/index.md
+      - Memory Runbook: operations/memory-runbook.md
+  - Reference:
+      - Tags: tags.md
+      - Extensions: EXTENSIONS.md
+      - Known Issues: KNOWN_ISSUES.md
+      - Debug Logging: DEBUG_LOGGING.md
+
+# Extra configuration
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/amiable-dev/luminescent-cluster
+  generator: false
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX  # TODO: Replace with actual tracking ID

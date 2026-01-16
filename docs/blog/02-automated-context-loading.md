@@ -81,7 +81,7 @@ This system requires two MCP (Model Context Protocol) servers:
 
 **Pixeltable Memory MCP** (`pixeltable-memory`): Long-term organizational knowledge base powered by [Pixeltable](https://pixeltable.com). Stores ADRs, documentation, incident history, and code patterns. This is where ingested content goes.
 
-Both are included in the Luminescent Cluster repository. See the [MCP Server setup guide](../operations/mcp-setup.md) for installation.
+Both are included in the Luminescent Cluster repository. See the [Getting Started guide](../getting-started/installation.md) for installation.
 
 ## Agent Skills: A Portable Standard
 

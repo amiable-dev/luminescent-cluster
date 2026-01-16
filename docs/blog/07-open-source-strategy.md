@@ -425,4 +425,4 @@ The open-core model aligns our incentives: we succeed when you succeed. Free use
 
 ---
 
-*Open source strategy is detailed in ADR-004 (commercialization) and ADR-005 (licensing). See the [full ADRs](../adrs/) for implementation details and legal analysis.*
+*Open source strategy is detailed in ADR-004 (commercialization) and ADR-005 (licensing). See the [full ADRs](../adrs/index.md) for implementation details and legal analysis.*

@@ -1,0 +1,61 @@
+# Copyright 2024-2026 Amiable Development
+# SPDX-License-Identifier: Apache-2.0
+
+name: Spec/Ledger Reconciliation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'spec/**'
+      - 'tests/**'
+      - '.github/workflows/reconcile.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'spec/**'
+      - 'tests/**'
+      - '.github/workflows/reconcile.yml'
+  workflow_dispatch:
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Run reconciliation (warning mode)
+        id: reconcile-warn
+        run: |
+          python spec/validation/reconcile.py --warn --verbose
+
+      - name: Run reconciliation (strict mode)
+        id: reconcile-strict
+        continue-on-error: true
+        run: |
+          python spec/validation/reconcile.py --verbose
+
+      - name: Check reconciliation result
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ "${{ steps.reconcile-strict.outcome }}" == "failure" ]; then
+            echo "::warning::Spec/Ledger reconciliation failed. Please ensure all requirements have tests."
+          fi
+
+      # Block merge only after Phase 3 is complete
+      # Uncomment when ready to enforce:
+      # - name: Enforce reconciliation
+      #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      #   run: |
+      #     python spec/validation/reconcile.py

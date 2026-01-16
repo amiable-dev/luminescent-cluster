@@ -381,5 +381,5 @@ pytest tests/memory/security/ -v
 ## Related ADRs
 
 - [ADR-003](../adrs/ADR-003-project-intent-persistent-context.md) - Memory Architecture
-- [ADR-005](../adrs/ADR-005-repository-organization.md) - Dual Repo Pattern
-- [ADR-007](../adrs/ADR-007-cross-adr-integration.md) - Protocol Consolidation
+- [ADR-005](../adrs/ADR-005-repository-organization-strategy.md) - Dual Repo Pattern
+- [ADR-007](../adrs/ADR-007-cross-adr-integration-guide.md) - Protocol Consolidation

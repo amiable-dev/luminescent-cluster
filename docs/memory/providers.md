@@ -242,7 +242,7 @@ class CloudMemoryProvider:
 
 ## Related Documentation
 
-- [Memory Architecture README](./README.md)
+- [Memory Architecture](../architecture/memory-tiers.md)
 - [ADR-003: Memory Architecture](../adrs/ADR-003-project-intent-persistent-context.md)
-- [ADR-005: Repository Organization](../adrs/ADR-005-repository-organization.md)
-- [ADR-007: Protocol Consolidation](../adrs/ADR-007-cross-adr-integration.md)
+- [ADR-005: Repository Organization](../adrs/ADR-005-repository-organization-strategy.md)
+- [ADR-007: Protocol Consolidation](../adrs/ADR-007-cross-adr-integration-guide.md)
