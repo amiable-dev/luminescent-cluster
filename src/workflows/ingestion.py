@@ -94,8 +94,23 @@ def ingest_file(
                 "path": relative_path,
             }
 
-        # Security check: reject secrets files
-        if is_secret_file(relative_path):
+        # Security: Reject symlinks pointing outside project root
+        # This prevents symlink attacks that could exfiltrate sensitive files
+        try:
+            resolved_path = file_path.resolve()
+            resolved_root = project_root.resolve()
+            # Check that resolved path is within project root
+            resolved_path.relative_to(resolved_root)
+        except ValueError:
+            return {
+                "success": False,
+                "skipped": True,
+                "reason": f"Rejected symlink pointing outside project: {relative_path}",
+                "path": relative_path,
+            }
+
+        # Security check: reject secrets files (using config's patterns)
+        if is_secret_file(relative_path, config.secrets_patterns):
             return {
                 "success": False,
                 "skipped": True,

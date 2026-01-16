@@ -99,12 +99,20 @@ def load_config(project_root: Path) -> WorkflowConfig:
 
     ingestion = data.get("ingestion", {})
 
+    # Load secrets patterns from config, with defaults as base
+    # User can extend or override default secrets patterns
+    config_secrets = ingestion.get("secrets_patterns", [])
+    secrets_patterns = DEFAULT_SECRETS_PATTERNS.copy()
+    if config_secrets:
+        # Extend with user-defined patterns (don't replace defaults for safety)
+        secrets_patterns.extend(config_secrets)
+
     return WorkflowConfig(
         include_patterns=ingestion.get("include", DEFAULT_INCLUDE_PATTERNS.copy()),
         exclude_patterns=ingestion.get("exclude", DEFAULT_EXCLUDE_PATTERNS.copy()),
         max_file_size_kb=ingestion.get("max_file_size_kb", 500),
         skip_binary=ingestion.get("skip_binary", True),
-        secrets_patterns=DEFAULT_SECRETS_PATTERNS.copy(),
+        secrets_patterns=secrets_patterns,
     )
 
 
@@ -138,11 +146,12 @@ def should_ingest_file(file_path: str, config: WorkflowConfig) -> bool:
     return False
 
 
-def is_secret_file(file_path: str) -> bool:
+def is_secret_file(file_path: str, secrets_patterns: Optional[List[str]] = None) -> bool:
     """Check if a file is a secrets/sensitive file.
 
     Args:
         file_path: Path to the file (can be relative or absolute)
+        secrets_patterns: Regex patterns to match (defaults to DEFAULT_SECRETS_PATTERNS)
 
     Returns:
         True if the file appears to be a secrets file
@@ -151,7 +160,10 @@ def is_secret_file(file_path: str) -> bool:
     file_path = file_path.replace("\\", "/")
     path_lower = file_path.lower()
 
-    for pattern in DEFAULT_SECRETS_PATTERNS:
+    # Use provided patterns or defaults
+    patterns = secrets_patterns if secrets_patterns is not None else DEFAULT_SECRETS_PATTERNS
+
+    for pattern in patterns:
         if re.search(pattern, path_lower):
             return True
 

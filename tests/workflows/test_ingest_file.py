@@ -300,6 +300,100 @@ class TestIngestFileIdempotency:
 class TestIngestFileSecurity:
     """TDD: Tests for ingest_file security features."""
 
+    def test_ingest_file_rejects_symlink_outside_project(self, temp_project_dir, sample_markdown_file):
+        """ingest_file should reject symlinks pointing outside project root.
+
+        ADR Reference: ADR-002 Security - Symlink Protection (Council Review)
+        """
+        import os
+        from src.workflows.ingestion import ingest_file
+
+        # Create a symlink pointing outside project (to /etc/passwd or similar)
+        symlink_path = temp_project_dir / "docs" / "evil-link.md"
+        target_path = Path("/etc/passwd")
+
+        # Only run this test if we can create symlinks and target exists
+        if target_path.exists():
+            try:
+                os.symlink(target_path, symlink_path)
+
+                with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+                    mock_kb = MagicMock()
+                    mock_get_kb.return_value = mock_kb
+
+                    result = ingest_file(
+                        str(symlink_path),
+                        commit_sha="abc123",
+                        project_root=temp_project_dir
+                    )
+
+                assert result["success"] is False
+                assert "symlink" in result.get("reason", "").lower() or "outside" in result.get("reason", "").lower()
+                mock_kb.insert.assert_not_called()
+            finally:
+                symlink_path.unlink(missing_ok=True)
+
+    def test_ingest_file_allows_symlink_within_project(self, temp_project_dir, sample_markdown_file):
+        """ingest_file should allow symlinks pointing within project root.
+
+        ADR Reference: ADR-002 Security - Symlink Protection
+        """
+        import os
+        from src.workflows.ingestion import ingest_file
+
+        # Create a symlink pointing to another file within the project
+        symlink_path = temp_project_dir / "docs" / "link-to-test.md"
+        try:
+            os.symlink(sample_markdown_file, symlink_path)
+
+            with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+                mock_kb = MagicMock()
+                mock_kb.where.return_value.select.return_value.collect.return_value = []
+                mock_get_kb.return_value = mock_kb
+
+                result = ingest_file(
+                    str(symlink_path),
+                    commit_sha="abc123",
+                    project_root=temp_project_dir
+                )
+
+            # Should succeed since symlink points within project
+            assert result["success"] is True
+        finally:
+            symlink_path.unlink(missing_ok=True)
+
+    def test_ingest_file_uses_config_secrets_patterns(self, temp_project_dir):
+        """ingest_file should use secrets patterns from config.
+
+        ADR Reference: ADR-002 Security - Custom Secrets Patterns (Council Review)
+        """
+        from src.workflows.ingestion import ingest_file
+        from src.workflows.config import WorkflowConfig
+
+        # Create a file with a custom pattern that should be blocked
+        api_key_file = temp_project_dir / "docs" / "api-keys.md"
+        api_key_file.write_text("# API Keys\nSome content")
+
+        # Create config with custom secrets pattern
+        config = WorkflowConfig(
+            secrets_patterns=[r"api[-_]?key"],  # Custom pattern
+        )
+
+        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+            mock_kb = MagicMock()
+            mock_get_kb.return_value = mock_kb
+
+            result = ingest_file(
+                str(api_key_file),
+                commit_sha="abc123",
+                project_root=temp_project_dir,
+                config=config
+            )
+
+        assert result["success"] is False
+        assert result.get("skipped") is True
+        mock_kb.insert.assert_not_called()
+
     def test_ingest_file_rejects_env_file(self, temp_project_dir, sample_secret_file):
         """ingest_file should reject .env files.
 

@@ -72,16 +72,37 @@ echo "[post-commit] Ingesting $FILE_COUNT files..."
     # Log start
     echo "$(date -Iseconds) | COMMIT=$COMMIT_SHA | START | files=$FILE_COUNT" >> "$LOG_FILE"
 
-    # Ingest each file
-    echo "$FILES_TO_INGEST" | while IFS= read -r file; do
-        if [ -f "$file" ]; then
-            "$PYTHON" -c "
-from src.workflows.ingestion import ingest_file
-result = ingest_file('$file', commit_sha='$COMMIT_SHA')
-print(f\"  {result.get('path', '$file')}: {'OK' if result.get('success') else result.get('reason', 'FAILED')}\")
-" >> "$LOG_FILE" 2>&1 || echo "$(date -Iseconds) | ERROR | Failed to ingest: $file" >> "$LOG_FILE"
-        fi
-    done
+    # Security: Write files to a temp file to avoid shell injection via filenames
+    TEMP_FILE=$(mktemp)
+    echo "$FILES_TO_INGEST" > "$TEMP_FILE"
+
+    # Ingest files using Python script that reads from temp file (no shell interpolation)
+    "$PYTHON" <<PYTHON_SCRIPT >> "$LOG_FILE" 2>&1
+import os
+import sys
+
+# Read files from temp file (avoids shell injection)
+temp_file = "$TEMP_FILE"
+commit_sha = "$COMMIT_SHA"
+
+try:
+    from src.workflows.ingestion import ingest_file
+
+    with open(temp_file, 'r') as f:
+        files = [line.strip() for line in f if line.strip()]
+
+    for file_path in files:
+        if os.path.isfile(file_path):
+            result = ingest_file(file_path, commit_sha=commit_sha)
+            status = 'OK' if result.get('success') else result.get('reason', 'FAILED')
+            print(f"  {result.get('path', file_path)}: {status}")
+except Exception as e:
+    print(f"ERROR: {e}", file=sys.stderr)
+    sys.exit(1)
+PYTHON_SCRIPT
+
+    # Cleanup temp file
+    rm -f "$TEMP_FILE"
 
     # Record success
     echo "$COMMIT_SHA" > "$STATE_DIR/last_ingest_sha"
