@@ -238,9 +238,14 @@ class HandoffManager:
         outcome: str,
         details: Optional[dict[str, Any]] = None,
     ) -> None:
-        """Log an event if audit logger is configured."""
-        if self._audit_logger is not None:
-            self._audit_logger.log_agent_operation(
+        """Log an event if audit logger is configured.
+
+        Thread-safe: Captures logger reference to prevent TOCTOU race.
+        """
+        # Capture reference to prevent race condition (TOCTOU)
+        logger = self._audit_logger
+        if logger is not None:
+            logger.log_agent_operation(
                 event_type=event_type,
                 agent_id=agent_id,
                 action=action,
