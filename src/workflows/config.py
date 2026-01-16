@@ -13,13 +13,17 @@ This module provides:
 Related: ADR-002 Workflow Integration, Phase 1 (Core Infrastructure)
 """
 
-import re
 from dataclasses import dataclass, field
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import List, Optional
 
 import yaml
+
+# Hard limits to prevent DoS via malicious config
+# These cannot be overridden by .agent/config.yaml
+MAX_FILE_SIZE_KB_HARD_LIMIT = 10240  # 10MB absolute maximum
+MIN_FILE_SIZE_KB = 1  # Minimum 1KB
 
 
 # Default patterns for ingestion
@@ -107,14 +111,35 @@ def load_config(project_root: Path) -> WorkflowConfig:
     # User can extend or override default secrets patterns
     config_secrets = ingestion.get("secrets_patterns", [])
     secrets_patterns = DEFAULT_SECRETS_PATTERNS.copy()
-    if config_secrets:
+    if config_secrets and isinstance(config_secrets, list):
         # Extend with user-defined patterns (don't replace defaults for safety)
-        secrets_patterns.extend(config_secrets)
+        # Filter to strings only to prevent type errors
+        secrets_patterns.extend(p for p in config_secrets if isinstance(p, str))
+
+    # Validate and clamp max_file_size_kb to prevent DoS via malicious config
+    # If config is controlled by untrusted repo, this prevents memory exhaustion
+    raw_max_size = ingestion.get("max_file_size_kb", 500)
+    if not isinstance(raw_max_size, (int, float)):
+        raw_max_size = 500  # Default if invalid type
+    max_file_size_kb = max(MIN_FILE_SIZE_KB, min(int(raw_max_size), MAX_FILE_SIZE_KB_HARD_LIMIT))
+
+    # Validate include/exclude patterns are lists of strings
+    include_patterns = ingestion.get("include", DEFAULT_INCLUDE_PATTERNS.copy())
+    if not isinstance(include_patterns, list):
+        include_patterns = DEFAULT_INCLUDE_PATTERNS.copy()
+    else:
+        include_patterns = [p for p in include_patterns if isinstance(p, str)]
+
+    exclude_patterns = ingestion.get("exclude", DEFAULT_EXCLUDE_PATTERNS.copy())
+    if not isinstance(exclude_patterns, list):
+        exclude_patterns = DEFAULT_EXCLUDE_PATTERNS.copy()
+    else:
+        exclude_patterns = [p for p in exclude_patterns if isinstance(p, str)]
 
     return WorkflowConfig(
-        include_patterns=ingestion.get("include", DEFAULT_INCLUDE_PATTERNS.copy()),
-        exclude_patterns=ingestion.get("exclude", DEFAULT_EXCLUDE_PATTERNS.copy()),
-        max_file_size_kb=ingestion.get("max_file_size_kb", 500),
+        include_patterns=include_patterns or DEFAULT_INCLUDE_PATTERNS.copy(),
+        exclude_patterns=exclude_patterns or DEFAULT_EXCLUDE_PATTERNS.copy(),
+        max_file_size_kb=max_file_size_kb,
         skip_binary=ingestion.get("skip_binary", True),
         secrets_patterns=secrets_patterns,
     )
@@ -182,65 +207,95 @@ def is_secret_file(file_path: str, secrets_patterns: Optional[List[str]] = None)
 def _matches_pattern(file_path: str, pattern: str) -> bool:
     """Check if a file path matches a glob pattern.
 
-    Supports ** for directory recursion and * for wildcards.
+    Uses safe pattern matching without regex to prevent ReDoS vulnerabilities.
+    Handles ** for recursive directory matching using simple string operations.
 
     Args:
         file_path: Path to check
-        pattern: Glob pattern
+        pattern: Glob pattern (supports *, **, ?)
 
     Returns:
         True if the path matches the pattern
     """
-    # Normalize both paths
+    # Normalize both paths to forward slashes
     file_path = file_path.replace("\\", "/")
     pattern = pattern.replace("\\", "/")
 
-    # Handle ** patterns (recursive directory matching)
+    # Split path and pattern into components
+    path_parts = file_path.split("/")
+    pattern_parts = pattern.split("/")
+
+    # Handle ** patterns using simple component matching (no regex, no ReDoS)
     if "**" in pattern:
-        # Convert glob pattern to regex:
-        # ** matches zero or more directories (including none)
-        # * matches any character except /
-
-        # Start building the regex
-        regex = ""
-        i = 0
-        while i < len(pattern):
-            if i < len(pattern) - 1 and pattern[i:i+2] == "**":
-                # ** matches any path (including empty)
-                if i + 2 < len(pattern) and pattern[i+2] == "/":
-                    # **/ at start or middle - match zero or more directories
-                    regex += "(?:.*/)?"
-                    i += 3
-                elif i > 0 and pattern[i-1] == "/":
-                    # /** at end - match zero or more directories/files
-                    regex += "(?:/.*)?"
-                    i += 2
-                else:
-                    # standalone ** - match anything
-                    regex += ".*"
-                    i += 2
-            elif pattern[i] == "*":
-                # * matches any character except /
-                regex += "[^/]*"
-                i += 1
-            elif pattern[i] in ".^$+{}[]|()":
-                # Escape regex special chars
-                regex += "\\" + pattern[i]
-                i += 1
+        # Pattern like "**/dir/**" - check if 'dir' appears anywhere in path
+        # This handles the common case of exclude patterns
+        if pattern.startswith("**/") and pattern.endswith("/**"):
+            # Extract the middle part (e.g., "node_modules" from "**/node_modules/**")
+            middle = pattern[3:-3]  # Remove **/ and /**
+            if "/" not in middle:
+                # Simple case: check if this directory name appears in path
+                return middle in path_parts
             else:
-                regex += pattern[i]
-                i += 1
+                # Complex case: check if the middle sequence appears
+                middle_parts = middle.split("/")
+                for i in range(len(path_parts) - len(middle_parts) + 1):
+                    if path_parts[i:i+len(middle_parts)] == middle_parts:
+                        return True
+                return False
 
-        # Anchor the pattern appropriately
-        if not pattern.startswith("**/"):
-            regex = "^" + regex
-        if not pattern.endswith("/**"):
-            regex = regex + "$"
+        # Pattern like "**/suffix" - check if path ends with suffix
+        if pattern.startswith("**/"):
+            suffix = pattern[3:]  # Remove **/
+            return _fnmatch_parts(path_parts, suffix.split("/"))
 
-        try:
-            return bool(re.search(regex, file_path))
-        except re.error:
-            return fnmatch(file_path, pattern)
+        # Pattern like "prefix/**" - check if path starts with prefix
+        if pattern.endswith("/**"):
+            prefix = pattern[:-3]  # Remove /**
+            prefix_parts = prefix.split("/")
+            if len(path_parts) < len(prefix_parts):
+                return False
+            for i, ppart in enumerate(prefix_parts):
+                if not fnmatch(path_parts[i], ppart):
+                    return False
+            return True
 
-    # Use fnmatch for simple patterns
+        # Pattern like "prefix/**/suffix" - complex recursive pattern
+        # For safety, use a simple substring approach
+        if "/**/" in pattern:
+            prefix, suffix = pattern.split("/**/", 1)
+            # Check if prefix matches start and suffix matches any later part
+            prefix_parts = prefix.split("/") if prefix else []
+            suffix_parts = suffix.split("/") if suffix else []
+
+            # Verify prefix
+            if prefix_parts:
+                if len(path_parts) < len(prefix_parts):
+                    return False
+                for i, ppart in enumerate(prefix_parts):
+                    if not fnmatch(path_parts[i], ppart):
+                        return False
+
+            # Check if suffix appears anywhere after prefix
+            if suffix_parts:
+                return _fnmatch_parts(path_parts[len(prefix_parts):], suffix_parts)
+            return True
+
+    # Use fnmatch for simple patterns (no **)
     return fnmatch(file_path, pattern)
+
+
+def _fnmatch_parts(path_parts: list, pattern_parts: list) -> bool:
+    """Check if pattern_parts matches any suffix of path_parts using fnmatch."""
+    if len(pattern_parts) > len(path_parts):
+        return False
+
+    # Try to match pattern_parts against any suffix of path_parts
+    for start in range(len(path_parts) - len(pattern_parts) + 1):
+        match = True
+        for i, ppart in enumerate(pattern_parts):
+            if not fnmatch(path_parts[start + i], ppart):
+                match = False
+                break
+        if match:
+            return True
+    return False
