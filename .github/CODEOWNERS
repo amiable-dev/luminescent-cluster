@@ -1,0 +1,22 @@
+# CODEOWNERS - GitHub Code Ownership
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything
+* @christopherjoseph
+
+# Agent Skills require security review (ADR-002)
+# Skills are executable by AI agents and should be treated as code
+.claude/skills/ @christopherjoseph
+
+# Git hooks require security review (ADR-002)
+.agent/hooks/ @christopherjoseph
+
+# ADRs require architect review
+docs/adrs/ @christopherjoseph
+
+# MCP servers require security review
+*_mcp_server.py @christopherjoseph
+*_server.py @christopherjoseph
+
+# Security-sensitive files
+src/maas/security/ @christopherjoseph

@@ -1,0 +1,91 @@
+#!/bin/bash
+# ADR-002: Auto-ingest committed files into Pixeltable memory
+# Installed by: scripts/install_hooks.sh
+#
+# This hook runs after each commit and ingests documentation files
+# into the organizational knowledge base for context retrieval.
+
+set -euo pipefail
+
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+STATE_DIR="${PROJECT_ROOT}/.agent/state"
+LOG_FILE="${PROJECT_ROOT}/.agent/logs/ingestion.log"
+
+# Use project venv Python (critical for environment isolation)
+PYTHON="${PROJECT_ROOT}/.venv/bin/python"
+if [ ! -f "$PYTHON" ]; then
+    PYTHON="python3"  # Fallback
+fi
+
+# Ensure directories exist
+mkdir -p "$STATE_DIR" "$(dirname "$LOG_FILE")"
+
+# Get files changed in this commit
+COMMIT_SHA=$(git rev-parse HEAD)
+CHANGED_FILES=$(git diff-tree --no-commit-id --name-only --diff-filter=AMR -r HEAD)
+
+# Filter to ingestible files (allowlist)
+INGESTIBLE_PATTERNS="\.md$|\.txt$|\.rst$|docs/|adr/|ADR-"
+EXCLUDED_PATTERNS="node_modules/|\.venv/|dist/|build/|__pycache__/"
+
+# Additional secrets protection
+SECRETS_PATTERNS="\.env|secret|\.key$|\.pem$|password|token|credential"
+
+FILES_TO_INGEST=""
+while IFS= read -r file; do
+    [ -z "$file" ] && continue
+
+    # Check if file matches ingestible patterns
+    if ! echo "$file" | grep -qE "$INGESTIBLE_PATTERNS"; then
+        continue
+    fi
+
+    # Check if file matches excluded patterns
+    if echo "$file" | grep -qE "$EXCLUDED_PATTERNS"; then
+        continue
+    fi
+
+    # Check if file matches secrets patterns
+    if echo "$file" | grep -qiE "$SECRETS_PATTERNS"; then
+        echo "[post-commit] SKIPPED sensitive file: $file" >> "$LOG_FILE"
+        continue
+    fi
+
+    FILES_TO_INGEST="${FILES_TO_INGEST}${file}"$'\n'
+done <<< "$CHANGED_FILES"
+
+# Remove trailing newline and check if empty
+FILES_TO_INGEST=$(echo "$FILES_TO_INGEST" | sed '/^$/d')
+
+if [ -z "$FILES_TO_INGEST" ]; then
+    echo "[post-commit] No ingestible files in commit, skipping."
+    exit 0
+fi
+
+FILE_COUNT=$(echo "$FILES_TO_INGEST" | wc -l | tr -d ' ')
+echo "[post-commit] Ingesting $FILE_COUNT files..."
+
+# Run ingestion asynchronously to not block commit
+(
+    cd "$PROJECT_ROOT"
+
+    # Log start
+    echo "$(date -Iseconds) | COMMIT=$COMMIT_SHA | START | files=$FILE_COUNT" >> "$LOG_FILE"
+
+    # Ingest each file
+    echo "$FILES_TO_INGEST" | while IFS= read -r file; do
+        if [ -f "$file" ]; then
+            "$PYTHON" -c "
+from src.workflows.ingestion import ingest_file
+result = ingest_file('$file', commit_sha='$COMMIT_SHA')
+print(f\"  {result.get('path', '$file')}: {'OK' if result.get('success') else result.get('reason', 'FAILED')}\")
+" >> "$LOG_FILE" 2>&1 || echo "$(date -Iseconds) | ERROR | Failed to ingest: $file" >> "$LOG_FILE"
+        fi
+    done
+
+    # Record success
+    echo "$COMMIT_SHA" > "$STATE_DIR/last_ingest_sha"
+    echo "$(date -Iseconds) | COMMIT=$COMMIT_SHA | SUCCESS" >> "$LOG_FILE"
+) &
+
+echo "[post-commit] Ingestion queued. Check .agent/logs/ingestion.log for status."

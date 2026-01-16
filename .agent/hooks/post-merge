@@ -1,0 +1,12 @@
+#!/bin/bash
+# ADR-002: Ingest files from merged/pulled changes
+#
+# This hook runs after git pull or git merge and delegates to
+# post-commit to ingest any new documentation files.
+
+set -euo pipefail
+
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+
+# Delegate to post-commit logic
+exec "${PROJECT_ROOT}/.agent/hooks/post-commit"

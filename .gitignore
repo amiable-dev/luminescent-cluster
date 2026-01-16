@@ -42,9 +42,15 @@ coverage/
 temp/
 
 # Claude Code local scope (contains user-specific MCP servers)
-.claude/
+# Note: .claude/skills/ is tracked (Agent Skills for ADR-002)
+.claude/*
+!.claude/skills/
 .mcp.json
 .venv/
+
+# Agent runtime state (ADR-002)
+.agent/state/
+.agent/logs/
 
 # Council verification logs (contain sensitive paths)
 .council/logs/

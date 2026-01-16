@@ -1,0 +1,21 @@
+#!/bin/bash
+# ADR-002: Re-sync after rebase/amend
+#
+# This hook runs after git rebase or git commit --amend and clears
+# the ingestion state to force a freshness check on next session-init.
+
+set -euo pipefail
+
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+STATE_DIR="${PROJECT_ROOT}/.agent/state"
+LOG_FILE="${PROJECT_ROOT}/.agent/logs/ingestion.log"
+
+mkdir -p "$STATE_DIR" "$(dirname "$LOG_FILE")"
+
+echo "[post-rewrite] History rewritten, updating ingestion state..."
+echo "$(date -Iseconds) | REWRITE | Clearing last_ingest_sha" >> "$LOG_FILE"
+
+# Clear last ingest SHA to force re-check on next session-init
+rm -f "$STATE_DIR/last_ingest_sha"
+
+echo "[post-rewrite] Run session-init skill to re-sync if needed."

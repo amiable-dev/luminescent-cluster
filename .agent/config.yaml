@@ -1,0 +1,41 @@
+# ADR-002: Ingestion policy for git hook automation
+# This file configures what files are ingested into the knowledge base
+# when git hooks run (post-commit, post-merge, post-rewrite).
+
+ingestion:
+  # Glob patterns for files to include in ingestion
+  include:
+    - "docs/**/*.md"
+    - "*.md"
+    - "docs/adrs/**"
+
+  # Glob patterns for files to exclude from ingestion
+  exclude:
+    - "**/node_modules/**"
+    - "**/.venv/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/__pycache__/**"
+    - "**/*.pyc"
+    - "**/.env"
+    - "**/*.key"
+    - "**/*.pem"
+    - "**/secrets/**"
+    - "**/*secret*"
+    - "**/*password*"
+    - "**/*token*"
+    - "**/*credential*"
+
+  # Maximum file size in KB to ingest (skip larger files)
+  max_file_size_kb: 500
+
+  # Skip binary files (detected by null bytes)
+  skip_binary: true
+
+# Skills configuration
+skills:
+  # Directory where Agent Skills are stored
+  directory: ".claude/skills"
+
+  # Enable auto-discovery of skills
+  auto_discover: true

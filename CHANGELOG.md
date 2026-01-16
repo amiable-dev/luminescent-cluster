@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Workflow Integration (ADR-002)**
+  - Agent Skills for session management (open standard, portable across LLMs)
+    - `session-init`: Load context, check KB freshness, query organizational knowledge
+    - `session-save`: Persist session state, update task context, prepare for commit
+  - Git hooks for automatic KB synchronization
+    - `post-commit`: Auto-ingest committed documentation files
+    - `post-merge`: Sync KB after merge/pull operations
+    - `post-rewrite`: Clear ingestion state on rebase/amend
+  - Support scripts
+    - `scripts/install_hooks.sh`: Install git hooks with backup of existing hooks
+    - `scripts/init_memory.py`: Bootstrap KB for fresh clones
+  - Core workflow infrastructure (`src/workflows/`)
+    - `WorkflowConfig`: Include/exclude patterns, max file size, secrets detection
+    - `ingest_file()`: Single-file ingestion with content hash idempotency
+    - `should_ingest_file()`: Pattern-based filtering for allowlist/denylist
+    - `is_secret_file()`: Secrets detection to prevent sensitive file ingestion
+  - Configuration via `.agent/config.yaml`
+  - 112 new workflow tests (TDD approach)
+
+### Security
+- **Secrets Protection (ADR-002)**
+  - Pattern-based filtering: `.env`, `*.key`, `*.pem`, `*secret*`, `*password*`, `*token*`
+  - Content never ingested for files matching secrets patterns
+  - Audit logging for skipped files
+
 ## [0.3.0] - 2026-01-16
 
 ### Added
