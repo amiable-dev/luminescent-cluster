@@ -106,5 +106,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Grounded ingestion security hardening (8 vulnerability fixes)
 - HNSW security: symlink protection, path containment, PII exclusion
 
+[0.3.0]: https://github.com/amiable-dev/luminescent-cluster/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/amiable-dev/luminescent-cluster/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/amiable-dev/luminescent-cluster/releases/tag/v0.1.0
