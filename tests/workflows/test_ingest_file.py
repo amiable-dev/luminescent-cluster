@@ -26,17 +26,21 @@ def create_git_mock(file_content):
 
     Used to simulate git operations in tests without a real git repo.
     Handles: git show, git cat-file -s, git branch --show-current
+
+    Note: git show uses text=False (binary mode) so returns bytes,
+    while other commands use text=True so return strings.
     """
     def mock_run(cmd, **kwargs):
         result = MagicMock()
         result.returncode = 0
 
         if "show" in cmd:
-            # git show <commit>:<path>
-            result.stdout = file_content
+            # git show <commit>:<path> - returns bytes (text=False)
+            result.stdout = file_content.encode("utf-8") if isinstance(file_content, str) else file_content
         elif "cat-file" in cmd and "-s" in cmd:
-            # git cat-file -s <commit>:<path>
-            result.stdout = str(len(file_content.encode("utf-8")))
+            # git cat-file -s <commit>:<path> - returns string (text=True)
+            content_bytes = file_content.encode("utf-8") if isinstance(file_content, str) else file_content
+            result.stdout = str(len(content_bytes))
         elif "branch" in cmd and "--show-current" in cmd:
             result.stdout = "main"
         else:

@@ -123,6 +123,9 @@ def mock_git_commands(temp_project_dir, sample_markdown_file):
 
     This fixture mocks git commands so tests work without a real git repo.
     It handles: rev-parse, branch, diff-tree, show (for content), cat-file -s (for size)
+
+    Note: git show uses text=False (binary mode) so returns bytes,
+    while other commands use text=True so return strings.
     """
     # Read the sample content for git show mocking
     sample_content = sample_markdown_file.read_text() if sample_markdown_file.exists() else "# Test"
@@ -140,10 +143,10 @@ def mock_git_commands(temp_project_dir, sample_markdown_file):
         elif "diff-tree" in cmd:
             result.stdout = ""
         elif "show" in cmd:
-            # git show <commit>:<path> - return the file content
-            result.stdout = sample_content
+            # git show <commit>:<path> - return bytes (text=False)
+            result.stdout = sample_content.encode("utf-8")
         elif "cat-file" in cmd and "-s" in cmd:
-            # git cat-file -s <commit>:<path> - return file size
+            # git cat-file -s <commit>:<path> - return file size as string (text=True)
             result.stdout = str(len(sample_content.encode("utf-8")))
         else:
             result.stdout = ""
@@ -155,16 +158,24 @@ def mock_git_commands(temp_project_dir, sample_markdown_file):
 
 @pytest.fixture
 def mock_git_for_ingestion(temp_project_dir):
-    """Context manager fixture to mock all git calls in ingestion module."""
+    """Context manager fixture to mock all git calls in ingestion module.
+
+    Note: git show uses text=False (binary mode) so returns bytes,
+    while other commands use text=True so return strings.
+    """
     def create_mock(file_content="# Test Document\n\nThis is a test document for ingestion."):
         def mock_run(cmd, **kwargs):
             result = MagicMock()
             result.returncode = 0
 
             if "show" in cmd:
-                result.stdout = file_content
+                # git show returns bytes (text=False)
+                content_bytes = file_content.encode("utf-8") if isinstance(file_content, str) else file_content
+                result.stdout = content_bytes
             elif "cat-file" in cmd and "-s" in cmd:
-                result.stdout = str(len(file_content.encode("utf-8")))
+                # git cat-file -s returns string (text=True)
+                content_bytes = file_content.encode("utf-8") if isinstance(file_content, str) else file_content
+                result.stdout = str(len(content_bytes))
             elif "branch" in cmd and "--show-current" in cmd:
                 result.stdout = "main"
             else:

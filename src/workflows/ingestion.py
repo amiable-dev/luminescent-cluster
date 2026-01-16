@@ -117,6 +117,16 @@ def ingest_file(
                 "path": relative_path,
             }
 
+        # Security: Reject paths with null bytes (null byte injection prevention)
+        # Python 3 largely handles this, but defense-in-depth for embedded nulls
+        if "\x00" in relative_path:
+            return {
+                "success": False,
+                "skipped": True,
+                "reason": f"Rejected path with null bytes",
+                "path": str(file_path),
+            }
+
         # Security: Reject paths starting with hyphen (argument injection prevention)
         # Git commands could interpret "-filename.md" as a flag
         if relative_path.startswith("-"):
@@ -303,6 +313,9 @@ def _read_committed_content(relative_path: str, commit_sha: str, project_root: P
     This ensures we ingest exactly what was committed, not working tree state.
     Prevents race conditions where files are modified between commit and ingestion.
 
+    Uses binary mode with explicit decode to handle non-UTF-8 files gracefully
+    (errors='replace' prevents crashes on malformed encodings).
+
     Args:
         relative_path: Path relative to project root
         commit_sha: Git commit SHA to read from
@@ -314,37 +327,21 @@ def _read_committed_content(relative_path: str, commit_sha: str, project_root: P
     try:
         # Note: git show uses <commit>:<path> format which doesn't need -- separator
         # The path is part of the object specifier, not a positional argument
+        # Use binary mode to avoid UnicodeDecodeError on non-UTF-8 files
         result = subprocess.run(
             ["git", "show", f"{commit_sha}:{relative_path}"],
             cwd=project_root,
             capture_output=True,
-            text=True,
+            text=False,  # Binary mode for explicit decode
             timeout=10,
         )
         if result.returncode == 0:
-            return result.stdout
+            # Decode with error handling to prevent crashes on non-UTF-8 content
+            # errors='replace' substitutes invalid bytes with U+FFFD
+            return result.stdout.decode("utf-8", errors="replace")
         return None
     except (subprocess.SubprocessError, FileNotFoundError):
         return None
-
-
-def _is_binary_file(file_path: Path, sample_size: int = 8192) -> bool:
-    """Check if a file is binary by looking for null bytes.
-
-    Args:
-        file_path: Path to the file
-        sample_size: Number of bytes to check
-
-    Returns:
-        True if the file appears to be binary
-    """
-    try:
-        with open(file_path, "rb") as f:
-            sample = f.read(sample_size)
-        # Check for null bytes (common in binary files)
-        return b"\x00" in sample
-    except (IOError, OSError):
-        return True
 
 
 def _get_git_branch(project_root: Path) -> str:

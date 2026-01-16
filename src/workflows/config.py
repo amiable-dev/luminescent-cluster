@@ -46,15 +46,19 @@ DEFAULT_EXCLUDE_PATTERNS = [
     "**/*credential*",
 ]
 
-# Patterns for detecting secrets files
+# Glob patterns for detecting secrets files (fnmatch-based, not regex)
+# Using glob patterns instead of regex to prevent ReDoS attacks from user config
 DEFAULT_SECRETS_PATTERNS = [
-    r"\.env($|\.)",  # .env, .env.local, etc.
-    r"\.key$",
-    r"\.pem$",
-    r"secret",
-    r"password",
-    r"token",
-    r"credential",
+    "*.env",           # .env files
+    "*.env.*",         # .env.local, .env.production, etc.
+    "**/.env",         # .env in any directory
+    "**/.env.*",       # .env.* in any directory
+    "*.key",           # Private key files
+    "*.pem",           # PEM certificate/key files
+    "*secret*",        # Any file with "secret" in name
+    "*password*",      # Any file with "password" in name
+    "*token*",         # Any file with "token" in name
+    "*credential*",    # Any file with "credential" in name
 ]
 
 
@@ -67,7 +71,7 @@ class WorkflowConfig:
         exclude_patterns: Glob patterns for files to exclude
         max_file_size_kb: Maximum file size in KB to ingest
         skip_binary: Whether to skip binary files
-        secrets_patterns: Regex patterns for detecting secrets files
+        secrets_patterns: Glob patterns for detecting secrets files (fnmatch-based)
     """
 
     include_patterns: List[str] = field(default_factory=lambda: DEFAULT_INCLUDE_PATTERNS.copy())
@@ -150,9 +154,12 @@ def should_ingest_file(file_path: str, config: WorkflowConfig) -> bool:
 def is_secret_file(file_path: str, secrets_patterns: Optional[List[str]] = None) -> bool:
     """Check if a file is a secrets/sensitive file.
 
+    Uses fnmatch (glob patterns) instead of regex to prevent ReDoS attacks
+    from user-configurable patterns in .agent/config.yaml.
+
     Args:
         file_path: Path to the file (can be relative or absolute)
-        secrets_patterns: Regex patterns to match (defaults to DEFAULT_SECRETS_PATTERNS)
+        secrets_patterns: Glob patterns to match (defaults to DEFAULT_SECRETS_PATTERNS)
 
     Returns:
         True if the file appears to be a secrets file
@@ -165,7 +172,8 @@ def is_secret_file(file_path: str, secrets_patterns: Optional[List[str]] = None)
     patterns = secrets_patterns if secrets_patterns is not None else DEFAULT_SECRETS_PATTERNS
 
     for pattern in patterns:
-        if re.search(pattern, path_lower):
+        # Use _matches_pattern for consistent glob handling (supports **)
+        if _matches_pattern(path_lower, pattern.lower()):
             return True
 
     return False
