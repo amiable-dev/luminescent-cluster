@@ -91,21 +91,39 @@ def ingest_file(
 
         # Calculate relative path for storage
         # Use canonical path to prevent traversal attacks (e.g., docs/../secrets.env)
+        # FAIL-CLOSED: If path cannot be resolved relative to root, reject it
         try:
             canonical_path = file_path.resolve()
             canonical_root = project_root.resolve()
             relative_path = str(canonical_path.relative_to(canonical_root))
         except ValueError:
-            relative_path = file_path.name
+            # Path is outside project root - reject (fail-closed)
+            return {
+                "success": False,
+                "skipped": True,
+                "reason": f"Path outside project root: {file_path}",
+                "path": str(file_path),
+            }
 
         # Normalize path separators and remove any remaining traversal
         relative_path = relative_path.replace("\\", "/")
-        # Reject paths that still contain .. after resolution (shouldn't happen but defense in depth)
+
+        # Reject paths that still contain .. after resolution (defense in depth)
         if ".." in relative_path:
             return {
                 "success": False,
                 "skipped": True,
                 "reason": f"Rejected path with traversal: {relative_path}",
+                "path": relative_path,
+            }
+
+        # Security: Reject paths starting with hyphen (argument injection prevention)
+        # Git commands could interpret "-filename.md" as a flag
+        if relative_path.startswith("-"):
+            return {
+                "success": False,
+                "skipped": True,
+                "reason": f"Rejected path starting with hyphen: {relative_path}",
                 "path": relative_path,
             }
 
@@ -263,6 +281,8 @@ def _get_blob_size(relative_path: str, commit_sha: str, project_root: Path) -> O
         Blob size in bytes, or None if git command fails
     """
     try:
+        # Note: cat-file uses <commit>:<path> format which doesn't need -- separator
+        # The path is part of the object specifier, not a positional argument
         result = subprocess.run(
             ["git", "cat-file", "-s", f"{commit_sha}:{relative_path}"],
             cwd=project_root,
@@ -292,6 +312,8 @@ def _read_committed_content(relative_path: str, commit_sha: str, project_root: P
         File content as string, or None if git show fails
     """
     try:
+        # Note: git show uses <commit>:<path> format which doesn't need -- separator
+        # The path is part of the object specifier, not a positional argument
         result = subprocess.run(
             ["git", "show", f"{commit_sha}:{relative_path}"],
             cwd=project_root,
