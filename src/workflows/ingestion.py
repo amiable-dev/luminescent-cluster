@@ -18,7 +18,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from .config import WorkflowConfig, load_config, is_secret_file, should_ingest_file
+import re
+
+from .config import WorkflowConfig, load_config, should_ingest_file
+
+# Regex to validate commit SHA (7-40 hex characters)
+COMMIT_SHA_PATTERN = re.compile(r'^[0-9a-fA-F]{7,40}$')
 
 
 def get_knowledge_base():
@@ -65,6 +70,14 @@ def ingest_file(
             - path: str relative path of the file
     """
     try:
+        # Validate commit_sha (security: prevent injection attacks)
+        if not commit_sha or not COMMIT_SHA_PATTERN.match(commit_sha):
+            return {
+                "success": False,
+                "reason": f"Invalid commit SHA format: {commit_sha}",
+                "path": str(file_path),
+            }
+
         # Resolve paths
         file_path = Path(file_path)
         if project_root is None:
@@ -132,18 +145,25 @@ def ingest_file(
                 "path": relative_path,
             }
 
-        # Check blob size BEFORE reading content (DoS prevention)
+        # Check blob size BEFORE reading content (DoS prevention - fail-closed)
         # This prevents loading large files into memory before checking size
+        # If we can't determine size, we fail-closed (reject file) for safety
         blob_size = _get_blob_size(relative_path, commit_sha, project_root)
-        if blob_size is not None:
-            blob_size_kb = blob_size / 1024
-            if blob_size_kb > config.max_file_size_kb:
-                return {
-                    "success": False,
-                    "skipped": True,
-                    "reason": f"File too large ({blob_size_kb:.1f}KB > {config.max_file_size_kb}KB)",
-                    "path": relative_path,
-                }
+        if blob_size is None:
+            return {
+                "success": False,
+                "skipped": True,
+                "reason": f"Cannot determine blob size (file may not exist in commit {commit_sha[:8]})",
+                "path": relative_path,
+            }
+        blob_size_kb = blob_size / 1024
+        if blob_size_kb > config.max_file_size_kb:
+            return {
+                "success": False,
+                "skipped": True,
+                "reason": f"File too large ({blob_size_kb:.1f}KB > {config.max_file_size_kb}KB)",
+                "path": relative_path,
+            }
 
         # Read content from git object database (not working tree) for provenance integrity
         # This ensures we ingest exactly what was committed, not potentially modified working tree

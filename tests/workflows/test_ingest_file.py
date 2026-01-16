@@ -75,7 +75,7 @@ class TestIngestFileFunction:
 
             result = ingest_file(
                 str(sample_markdown_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -131,7 +131,7 @@ class TestIngestFileContent:
 
             ingest_file(
                 str(sample_markdown_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -157,7 +157,7 @@ class TestIngestFileContent:
 
             ingest_file(
                 str(sample_markdown_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -187,7 +187,7 @@ class TestIngestFileMetadata:
 
             ingest_file(
                 str(sample_markdown_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -213,7 +213,7 @@ class TestIngestFileMetadata:
 
             ingest_file(
                 str(sample_markdown_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -237,7 +237,7 @@ class TestIngestFileMetadata:
 
             ingest_file(
                 str(sample_markdown_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -264,7 +264,7 @@ class TestIngestFileMetadata:
             # Regular markdown should be 'documentation'
             ingest_file(
                 str(sample_markdown_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -280,7 +280,7 @@ class TestIngestFileMetadata:
 
             ingest_file(
                 str(sample_adr_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -312,7 +312,7 @@ class TestIngestFileIdempotency:
 
             result = ingest_file(
                 str(sample_markdown_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -341,7 +341,7 @@ class TestIngestFileIdempotency:
 
             result = ingest_file(
                 str(sample_markdown_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -376,7 +376,7 @@ class TestIngestFileSecurity:
 
                     result = ingest_file(
                         str(symlink_path),
-                        commit_sha="abc123",
+                        commit_sha="abc1234",
                         project_root=temp_project_dir
                     )
 
@@ -409,7 +409,7 @@ class TestIngestFileSecurity:
 
                 result = ingest_file(
                     str(symlink_path),
-                    commit_sha="abc123",
+                    commit_sha="abc1234",
                     project_root=temp_project_dir
                 )
 
@@ -441,7 +441,7 @@ class TestIngestFileSecurity:
 
             result = ingest_file(
                 str(api_key_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir,
                 config=config
             )
@@ -463,7 +463,7 @@ class TestIngestFileSecurity:
 
             result = ingest_file(
                 str(sample_secret_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -489,7 +489,7 @@ class TestIngestFileSecurity:
 
             result = ingest_file(
                 str(key_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -512,7 +512,7 @@ class TestIngestFileSecurity:
 
             result = ingest_file(
                 str(pwd_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -536,7 +536,7 @@ class TestIngestFileErrorHandling:
 
             result = ingest_file(
                 str(temp_project_dir / "nonexistent.md"),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -559,7 +559,7 @@ class TestIngestFileErrorHandling:
 
             result = ingest_file(
                 str(binary_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
@@ -584,7 +584,7 @@ class TestIngestFileErrorHandling:
 
             result = ingest_file(
                 str(large_file),
-                commit_sha="abc123",
+                commit_sha="abc1234",
                 project_root=temp_project_dir
             )
 
