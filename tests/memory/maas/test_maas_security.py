@@ -518,6 +518,113 @@ class TestAuditLoggerIntegration:
         assert denied_logs[0]["outcome"] == "denied"
 
 
+class TestDefensiveCopies:
+    """Test that getters return defensive copies to prevent mutation."""
+
+    def setup_method(self):
+        """Reset registries before each test."""
+        from src.memory.maas.handoff import HandoffManager
+        from src.memory.maas.pool import PoolRegistry
+        from src.memory.maas.registry import AgentRegistry
+
+        AgentRegistry.reset()
+        PoolRegistry.reset()
+        HandoffManager.reset()
+
+    def teardown_method(self):
+        """Reset registries after each test."""
+        from src.memory.maas.handoff import HandoffManager
+        from src.memory.maas.pool import PoolRegistry
+        from src.memory.maas.registry import AgentRegistry
+
+        AgentRegistry.reset()
+        PoolRegistry.reset()
+        HandoffManager.reset()
+
+    def test_get_agent_returns_defensive_copy(self):
+        """Verify modifying returned agent doesn't affect internal state."""
+        from src.memory.maas.registry import AgentRegistry
+        from src.memory.maas.types import AgentCapability, AgentType
+
+        registry = AgentRegistry.get()
+        agent_id = registry.register_agent(
+            agent_type=AgentType.CLAUDE_CODE,
+            owner_id="user-123",
+        )
+
+        # Get agent and modify it
+        agent = registry.get_agent(agent_id)
+        original_caps_count = len(agent.capabilities)
+        agent.capabilities.add(AgentCapability.MEMORY_DELETE)
+
+        # Get again - should not have the modification
+        agent2 = registry.get_agent(agent_id)
+        assert len(agent2.capabilities) == original_caps_count
+
+    def test_get_pool_returns_defensive_copy(self):
+        """Verify modifying returned pool doesn't affect internal state."""
+        from src.memory.maas.pool import PoolRegistry
+        from src.memory.maas.scope import SharedScope
+
+        registry = PoolRegistry.get()
+        pool_id = registry.create_pool(
+            name="test-pool",
+            owner_id="user-123",
+            scope=SharedScope.USER,
+            metadata={"key": "value"},
+        )
+
+        # Get pool and modify it
+        pool = registry.get_pool(pool_id)
+        pool.metadata["evil"] = "data"
+        pool.name = "hacked"
+
+        # Get again - should not have the modification
+        pool2 = registry.get_pool(pool_id)
+        assert "evil" not in pool2.metadata
+        assert pool2.name == "test-pool"
+
+    def test_get_handoff_returns_defensive_copy(self):
+        """Verify modifying returned handoff doesn't affect internal state."""
+        from src.memory.maas.handoff import HandoffContext, HandoffManager
+        from src.memory.maas.registry import AgentRegistry
+        from src.memory.maas.types import AgentCapability, AgentType
+
+        registry = AgentRegistry.get()
+        manager = HandoffManager.get()
+
+        source_id = registry.register_agent(
+            agent_type=AgentType.CLAUDE_CODE,
+            owner_id="user-123",
+            capabilities={AgentCapability.HANDOFF_INITIATE},
+        )
+        target_id = registry.register_agent(
+            agent_type=AgentType.GPT_AGENT,
+            owner_id="user-456",
+            capabilities={AgentCapability.HANDOFF_RECEIVE},
+        )
+
+        context = HandoffContext(
+            task_description="Test task",
+            current_state={"step": 1},
+        )
+        handoff_id = manager.initiate_handoff(
+            source_agent_id=source_id,
+            target_agent_id=target_id,
+            context=context,
+        )
+
+        # Get handoff and modify it
+        handoff = manager.get_handoff(handoff_id)
+        handoff.context.current_state["evil"] = "data"
+        handoff.context.task_description = "hacked"
+
+        # Get again - should not have the modification
+        handoff2 = manager.get_handoff(handoff_id)
+        assert "evil" not in handoff2.context.current_state
+        assert handoff2.context.task_description == "Test task"
+
+
 class TestSecurityIntegration:
     """Integration tests for security components."""
 

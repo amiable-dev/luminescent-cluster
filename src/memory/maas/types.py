@@ -222,6 +222,25 @@ class AgentIdentity:
             created_at=created_at,
         )
 
+    def copy(self) -> "AgentIdentity":
+        """Create a defensive copy of this identity.
+
+        Returns a new AgentIdentity instance with copied capabilities and metadata
+        to prevent external mutation of internal state.
+
+        Returns:
+            A new AgentIdentity instance with the same data.
+        """
+        return AgentIdentity(
+            id=self.id,
+            agent_type=self.agent_type,
+            owner_id=self.owner_id,
+            capabilities=self.capabilities.copy(),
+            metadata=self.metadata.copy(),
+            session_id=self.session_id,
+            created_at=self.created_at,
+        )
+
     def __hash__(self) -> int:
         """Make AgentIdentity hashable by id."""
         return hash(self.id)

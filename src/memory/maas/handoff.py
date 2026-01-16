@@ -84,6 +84,19 @@ class HandoffContext:
             relevant_files=data.get("relevant_files", []),
         )
 
+    def copy(self) -> "HandoffContext":
+        """Create a defensive copy of this context.
+
+        Returns:
+            A new HandoffContext instance with copied data.
+        """
+        return HandoffContext(
+            task_description=self.task_description,
+            current_state=self.current_state.copy(),
+            relevant_memories=self.relevant_memories.copy(),
+            relevant_files=self.relevant_files.copy(),
+        )
+
 
 @dataclass
 class Handoff:
@@ -120,6 +133,29 @@ class Handoff:
         if self.expires_at is None:
             return False
         return datetime.now(timezone.utc) > self.expires_at
+
+    def copy(self) -> "Handoff":
+        """Create a defensive copy of this handoff.
+
+        Returns a new Handoff instance with copied context and result
+        to prevent external mutation of internal state.
+
+        Returns:
+            A new Handoff instance with the same data.
+        """
+        return Handoff(
+            id=self.id,
+            source_agent_id=self.source_agent_id,
+            target_agent_id=self.target_agent_id,
+            context=self.context.copy(),
+            status=self.status,
+            created_at=self.created_at,
+            expires_at=self.expires_at,
+            accepted_at=self.accepted_at,
+            completed_at=self.completed_at,
+            rejection_reason=self.rejection_reason,
+            result=self.result.copy() if self.result else None,
+        )
 
 
 class HandoffManager:
@@ -562,28 +598,35 @@ class HandoffManager:
     def get_handoff(self, handoff_id: str) -> Optional[Handoff]:
         """Get a handoff by ID.
 
+        Returns a defensive copy to prevent external mutation of internal state.
+
         Args:
             handoff_id: The handoff ID.
 
         Returns:
-            Handoff if found, None otherwise.
+            Defensive copy of Handoff if found, None otherwise.
         """
         with self._rlock:
-            return self._handoffs.get(handoff_id)
+            handoff = self._handoffs.get(handoff_id)
+            if handoff is None:
+                return None
+            return handoff.copy()
 
     def get_pending_handoffs(self, agent_id: str) -> list[Handoff]:
         """Get pending handoffs for an agent.
+
+        Returns defensive copies to prevent external mutation of internal state.
 
         Args:
             agent_id: The target agent ID.
 
         Returns:
-            List of pending Handoff objects.
+            List of pending Handoff copies.
         """
         with self._rlock:
             handoff_ids = self._pending_by_target.get(agent_id, set())
             return [
-                self._handoffs[hid]
+                self._handoffs[hid].copy()
                 for hid in handoff_ids
                 if hid in self._handoffs and self._handoffs[hid].status == HandoffStatus.PENDING
             ]
@@ -595,13 +638,15 @@ class HandoffManager:
     ) -> list[Handoff]:
         """Get handoffs involving an agent.
 
+        Returns defensive copies to prevent external mutation of internal state.
+
         Args:
             agent_id: The agent ID.
             as_source: If True, get handoffs where agent is source.
                       If False, get handoffs where agent is target.
 
         Returns:
-            List of Handoff objects.
+            List of Handoff copies.
         """
         with self._rlock:
             if as_source:
@@ -609,7 +654,7 @@ class HandoffManager:
             else:
                 handoff_ids = self._by_target.get(agent_id, set())
 
-            return [self._handoffs[hid] for hid in handoff_ids if hid in self._handoffs]
+            return [self._handoffs[hid].copy() for hid in handoff_ids if hid in self._handoffs]
 
     def expire_old_handoffs(self) -> int:
         """Expire handoffs that have passed their TTL.

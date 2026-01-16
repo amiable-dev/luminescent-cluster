@@ -263,36 +263,47 @@ class AgentRegistry:
     def get_agent(self, agent_id: str) -> Optional[AgentIdentity]:
         """Get an agent by ID.
 
+        Returns a defensive copy to prevent external mutation of internal state.
+        This ensures thread-safety and audit integrity since callers cannot
+        modify the registry's internal agent objects.
+
         Args:
             agent_id: The agent ID to look up.
 
         Returns:
-            AgentIdentity if found, None otherwise.
+            Defensive copy of AgentIdentity if found, None otherwise.
         """
         with self._rlock:
-            return self._agents.get(agent_id)
+            agent = self._agents.get(agent_id)
+            if agent is None:
+                return None
+            return agent.copy()
 
     def get_agents_by_owner(self, owner_id: str) -> list[AgentIdentity]:
         """Get all agents owned by a user.
+
+        Returns defensive copies to prevent external mutation of internal state.
 
         Args:
             owner_id: The owner's user ID.
 
         Returns:
-            List of AgentIdentity objects.
+            List of AgentIdentity copies.
         """
         with self._rlock:
             agent_ids = self._owner_index.get(owner_id, set())
-            return [self._agents[aid] for aid in agent_ids if aid in self._agents]
+            return [self._agents[aid].copy() for aid in agent_ids if aid in self._agents]
 
     def get_active_agents(self) -> list[AgentIdentity]:
         """Get all active agents.
 
+        Returns defensive copies to prevent external mutation of internal state.
+
         Returns:
-            List of active AgentIdentity objects.
+            List of active AgentIdentity copies.
         """
         with self._rlock:
-            return [self._agents[aid] for aid in self._active if aid in self._agents]
+            return [self._agents[aid].copy() for aid in self._active if aid in self._agents]
 
     def deactivate_agent(self, agent_id: str) -> bool:
         """Deactivate an agent.

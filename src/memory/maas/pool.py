@@ -107,6 +107,25 @@ class SharedMemoryPool:
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    def copy(self) -> "SharedMemoryPool":
+        """Create a defensive copy of this pool.
+
+        Returns a new SharedMemoryPool instance with copied metadata
+        to prevent external mutation of internal state.
+
+        Returns:
+            A new SharedMemoryPool instance with the same data.
+        """
+        return SharedMemoryPool(
+            id=self.id,
+            name=self.name,
+            owner_id=self.owner_id,
+            scope=self.scope,
+            status=self.status,
+            created_at=self.created_at,
+            metadata=self.metadata.copy(),
+        )
+
 
 class PoolRegistry:
     """Singleton registry for shared memory pools.
@@ -271,23 +290,30 @@ class PoolRegistry:
     def get_pool(self, pool_id: str) -> Optional[SharedMemoryPool]:
         """Get a pool by ID.
 
+        Returns a defensive copy to prevent external mutation of internal state.
+
         Args:
             pool_id: The pool ID to look up.
 
         Returns:
-            SharedMemoryPool if found, None otherwise.
+            Defensive copy of SharedMemoryPool if found, None otherwise.
         """
         with self._rlock:
-            return self._pools.get(pool_id)
+            pool = self._pools.get(pool_id)
+            if pool is None:
+                return None
+            return pool.copy()
 
     def get_active_pools(self) -> list[SharedMemoryPool]:
         """Get all active pools.
 
+        Returns defensive copies to prevent external mutation of internal state.
+
         Returns:
-            List of active SharedMemoryPool objects.
+            List of active SharedMemoryPool copies.
         """
         with self._rlock:
-            return [p for p in self._pools.values() if p.status == PoolStatus.ACTIVE]
+            return [p.copy() for p in self._pools.values() if p.status == PoolStatus.ACTIVE]
 
     def join_pool(
         self,
@@ -403,15 +429,17 @@ class PoolRegistry:
     def get_agent_pools(self, agent_id: str) -> list[SharedMemoryPool]:
         """Get all pools an agent is a member of.
 
+        Returns defensive copies to prevent external mutation of internal state.
+
         Args:
             agent_id: The agent to query.
 
         Returns:
-            List of SharedMemoryPool objects.
+            List of SharedMemoryPool copies.
         """
         with self._rlock:
             pool_ids = self._agent_pools.get(agent_id, set())
-            return [self._pools[pid] for pid in pool_ids if pid in self._pools]
+            return [self._pools[pid].copy() for pid in pool_ids if pid in self._pools]
 
     def get_member_permission(
         self,
