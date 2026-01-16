@@ -39,18 +39,20 @@ Related:
 
 from src.memory.maas.handoff import (
     Handoff,
+    HandoffCapacityError,
     HandoffContext,
     HandoffManager,
     HandoffStatus,
 )
 from src.memory.maas.pool import (
     DuplicatePoolError,
+    PoolCapacityError,
     PoolRegistry,
     PoolStatus,
     SharedMemoryPool,
 )
 from src.memory.maas.provider import MaaSMemoryProvider
-from src.memory.maas.registry import AgentRegistry, DuplicateAgentError
+from src.memory.maas.registry import AgentRegistry, DuplicateAgentError, RegistryCapacityError
 from src.memory.maas.scope import (
     AgentScope,
     PermissionModel,
@@ -87,16 +89,19 @@ __all__ = [
     # Registry
     "AgentRegistry",
     "DuplicateAgentError",
+    "RegistryCapacityError",
     # Pools
     "PoolRegistry",
     "SharedMemoryPool",
     "PoolStatus",
     "DuplicatePoolError",
+    "PoolCapacityError",
     # Handoff
     "HandoffManager",
     "Handoff",
     "HandoffContext",
     "HandoffStatus",
+    "HandoffCapacityError",
     # Provider
     "MaaSMemoryProvider",
     # Services

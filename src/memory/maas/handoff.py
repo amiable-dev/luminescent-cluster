@@ -22,6 +22,19 @@ from typing import Any, ClassVar, Optional
 from src.memory.maas.registry import AgentRegistry
 from src.memory.maas.types import AgentCapability
 
+# Default limits for DoS prevention
+DEFAULT_MAX_HANDOFFS = 50000
+DEFAULT_MAX_PENDING_PER_TARGET = 100
+
+
+class HandoffCapacityError(Exception):
+    """Raised when handoff capacity is exceeded (DoS prevention)."""
+
+    def __init__(self, resource: str, limit: int):
+        self.resource = resource
+        self.limit = limit
+        super().__init__(f"Handoff capacity exceeded: {resource} limit is {limit}")
+
 
 class HandoffStatus(str, Enum):
     """Status of a handoff request."""
@@ -129,14 +142,26 @@ class HandoffManager:
     # Singleton management
     _instance: ClassVar[Optional["HandoffManager"]] = None
     _lock: ClassVar[threading.Lock] = threading.Lock()
+    _audit_logger: ClassVar[Optional[Any]] = None  # MaaSAuditLogger
 
-    def __init__(self):
-        """Initialize the manager (internal use only)."""
+    def __init__(
+        self,
+        max_handoffs: int = DEFAULT_MAX_HANDOFFS,
+        max_pending_per_target: int = DEFAULT_MAX_PENDING_PER_TARGET,
+    ):
+        """Initialize the manager (internal use only).
+
+        Args:
+            max_handoffs: Maximum total handoffs (DoS prevention).
+            max_pending_per_target: Maximum pending handoffs per target agent.
+        """
         self._handoffs: dict[str, Handoff] = {}
         self._pending_by_target: dict[str, set[str]] = {}  # target_id -> set of handoff_ids
         self._by_source: dict[str, set[str]] = {}  # source_id -> set of handoff_ids
         self._by_target: dict[str, set[str]] = {}  # target_id -> set of handoff_ids
         self._rlock = threading.RLock()
+        self._max_handoffs = max_handoffs
+        self._max_pending_per_target = max_pending_per_target
 
     @classmethod
     def get(cls) -> "HandoffManager":
@@ -158,6 +183,34 @@ class HandoffManager:
         """Reset the singleton instance (for testing only)."""
         with cls._lock:
             cls._instance = None
+            cls._audit_logger = None
+
+    @classmethod
+    def set_audit_logger(cls, logger: Any) -> None:
+        """Set the audit logger for the manager.
+
+        Args:
+            logger: MaaSAuditLogger instance.
+        """
+        cls._audit_logger = logger
+
+    def _log_event(
+        self,
+        event_type: str,
+        agent_id: str,
+        action: str,
+        outcome: str,
+        details: Optional[dict[str, Any]] = None,
+    ) -> None:
+        """Log an event if audit logger is configured."""
+        if self._audit_logger is not None:
+            self._audit_logger.log_agent_operation(
+                event_type=event_type,
+                agent_id=agent_id,
+                action=action,
+                outcome=outcome,
+                details=details,
+            )
 
     def initiate_handoff(
         self,
@@ -176,6 +229,9 @@ class HandoffManager:
 
         Returns:
             Handoff ID if successful, None if capabilities check fails.
+
+        Raises:
+            HandoffCapacityError: If handoff limits are exceeded.
         """
         with self._rlock:
             agent_registry = AgentRegistry.get()
@@ -183,15 +239,60 @@ class HandoffManager:
             # Check source has HANDOFF_INITIATE capability
             source = agent_registry.get_agent(source_agent_id)
             if source is None or not source.has_capability(AgentCapability.HANDOFF_INITIATE):
+                self._log_event(
+                    event_type="HANDOFF",
+                    agent_id=source_agent_id,
+                    action="initiate_handoff",
+                    outcome="denied",
+                    details={"reason": "missing_capability", "capability": "HANDOFF_INITIATE"},
+                )
                 return None
 
             # Check target has HANDOFF_RECEIVE capability
             target = agent_registry.get_agent(target_agent_id)
             if target is None or not target.has_capability(AgentCapability.HANDOFF_RECEIVE):
+                self._log_event(
+                    event_type="HANDOFF",
+                    agent_id=source_agent_id,
+                    action="initiate_handoff",
+                    outcome="denied",
+                    details={
+                        "reason": "target_missing_capability",
+                        "target_agent_id": target_agent_id,
+                        "capability": "HANDOFF_RECEIVE",
+                    },
+                )
                 return None
 
+            # Check total handoff capacity (DoS prevention)
+            if len(self._handoffs) >= self._max_handoffs:
+                self._log_event(
+                    event_type="HANDOFF",
+                    agent_id=source_agent_id,
+                    action="initiate_handoff",
+                    outcome="denied",
+                    details={"reason": "capacity_exceeded", "limit": self._max_handoffs},
+                )
+                raise HandoffCapacityError("handoffs", self._max_handoffs)
+
+            # Check per-target pending limit (DoS prevention)
+            pending_count = len(self._pending_by_target.get(target_agent_id, set()))
+            if pending_count >= self._max_pending_per_target:
+                self._log_event(
+                    event_type="HANDOFF",
+                    agent_id=source_agent_id,
+                    action="initiate_handoff",
+                    outcome="denied",
+                    details={
+                        "reason": "pending_limit_exceeded",
+                        "target_agent_id": target_agent_id,
+                        "limit": self._max_pending_per_target,
+                    },
+                )
+                raise HandoffCapacityError("pending_per_target", self._max_pending_per_target)
+
             # Create handoff
-            handoff_id = f"handoff-{uuid.uuid4().hex[:12]}"
+            handoff_id = f"handoff-{uuid.uuid4().hex}"
 
             expires_at = None
             if ttl_seconds is not None:
@@ -221,6 +322,19 @@ class HandoffManager:
                 self._by_target[target_agent_id] = set()
             self._by_target[target_agent_id].add(handoff_id)
 
+            # Log success
+            self._log_event(
+                event_type="HANDOFF",
+                agent_id=source_agent_id,
+                action="initiate_handoff",
+                outcome="success",
+                details={
+                    "handoff_id": handoff_id,
+                    "target_agent_id": target_agent_id,
+                    "task_description": context.task_description[:100],  # Truncate for logging
+                },
+            )
+
             return handoff_id
 
     def accept_handoff(self, handoff_id: str, agent_id: str) -> bool:
@@ -236,16 +350,48 @@ class HandoffManager:
         with self._rlock:
             handoff = self._handoffs.get(handoff_id)
             if handoff is None:
+                self._log_event(
+                    event_type="HANDOFF",
+                    agent_id=agent_id,
+                    action="accept_handoff",
+                    outcome="failed",
+                    details={"reason": "handoff_not_found", "handoff_id": handoff_id},
+                )
                 return False
 
             if handoff.target_agent_id != agent_id:
+                self._log_event(
+                    event_type="PERMISSION_DENIED",
+                    agent_id=agent_id,
+                    action="accept_handoff",
+                    outcome="denied",
+                    details={
+                        "reason": "not_target_agent",
+                        "handoff_id": handoff_id,
+                        "actual_target": handoff.target_agent_id,
+                    },
+                )
                 return False
 
             if handoff.status != HandoffStatus.PENDING:
+                self._log_event(
+                    event_type="HANDOFF",
+                    agent_id=agent_id,
+                    action="accept_handoff",
+                    outcome="failed",
+                    details={"reason": "invalid_status", "handoff_id": handoff_id, "status": str(handoff.status)},
+                )
                 return False
 
             if handoff.is_expired():
                 handoff.status = HandoffStatus.EXPIRED
+                self._log_event(
+                    event_type="HANDOFF",
+                    agent_id=agent_id,
+                    action="accept_handoff",
+                    outcome="failed",
+                    details={"reason": "expired", "handoff_id": handoff_id},
+                )
                 return False
 
             handoff.status = HandoffStatus.ACCEPTED
@@ -254,6 +400,18 @@ class HandoffManager:
             # Remove from pending
             if handoff.target_agent_id in self._pending_by_target:
                 self._pending_by_target[handoff.target_agent_id].discard(handoff_id)
+
+            # Log cross-agent handoff acceptance
+            self._log_event(
+                event_type="CROSS_AGENT_READ",
+                agent_id=agent_id,
+                action="accept_handoff",
+                outcome="success",
+                details={
+                    "handoff_id": handoff_id,
+                    "source_agent_id": handoff.source_agent_id,
+                },
+            )
 
             return True
 
@@ -276,12 +434,37 @@ class HandoffManager:
         with self._rlock:
             handoff = self._handoffs.get(handoff_id)
             if handoff is None:
+                self._log_event(
+                    event_type="HANDOFF",
+                    agent_id=agent_id,
+                    action="reject_handoff",
+                    outcome="failed",
+                    details={"reason": "handoff_not_found", "handoff_id": handoff_id},
+                )
                 return False
 
             if handoff.target_agent_id != agent_id:
+                self._log_event(
+                    event_type="PERMISSION_DENIED",
+                    agent_id=agent_id,
+                    action="reject_handoff",
+                    outcome="denied",
+                    details={
+                        "reason": "not_target_agent",
+                        "handoff_id": handoff_id,
+                        "actual_target": handoff.target_agent_id,
+                    },
+                )
                 return False
 
             if handoff.status != HandoffStatus.PENDING:
+                self._log_event(
+                    event_type="HANDOFF",
+                    agent_id=agent_id,
+                    action="reject_handoff",
+                    outcome="failed",
+                    details={"reason": "invalid_status", "handoff_id": handoff_id, "status": str(handoff.status)},
+                )
                 return False
 
             handoff.status = HandoffStatus.REJECTED
@@ -290,6 +473,19 @@ class HandoffManager:
             # Remove from pending
             if handoff.target_agent_id in self._pending_by_target:
                 self._pending_by_target[handoff.target_agent_id].discard(handoff_id)
+
+            # Log rejection
+            self._log_event(
+                event_type="HANDOFF",
+                agent_id=agent_id,
+                action="reject_handoff",
+                outcome="success",
+                details={
+                    "handoff_id": handoff_id,
+                    "source_agent_id": handoff.source_agent_id,
+                    "rejection_reason": reason,
+                },
+            )
 
             return True
 
@@ -312,17 +508,54 @@ class HandoffManager:
         with self._rlock:
             handoff = self._handoffs.get(handoff_id)
             if handoff is None:
+                self._log_event(
+                    event_type="HANDOFF",
+                    agent_id=agent_id,
+                    action="complete_handoff",
+                    outcome="failed",
+                    details={"reason": "handoff_not_found", "handoff_id": handoff_id},
+                )
                 return False
 
             if handoff.target_agent_id != agent_id:
+                self._log_event(
+                    event_type="PERMISSION_DENIED",
+                    agent_id=agent_id,
+                    action="complete_handoff",
+                    outcome="denied",
+                    details={
+                        "reason": "not_target_agent",
+                        "handoff_id": handoff_id,
+                        "actual_target": handoff.target_agent_id,
+                    },
+                )
                 return False
 
             if handoff.status != HandoffStatus.ACCEPTED:
+                self._log_event(
+                    event_type="HANDOFF",
+                    agent_id=agent_id,
+                    action="complete_handoff",
+                    outcome="failed",
+                    details={"reason": "invalid_status", "handoff_id": handoff_id, "status": str(handoff.status)},
+                )
                 return False
 
             handoff.status = HandoffStatus.COMPLETED
             handoff.completed_at = datetime.now(timezone.utc)
             handoff.result = result
+
+            # Log completion
+            self._log_event(
+                event_type="HANDOFF",
+                agent_id=agent_id,
+                action="complete_handoff",
+                outcome="success",
+                details={
+                    "handoff_id": handoff_id,
+                    "source_agent_id": handoff.source_agent_id,
+                },
+            )
 
             return True
 

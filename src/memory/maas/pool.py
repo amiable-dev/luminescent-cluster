@@ -23,6 +23,11 @@ from typing import Any, ClassVar, Optional
 from src.memory.maas.registry import AgentRegistry
 from src.memory.maas.scope import PermissionModel, SharedScope
 
+# Default limits for DoS prevention
+DEFAULT_MAX_POOLS = 10000
+DEFAULT_MAX_MEMBERSHIPS_PER_POOL = 1000
+DEFAULT_MAX_SHARED_MEMORIES_PER_POOL = 100000
+
 
 class PoolStatus(str, Enum):
     """Status of a shared memory pool."""
@@ -37,6 +42,15 @@ class DuplicatePoolError(Exception):
     def __init__(self, pool_id: str):
         self.pool_id = pool_id
         super().__init__(f"Pool with ID '{pool_id}' already exists")
+
+
+class PoolCapacityError(Exception):
+    """Raised when pool capacity is exceeded (DoS prevention)."""
+
+    def __init__(self, resource: str, limit: int):
+        self.resource = resource
+        self.limit = limit
+        super().__init__(f"Pool capacity exceeded: {resource} limit is {limit}")
 
 
 @dataclass
@@ -118,14 +132,29 @@ class PoolRegistry:
     # Singleton management
     _instance: ClassVar[Optional["PoolRegistry"]] = None
     _lock: ClassVar[threading.Lock] = threading.Lock()
+    _audit_logger: ClassVar[Optional[Any]] = None  # MaaSAuditLogger
 
-    def __init__(self):
-        """Initialize the registry (internal use only)."""
+    def __init__(
+        self,
+        max_pools: int = DEFAULT_MAX_POOLS,
+        max_memberships_per_pool: int = DEFAULT_MAX_MEMBERSHIPS_PER_POOL,
+        max_shared_memories_per_pool: int = DEFAULT_MAX_SHARED_MEMORIES_PER_POOL,
+    ):
+        """Initialize the registry (internal use only).
+
+        Args:
+            max_pools: Maximum number of pools (DoS prevention).
+            max_memberships_per_pool: Maximum members per pool.
+            max_shared_memories_per_pool: Maximum shared memories per pool.
+        """
         self._pools: dict[str, SharedMemoryPool] = {}
         self._memberships: dict[str, dict[str, PoolMembership]] = defaultdict(dict)  # pool_id -> agent_id -> membership
         self._agent_pools: dict[str, set[str]] = defaultdict(set)  # agent_id -> set of pool_ids
         self._shared_memories: dict[str, list[SharedMemoryRef]] = defaultdict(list)  # pool_id -> list of refs
         self._rlock = threading.RLock()
+        self._max_pools = max_pools
+        self._max_memberships_per_pool = max_memberships_per_pool
+        self._max_shared_memories_per_pool = max_shared_memories_per_pool
 
     @classmethod
     def get(cls) -> "PoolRegistry":
@@ -147,6 +176,34 @@ class PoolRegistry:
         """Reset the singleton instance (for testing only)."""
         with cls._lock:
             cls._instance = None
+            cls._audit_logger = None
+
+    @classmethod
+    def set_audit_logger(cls, logger: Any) -> None:
+        """Set the audit logger for the registry.
+
+        Args:
+            logger: MaaSAuditLogger instance.
+        """
+        cls._audit_logger = logger
+
+    def _log_event(
+        self,
+        event_type: str,
+        agent_id: str,
+        action: str,
+        outcome: str,
+        details: Optional[dict[str, Any]] = None,
+    ) -> None:
+        """Log an event if audit logger is configured."""
+        if self._audit_logger is not None:
+            self._audit_logger.log_agent_operation(
+                event_type=event_type,
+                agent_id=agent_id,
+                action=action,
+                outcome=outcome,
+                details=details,
+            )
 
     def create_pool(
         self,
@@ -170,10 +227,22 @@ class PoolRegistry:
 
         Raises:
             DuplicatePoolError: If pool_id already exists.
+            PoolCapacityError: If max_pools limit is reached.
         """
         with self._rlock:
+            # Check capacity limit (DoS prevention)
+            if len(self._pools) >= self._max_pools:
+                self._log_event(
+                    event_type="POOL_OPERATION",
+                    agent_id=owner_id,
+                    action="create_pool",
+                    outcome="denied",
+                    details={"reason": "capacity_exceeded", "limit": self._max_pools},
+                )
+                raise PoolCapacityError("pools", self._max_pools)
+
             if pool_id is None:
-                pool_id = f"pool-{uuid.uuid4().hex[:12]}"
+                pool_id = f"pool-{uuid.uuid4().hex}"
 
             if pool_id in self._pools:
                 raise DuplicatePoolError(pool_id)
@@ -187,6 +256,16 @@ class PoolRegistry:
             )
 
             self._pools[pool_id] = pool
+
+            # Log success
+            self._log_event(
+                event_type="POOL_OPERATION",
+                agent_id=owner_id,
+                action="create_pool",
+                outcome="success",
+                details={"pool_id": pool_id, "name": name},
+            )
+
             return pool_id
 
     def get_pool(self, pool_id: str) -> Optional[SharedMemoryPool]:
@@ -224,15 +303,35 @@ class PoolRegistry:
             permission: Requested permission level.
 
         Returns:
-            True if joined successfully, False if pool not found.
+            True if joined successfully, False if pool not found or capacity exceeded.
 
         Note:
             If the agent's owner matches the pool owner, they get ADMIN.
+
+        Raises:
+            PoolCapacityError: If membership limit is reached.
         """
         with self._rlock:
             pool = self._pools.get(pool_id)
             if pool is None:
                 return False
+
+            # Check membership capacity (DoS prevention) - only for new members
+            if agent_id not in self._memberships.get(pool_id, {}):
+                current_count = len(self._memberships.get(pool_id, {}))
+                if current_count >= self._max_memberships_per_pool:
+                    self._log_event(
+                        event_type="POOL_OPERATION",
+                        agent_id=agent_id,
+                        action="join_pool",
+                        outcome="denied",
+                        details={
+                            "pool_id": pool_id,
+                            "reason": "membership_limit_exceeded",
+                            "limit": self._max_memberships_per_pool,
+                        },
+                    )
+                    raise PoolCapacityError("memberships_per_pool", self._max_memberships_per_pool)
 
             # Check if agent's owner matches pool owner -> grant ADMIN
             agent_registry = AgentRegistry.get()
@@ -247,6 +346,15 @@ class PoolRegistry:
 
             self._memberships[pool_id][agent_id] = membership
             self._agent_pools[agent_id].add(pool_id)
+
+            # Log success
+            self._log_event(
+                event_type="POOL_OPERATION",
+                agent_id=agent_id,
+                action="join_pool",
+                outcome="success",
+                details={"pool_id": pool_id, "permission": str(permission)},
+            )
 
             return True
 
@@ -408,12 +516,38 @@ class PoolRegistry:
             scope: Visibility scope for this share.
 
         Returns:
-            True if shared, False if no write permission.
+            True if shared, False if no write permission or capacity exceeded.
+
+        Raises:
+            PoolCapacityError: If shared memory limit is reached.
         """
         with self._rlock:
             # Check write permission
             if not self.check_access(pool_id, agent_id, PermissionModel.WRITE):
+                self._log_event(
+                    event_type="PERMISSION_DENIED",
+                    agent_id=agent_id,
+                    action="share_memory",
+                    outcome="denied",
+                    details={"pool_id": pool_id, "memory_id": memory_id, "reason": "insufficient_permission"},
+                )
                 return False
+
+            # Check shared memory capacity (DoS prevention)
+            current_count = len(self._shared_memories.get(pool_id, []))
+            if current_count >= self._max_shared_memories_per_pool:
+                self._log_event(
+                    event_type="POOL_OPERATION",
+                    agent_id=agent_id,
+                    action="share_memory",
+                    outcome="denied",
+                    details={
+                        "pool_id": pool_id,
+                        "reason": "shared_memory_limit_exceeded",
+                        "limit": self._max_shared_memories_per_pool,
+                    },
+                )
+                raise PoolCapacityError("shared_memories_per_pool", self._max_shared_memories_per_pool)
 
             ref = SharedMemoryRef(
                 memory_id=memory_id,
@@ -422,6 +556,16 @@ class PoolRegistry:
             )
 
             self._shared_memories[pool_id].append(ref)
+
+            # Log success
+            self._log_event(
+                event_type="POOL_OPERATION",
+                agent_id=agent_id,
+                action="share_memory",
+                outcome="success",
+                details={"pool_id": pool_id, "memory_id": memory_id},
+            )
+
             return True
 
     def get_shared_memories(self, pool_id: str) -> list[dict[str, Any]]:
@@ -464,10 +608,17 @@ class PoolRegistry:
         with self._rlock:
             # Check read permission
             if not self.check_access(pool_id, agent_id, PermissionModel.READ):
+                self._log_event(
+                    event_type="PERMISSION_DENIED",
+                    agent_id=agent_id,
+                    action="query_shared",
+                    outcome="denied",
+                    details={"pool_id": pool_id, "reason": "insufficient_permission"},
+                )
                 return []
 
             refs = self._shared_memories.get(pool_id, [])
-            return [
+            results = [
                 {
                     "memory_id": r.memory_id,
                     "shared_by": r.shared_by,
@@ -477,3 +628,20 @@ class PoolRegistry:
                 for r in refs
                 if max_scope.can_access(r.scope)
             ]
+
+            # Log cross-agent reads
+            for result in results:
+                if result["shared_by"] != agent_id:
+                    self._log_event(
+                        event_type="CROSS_AGENT_READ",
+                        agent_id=agent_id,
+                        action="query_shared",
+                        outcome="success",
+                        details={
+                            "pool_id": pool_id,
+                            "memory_id": result["memory_id"],
+                            "shared_by": result["shared_by"],
+                        },
+                    )
+
+            return results

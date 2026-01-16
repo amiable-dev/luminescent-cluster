@@ -254,6 +254,270 @@ class TestAuditLogging:
         assert logs[0]["outcome"] == "denied"
 
 
+class TestCapacityLimits:
+    """Test DoS prevention with capacity limits."""
+
+    def setup_method(self):
+        """Reset registries before each test."""
+        from src.memory.maas.handoff import HandoffManager
+        from src.memory.maas.pool import PoolRegistry
+        from src.memory.maas.registry import AgentRegistry
+
+        AgentRegistry.reset()
+        PoolRegistry.reset()
+        HandoffManager.reset()
+
+    def teardown_method(self):
+        """Reset registries after each test."""
+        from src.memory.maas.handoff import HandoffManager
+        from src.memory.maas.pool import PoolRegistry
+        from src.memory.maas.registry import AgentRegistry
+
+        AgentRegistry.reset()
+        PoolRegistry.reset()
+        HandoffManager.reset()
+
+    def test_agent_registry_capacity_limit(self):
+        """Verify agent registry enforces capacity limit."""
+        from src.memory.maas.registry import AgentRegistry, RegistryCapacityError
+        from src.memory.maas.types import AgentType
+
+        # Create registry with low limit for testing
+        AgentRegistry.reset()
+        AgentRegistry._instance = AgentRegistry(max_agents=3)
+        registry = AgentRegistry.get()
+
+        # Register up to limit
+        for i in range(3):
+            registry.register_agent(
+                agent_type=AgentType.CLAUDE_CODE,
+                owner_id="user-123",
+            )
+
+        # Next should fail
+        with pytest.raises(RegistryCapacityError) as exc_info:
+            registry.register_agent(
+                agent_type=AgentType.CLAUDE_CODE,
+                owner_id="user-123",
+            )
+        assert "agents" in str(exc_info.value)
+
+    def test_pool_registry_capacity_limit(self):
+        """Verify pool registry enforces capacity limit."""
+        from src.memory.maas.pool import PoolCapacityError, PoolRegistry
+        from src.memory.maas.scope import SharedScope
+
+        # Create registry with low limit for testing
+        PoolRegistry.reset()
+        PoolRegistry._instance = PoolRegistry(max_pools=2)
+        registry = PoolRegistry.get()
+
+        # Create up to limit
+        for i in range(2):
+            registry.create_pool(
+                name=f"pool-{i}",
+                owner_id="user-123",
+                scope=SharedScope.USER,
+            )
+
+        # Next should fail
+        with pytest.raises(PoolCapacityError) as exc_info:
+            registry.create_pool(
+                name="overflow-pool",
+                owner_id="user-123",
+                scope=SharedScope.USER,
+            )
+        assert "pools" in str(exc_info.value)
+
+    def test_handoff_capacity_limit(self):
+        """Verify handoff manager enforces capacity limit."""
+        from src.memory.maas.handoff import (
+            HandoffCapacityError,
+            HandoffContext,
+            HandoffManager,
+        )
+        from src.memory.maas.registry import AgentRegistry
+        from src.memory.maas.types import AgentCapability, AgentType
+
+        # Setup
+        AgentRegistry.reset()
+        HandoffManager.reset()
+        HandoffManager._instance = HandoffManager(max_handoffs=2)
+
+        registry = AgentRegistry.get()
+        manager = HandoffManager.get()
+
+        # Register agents with proper capabilities
+        source_ids = []
+        target_ids = []
+        for i in range(3):
+            src_id = registry.register_agent(
+                agent_type=AgentType.CLAUDE_CODE,
+                owner_id="user-123",
+                capabilities={AgentCapability.HANDOFF_INITIATE},
+            )
+            tgt_id = registry.register_agent(
+                agent_type=AgentType.GPT_AGENT,
+                owner_id="user-123",
+                capabilities={AgentCapability.HANDOFF_RECEIVE},
+            )
+            source_ids.append(src_id)
+            target_ids.append(tgt_id)
+
+        context = HandoffContext(task_description="Test task")
+
+        # Create up to limit
+        for i in range(2):
+            manager.initiate_handoff(
+                source_agent_id=source_ids[i],
+                target_agent_id=target_ids[i],
+                context=context,
+            )
+
+        # Next should fail
+        with pytest.raises(HandoffCapacityError) as exc_info:
+            manager.initiate_handoff(
+                source_agent_id=source_ids[2],
+                target_agent_id=target_ids[2],
+                context=context,
+            )
+        assert "handoffs" in str(exc_info.value)
+
+
+class TestAuditLoggerIntegration:
+    """Test audit logger integration with registries."""
+
+    def setup_method(self):
+        """Reset registries before each test."""
+        from src.memory.maas.handoff import HandoffManager
+        from src.memory.maas.pool import PoolRegistry
+        from src.memory.maas.registry import AgentRegistry
+
+        AgentRegistry.reset()
+        PoolRegistry.reset()
+        HandoffManager.reset()
+
+    def teardown_method(self):
+        """Reset registries after each test."""
+        from src.memory.maas.handoff import HandoffManager
+        from src.memory.maas.pool import PoolRegistry
+        from src.memory.maas.registry import AgentRegistry
+
+        AgentRegistry.reset()
+        PoolRegistry.reset()
+        HandoffManager.reset()
+
+    def test_agent_registry_logs_registration(self):
+        """Verify agent registration is logged."""
+        from src.memory.maas.registry import AgentRegistry
+        from src.memory.maas.security import MaaSAuditLogger
+        from src.memory.maas.types import AgentType
+
+        logger = MaaSAuditLogger()
+        AgentRegistry.set_audit_logger(logger)
+
+        registry = AgentRegistry.get()
+        registry.register_agent(
+            agent_type=AgentType.CLAUDE_CODE,
+            owner_id="user-123",
+        )
+
+        logs = logger.get_recent_logs(limit=1)
+        assert len(logs) == 1
+        assert logs[0]["event_type"] == "AGENT_AUTH"
+        assert logs[0]["action"] == "register_agent"
+        assert logs[0]["outcome"] == "success"
+
+    def test_handoff_logs_cross_agent_access(self):
+        """Verify handoff acceptance logs cross-agent access."""
+        from src.memory.maas.handoff import HandoffContext, HandoffManager
+        from src.memory.maas.registry import AgentRegistry
+        from src.memory.maas.security import MaaSAuditLogger
+        from src.memory.maas.types import AgentCapability, AgentType
+
+        logger = MaaSAuditLogger()
+        AgentRegistry.set_audit_logger(logger)
+        HandoffManager.set_audit_logger(logger)
+
+        registry = AgentRegistry.get()
+        manager = HandoffManager.get()
+
+        # Register agents
+        source_id = registry.register_agent(
+            agent_type=AgentType.CLAUDE_CODE,
+            owner_id="user-123",
+            capabilities={AgentCapability.HANDOFF_INITIATE},
+        )
+        target_id = registry.register_agent(
+            agent_type=AgentType.GPT_AGENT,
+            owner_id="user-456",
+            capabilities={AgentCapability.HANDOFF_RECEIVE},
+        )
+
+        # Initiate and accept handoff
+        context = HandoffContext(task_description="Test task")
+        handoff_id = manager.initiate_handoff(
+            source_agent_id=source_id,
+            target_agent_id=target_id,
+            context=context,
+        )
+        manager.accept_handoff(handoff_id, target_id)
+
+        # Check for cross-agent access log
+        logs = logger.get_recent_logs(limit=10)
+        cross_agent_logs = [l for l in logs if l["event_type"] == "CROSS_AGENT_READ"]
+        assert len(cross_agent_logs) >= 1
+        assert cross_agent_logs[0]["action"] == "accept_handoff"
+
+    def test_permission_denied_logged(self):
+        """Verify permission denied events are logged."""
+        from src.memory.maas.handoff import HandoffContext, HandoffManager
+        from src.memory.maas.registry import AgentRegistry
+        from src.memory.maas.security import MaaSAuditLogger
+        from src.memory.maas.types import AgentCapability, AgentType
+
+        logger = MaaSAuditLogger()
+        HandoffManager.set_audit_logger(logger)
+
+        registry = AgentRegistry.get()
+        manager = HandoffManager.get()
+
+        # Register agents
+        source_id = registry.register_agent(
+            agent_type=AgentType.CLAUDE_CODE,
+            owner_id="user-123",
+            capabilities={AgentCapability.HANDOFF_INITIATE},
+        )
+        target_id = registry.register_agent(
+            agent_type=AgentType.GPT_AGENT,
+            owner_id="user-456",
+            capabilities={AgentCapability.HANDOFF_RECEIVE},
+        )
+        other_id = registry.register_agent(
+            agent_type=AgentType.CLAUDE_CODE,
+            owner_id="user-789",
+            capabilities={AgentCapability.HANDOFF_RECEIVE},
+        )
+
+        # Create handoff
+        context = HandoffContext(task_description="Test task")
+        handoff_id = manager.initiate_handoff(
+            source_agent_id=source_id,
+            target_agent_id=target_id,
+            context=context,
+        )
+
+        # Try to accept with wrong agent (should be denied)
+        result = manager.accept_handoff(handoff_id, other_id)
+        assert result is False
+
+        # Check for permission denied log
+        logs = logger.get_recent_logs(limit=10)
+        denied_logs = [l for l in logs if l["event_type"] == "PERMISSION_DENIED"]
+        assert len(denied_logs) >= 1
+        assert denied_logs[0]["outcome"] == "denied"
+
+
 class TestSecurityIntegration:
     """Integration tests for security components."""
 

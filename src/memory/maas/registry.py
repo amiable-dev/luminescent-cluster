@@ -26,6 +26,10 @@ from src.memory.maas.types import (
     get_default_capabilities,
 )
 
+# Default limits for DoS prevention
+DEFAULT_MAX_AGENTS = 10000
+DEFAULT_MAX_SESSIONS = 50000
+
 
 class DuplicateAgentError(Exception):
     """Raised when attempting to register an agent with duplicate ID."""
@@ -33,6 +37,15 @@ class DuplicateAgentError(Exception):
     def __init__(self, agent_id: str):
         self.agent_id = agent_id
         super().__init__(f"Agent with ID '{agent_id}' already exists")
+
+
+class RegistryCapacityError(Exception):
+    """Raised when registry capacity is exceeded (DoS prevention)."""
+
+    def __init__(self, resource: str, limit: int):
+        self.resource = resource
+        self.limit = limit
+        super().__init__(f"Registry capacity exceeded: {resource} limit is {limit}")
 
 
 @dataclass
@@ -85,15 +98,27 @@ class AgentRegistry:
     # Singleton management
     _instance: ClassVar[Optional["AgentRegistry"]] = None
     _lock: ClassVar[threading.Lock] = threading.Lock()
+    _audit_logger: ClassVar[Optional[Any]] = None  # MaaSAuditLogger
 
-    def __init__(self):
-        """Initialize the registry (internal use only)."""
+    def __init__(
+        self,
+        max_agents: int = DEFAULT_MAX_AGENTS,
+        max_sessions: int = DEFAULT_MAX_SESSIONS,
+    ):
+        """Initialize the registry (internal use only).
+
+        Args:
+            max_agents: Maximum number of agents (DoS prevention).
+            max_sessions: Maximum number of sessions (DoS prevention).
+        """
         self._agents: dict[str, AgentIdentity] = {}
         self._active: set[str] = set()
         self._sessions: dict[str, SessionInfo] = {}
         self._agent_sessions: dict[str, str] = {}  # agent_id -> session_id
         self._owner_index: dict[str, set[str]] = defaultdict(set)
         self._rlock = threading.RLock()
+        self._max_agents = max_agents
+        self._max_sessions = max_sessions
 
     @classmethod
     def get(cls) -> "AgentRegistry":
@@ -120,6 +145,34 @@ class AgentRegistry:
         """
         with cls._lock:
             cls._instance = None
+            cls._audit_logger = None
+
+    @classmethod
+    def set_audit_logger(cls, logger: Any) -> None:
+        """Set the audit logger for the registry.
+
+        Args:
+            logger: MaaSAuditLogger instance.
+        """
+        cls._audit_logger = logger
+
+    def _log_event(
+        self,
+        event_type: str,
+        agent_id: str,
+        action: str,
+        outcome: str,
+        details: Optional[dict[str, Any]] = None,
+    ) -> None:
+        """Log an event if audit logger is configured."""
+        if self._audit_logger is not None:
+            self._audit_logger.log_agent_operation(
+                event_type=event_type,
+                agent_id=agent_id,
+                action=action,
+                outcome=outcome,
+                details=details,
+            )
 
     def register_agent(
         self,
@@ -143,6 +196,7 @@ class AgentRegistry:
 
         Raises:
             DuplicateAgentError: If agent_id already exists.
+            RegistryCapacityError: If max_agents limit is reached.
 
         Example:
             agent_id = registry.register_agent(
@@ -151,12 +205,30 @@ class AgentRegistry:
             )
         """
         with self._rlock:
+            # Check capacity limit (DoS prevention)
+            if len(self._agents) >= self._max_agents:
+                self._log_event(
+                    event_type="AGENT_AUTH",
+                    agent_id=agent_id or "unknown",
+                    action="register_agent",
+                    outcome="denied",
+                    details={"reason": "capacity_exceeded", "limit": self._max_agents},
+                )
+                raise RegistryCapacityError("agents", self._max_agents)
+
             # Generate ID if not provided
             if agent_id is None:
-                agent_id = f"agent-{uuid.uuid4().hex[:12]}"
+                agent_id = f"agent-{uuid.uuid4().hex}"
 
             # Check for duplicate
             if agent_id in self._agents:
+                self._log_event(
+                    event_type="AGENT_AUTH",
+                    agent_id=agent_id,
+                    action="register_agent",
+                    outcome="failed",
+                    details={"reason": "duplicate_id"},
+                )
                 raise DuplicateAgentError(agent_id)
 
             # Use default capabilities if not provided
@@ -176,6 +248,15 @@ class AgentRegistry:
             self._agents[agent_id] = identity
             self._active.add(agent_id)
             self._owner_index[owner_id].add(agent_id)
+
+            # Log success
+            self._log_event(
+                event_type="AGENT_AUTH",
+                agent_id=agent_id,
+                action="register_agent",
+                outcome="success",
+                details={"agent_type": str(agent_type), "owner_id": owner_id},
+            )
 
             return agent_id
 
@@ -262,12 +343,33 @@ class AgentRegistry:
             metadata: Optional session metadata.
 
         Returns:
-            Session ID if successful, None if agent not found.
+            Session ID if successful, None if agent not found or capacity exceeded.
+
+        Raises:
+            RegistryCapacityError: If max_sessions limit is reached.
         """
         with self._rlock:
             agent = self._agents.get(agent_id)
             if agent is None:
+                self._log_event(
+                    event_type="AGENT_AUTH",
+                    agent_id=agent_id,
+                    action="start_session",
+                    outcome="failed",
+                    details={"reason": "agent_not_found"},
+                )
                 return None
+
+            # Check session capacity (excluding replacement of existing session)
+            if agent_id not in self._agent_sessions and len(self._sessions) >= self._max_sessions:
+                self._log_event(
+                    event_type="AGENT_AUTH",
+                    agent_id=agent_id,
+                    action="start_session",
+                    outcome="denied",
+                    details={"reason": "capacity_exceeded", "limit": self._max_sessions},
+                )
+                raise RegistryCapacityError("sessions", self._max_sessions)
 
             # End existing session if any
             if agent_id in self._agent_sessions:
@@ -276,7 +378,7 @@ class AgentRegistry:
                     del self._sessions[old_session_id]
 
             # Create new session
-            session_id = f"session-{uuid.uuid4().hex[:12]}"
+            session_id = f"session-{uuid.uuid4().hex}"
             session = SessionInfo(
                 session_id=session_id,
                 agent_id=agent_id,
@@ -289,6 +391,15 @@ class AgentRegistry:
 
             # Update agent
             agent.session_id = session_id
+
+            # Log success
+            self._log_event(
+                event_type="AGENT_AUTH",
+                agent_id=agent_id,
+                action="start_session",
+                outcome="success",
+                details={"session_id": session_id},
+            )
 
             return session_id
 
