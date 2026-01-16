@@ -360,70 +360,64 @@ class TestIngestFileIdempotency:
 class TestIngestFileSecurity:
     """TDD: Tests for ingest_file security features."""
 
-    def test_ingest_file_rejects_symlink_outside_project(self, temp_project_dir, sample_markdown_file):
-        """ingest_file should reject symlinks pointing outside project root.
+    def test_ingest_file_rejects_path_outside_project(self, temp_project_dir, sample_markdown_file):
+        """ingest_file should reject paths that resolve outside project root.
 
-        ADR Reference: ADR-002 Security - Symlink Protection (Council Review)
+        ADR Reference: ADR-002 Security - Path Traversal Prevention (Council Review)
         """
-        import os
         from src.workflows.ingestion import ingest_file
 
-        # Create a symlink pointing outside project (to /etc/passwd or similar)
-        symlink_path = temp_project_dir / "docs" / "evil-link.md"
-        target_path = Path("/etc/passwd")
+        # Try to ingest a path outside project root using absolute path
+        outside_path = Path("/etc/passwd")
 
-        # Only run this test if we can create symlinks and target exists
-        if target_path.exists():
-            try:
-                os.symlink(target_path, symlink_path)
+        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+            mock_kb = MagicMock()
+            mock_get_kb.return_value = mock_kb
 
-                with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
-                    mock_kb = MagicMock()
-                    mock_get_kb.return_value = mock_kb
+            result = ingest_file(
+                str(outside_path),
+                commit_sha="abc1234",
+                project_root=temp_project_dir
+            )
 
-                    result = ingest_file(
-                        str(symlink_path),
-                        commit_sha="abc1234",
-                        project_root=temp_project_dir
-                    )
+        assert result["success"] is False
+        assert "outside" in result.get("reason", "").lower()
+        mock_kb.insert.assert_not_called()
 
-                assert result["success"] is False
-                assert "symlink" in result.get("reason", "").lower() or "outside" in result.get("reason", "").lower()
-                mock_kb.insert.assert_not_called()
-            finally:
-                symlink_path.unlink(missing_ok=True)
+    def test_ingest_file_reads_from_git_not_working_tree(self, temp_project_dir, sample_markdown_file):
+        """ingest_file should read from git object database, not working tree.
 
-    def test_ingest_file_allows_symlink_within_project(self, temp_project_dir, sample_markdown_file):
-        """ingest_file should allow symlinks pointing within project root.
+        ADR Reference: ADR-002 Security - Provenance Integrity (Council Review)
 
-        ADR Reference: ADR-002 Security - Symlink Protection
+        We read from git to ensure we ingest exactly what was committed,
+        not potentially modified working tree state. Working tree existence
+        and symlinks are irrelevant since we use 'git show commit:path'.
         """
-        import os
         from src.workflows.ingestion import ingest_file
 
         file_content = sample_markdown_file.read_text()
 
-        # Create a symlink pointing to another file within the project
-        symlink_path = temp_project_dir / "docs" / "link-to-test.md"
-        try:
-            os.symlink(sample_markdown_file, symlink_path)
+        # Create git mock that returns specific content
+        git_content = "# Content from Git\n\nThis is what git show returns."
 
-            with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-                 patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
-                mock_kb = MagicMock()
-                mock_kb.where.return_value.select.return_value.collect.return_value = []
-                mock_get_kb.return_value = mock_kb
+        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(git_content)):
+            mock_kb = MagicMock()
+            mock_kb.where.return_value.select.return_value.collect.return_value = []
+            mock_get_kb.return_value = mock_kb
 
-                result = ingest_file(
-                    str(symlink_path),
-                    commit_sha="abc1234",
-                    project_root=temp_project_dir
-                )
+            result = ingest_file(
+                str(sample_markdown_file),
+                commit_sha="abc1234",
+                project_root=temp_project_dir
+            )
 
-            # Should succeed since symlink points within project
-            assert result["success"] is True
-        finally:
-            symlink_path.unlink(missing_ok=True)
+        # Should succeed with git content
+        assert result["success"] is True
+        # The KB should receive the git content, not working tree content
+        mock_kb.insert.assert_called_once()
+        inserted_record = mock_kb.insert.call_args[0][0][0]
+        assert inserted_record["content"] == git_content
 
     def test_ingest_file_uses_config_secrets_patterns(self, temp_project_dir):
         """ingest_file should use secrets patterns from config.

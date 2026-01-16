@@ -141,28 +141,11 @@ def ingest_file(
         if config is None:
             config = load_config(project_root)
 
-        # Check if file exists
-        if not file_path.exists():
-            return {
-                "success": False,
-                "reason": f"File not found: {file_path}",
-                "path": relative_path,
-            }
-
-        # Security: Reject symlinks pointing outside project root
-        # This prevents symlink attacks that could exfiltrate sensitive files
-        try:
-            resolved_path = file_path.resolve()
-            resolved_root = project_root.resolve()
-            # Check that resolved path is within project root
-            resolved_path.relative_to(resolved_root)
-        except ValueError:
-            return {
-                "success": False,
-                "skipped": True,
-                "reason": f"Rejected symlink pointing outside project: {relative_path}",
-                "path": relative_path,
-            }
+        # Note: We intentionally DO NOT check working tree existence or follow symlinks.
+        # We read from the git object database (git show commit:path), not the working tree.
+        # Working tree state is irrelevant for provenance integrity - we ingest exactly
+        # what was committed. The blob existence check (_get_blob_size) handles non-existent
+        # paths by returning None, causing the file to be skipped.
 
         # Policy check: enforce include/exclude patterns from config
         if not should_ingest_file(relative_path, config):
