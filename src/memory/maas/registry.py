@@ -337,6 +337,47 @@ class AgentRegistry:
 
             return True
 
+    def unregister_agent(self, agent_id: str) -> bool:
+        """Unregister an agent (permanent removal).
+
+        Frees up capacity for new agent registrations (DoS recovery).
+        This is a destructive operation - the agent cannot be recovered.
+
+        Args:
+            agent_id: The agent ID to unregister.
+
+        Returns:
+            True if agent was unregistered, False if not found.
+        """
+        with self._rlock:
+            agent = self._agents.get(agent_id)
+            if agent is None:
+                return False
+
+            # Remove from all indexes
+            self._active.discard(agent_id)
+            self._owner_index[agent.owner_id].discard(agent_id)
+
+            # End any active session
+            if agent_id in self._agent_sessions:
+                session_id = self._agent_sessions.pop(agent_id)
+                if session_id in self._sessions:
+                    del self._sessions[session_id]
+
+            # Remove agent
+            del self._agents[agent_id]
+
+            # Log
+            self._log_event(
+                event_type="AGENT_AUTH",
+                agent_id=agent_id,
+                action="unregister_agent",
+                outcome="success",
+                details={"owner_id": agent.owner_id},
+            )
+
+            return True
+
     def is_agent_active(self, agent_id: str) -> bool:
         """Check if an agent is active.
 

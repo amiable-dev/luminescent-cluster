@@ -683,3 +683,39 @@ class HandoffManager:
                     expired_count += 1
 
             return expired_count
+
+    def cleanup_terminal_handoffs(self) -> int:
+        """Remove handoffs in terminal states to free capacity (DoS recovery).
+
+        Terminal states: COMPLETED, REJECTED, EXPIRED
+
+        Returns:
+            Number of handoffs removed.
+        """
+        with self._rlock:
+            terminal_states = {
+                HandoffStatus.COMPLETED,
+                HandoffStatus.REJECTED,
+                HandoffStatus.EXPIRED,
+            }
+
+            to_remove = [
+                hid for hid, handoff in self._handoffs.items()
+                if handoff.status in terminal_states
+            ]
+
+            for hid in to_remove:
+                handoff = self._handoffs[hid]
+
+                # Remove from indexes
+                if handoff.source_agent_id in self._by_source:
+                    self._by_source[handoff.source_agent_id].discard(hid)
+                if handoff.target_agent_id in self._by_target:
+                    self._by_target[handoff.target_agent_id].discard(hid)
+                if handoff.target_agent_id in self._pending_by_target:
+                    self._pending_by_target[handoff.target_agent_id].discard(hid)
+
+                # Remove handoff
+                del self._handoffs[hid]
+
+            return len(to_remove)
