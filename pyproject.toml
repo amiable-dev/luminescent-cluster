@@ -61,3 +61,14 @@ packages = ["src", "integrations"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "requirement(req_id): Link test to a requirement ID (e.g., REQ-MCP-001)",
+    "critical: Mark test as critical priority (100% coverage required)",
+    "high: Mark test as high priority (95% coverage required)",
+    "medium: Mark test as medium priority (85% coverage required)",
+    "low: Mark test as low priority (75% coverage required)",
+    "integration: Mark test as integration test (cross-system)",
+    "security: Mark test as security-related",
+    "performance: Mark test as performance benchmark",
+    "slow: Mark test as slow-running (may be skipped in quick runs)",
+]

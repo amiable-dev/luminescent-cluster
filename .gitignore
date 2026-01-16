@@ -54,3 +54,10 @@ temp/
 
 # Council verification logs (contain sensitive paths)
 .council/logs/
+
+# MkDocs build output
+site/
+
+# pytest cache
+.pytest_cache/
+pytest_cache/

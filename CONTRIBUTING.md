@@ -83,6 +83,78 @@ Before submitting a PR:
 2. Test your MCP server manually
 3. Verify no regressions in existing functionality
 4. Ensure Python version guard tests pass (ADR-001)
+5. Run spec/ledger reconciliation (see Requirement Traceability below)
+
+## Requirement Traceability
+
+Tests should be linked to requirements using pytest markers. See [ADR-009](docs/adrs/ADR-009-spec-ledger-reconciliation.md) for the full system design.
+
+### Using Requirement Markers
+
+```python
+import pytest
+
+@pytest.mark.requirement("REQ-MCP-001")
+def test_version_mismatch_exit_code():
+    """Requirement: Version mismatch should exit with code 78."""
+    # Test implementation
+    pass
+```
+
+### Verifying Requirement Coverage
+
+```bash
+# Run reconciliation to check requirement coverage
+python spec/validation/reconcile.py --verbose
+
+# Expected output: Reconciliation PASSED!
+# Coverage by Priority:
+#   Critical   100.0% (threshold: 100%) [OK]
+#   High       100.0% (threshold: 95%) [OK]
+#   Medium     100.0% (threshold: 85%) [OK]
+#   Low        100.0% (threshold: 75%) [OK]
+```
+
+### Adding New Requirements
+
+When adding new functionality:
+
+1. Add requirement to `spec/ledger.yml`:
+   ```yaml
+   REQ-XXX-NNN:
+     title: "Your Requirement Title"
+     source: "ADR-NNN"
+     status: active
+     priority: high  # critical | high | medium | low
+     tests:
+       - tests/path/to/test.py::test_function
+   ```
+
+2. Add test with requirement marker:
+   ```python
+   @pytest.mark.requirement("REQ-XXX-NNN")
+   def test_function():
+       pass
+   ```
+
+3. Verify coverage:
+   ```bash
+   python spec/validation/reconcile.py
+   ```
+
+### Available Markers
+
+| Marker | Description |
+|--------|-------------|
+| `@pytest.mark.requirement("REQ-XXX-NNN")` | Link test to requirement |
+| `@pytest.mark.critical` | Critical priority test |
+| `@pytest.mark.high` | High priority test |
+| `@pytest.mark.medium` | Medium priority test |
+| `@pytest.mark.low` | Low priority test |
+| `@pytest.mark.integration` | Cross-system integration test |
+| `@pytest.mark.security` | Security-related test |
+| `@pytest.mark.performance` | Performance benchmark |
+| `@pytest.mark.slow` | Slow-running test |
 
 ## Areas for Contribution
 

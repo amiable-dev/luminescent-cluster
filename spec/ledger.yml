@@ -1,0 +1,823 @@
+# Spec/Ledger: Requirement-to-Test Mapping
+# See ADR-009 for the reconciliation system design.
+#
+# Format:
+#   requirement_id:
+#     title: Human-readable title
+#     source: ADR reference
+#     status: active | deprecated | proposed
+#     priority: critical | high | medium | low
+#     tests: List of pytest test paths
+#
+# Domains:
+#   REQ-MCP-NNN: MCP server behavior, tools, version guard
+#   REQ-MEM-NNN: Memory storage, retrieval, lifecycle
+#   REQ-EXT-NNN: Extension protocols, registry
+#   REQ-BOT-NNN: Chatbot adapters, gateway
+#   REQ-SEC-NNN: Security, ACLs, rate limiting
+#   REQ-WKF-NNN: Workflow integration
+#   REQ-INT-NNN: Cross-ADR integration
+#   NEG-*-NNN: Negative obligations
+
+version: "1.0"
+
+domains:
+  - mcp
+  - memory
+  - extensions
+  - chatbot
+  - security
+  - workflow
+  - integration
+
+# =============================================================================
+# MCP SERVER REQUIREMENTS (ADR-001)
+# =============================================================================
+
+requirements:
+  REQ-MCP-001:
+    title: "Version Mismatch Exit Code"
+    source: "ADR-001 Layer 3"
+    status: active
+    priority: critical
+    tests:
+      - tests/test_version_guard.py::test_version_mismatch_exit_code
+      - tests/test_version_guard.py::test_version_mismatch_message
+
+  REQ-MCP-002:
+    title: "Version Marker Creation"
+    source: "ADR-001 Layer 3"
+    status: active
+    priority: high
+    tests:
+      - tests/test_version_guard.py::test_fresh_install_creates_marker
+      - tests/test_version_guard.py::test_marker_contains_version
+
+  REQ-MCP-003:
+    title: "Legacy Database Detection"
+    source: "ADR-001 Layer 3"
+    status: active
+    priority: critical
+    tests:
+      - tests/test_version_guard.py::test_legacy_database_exit_code
+
+  REQ-MCP-004:
+    title: "Version Guard Before Import"
+    source: "ADR-001 Layer 3"
+    status: active
+    priority: critical
+    tests:
+      - tests/test_version_guard.py::test_guard_runs_before_import
+
+  REQ-MCP-005:
+    title: "Cross-Platform File Locking"
+    source: "ADR-001 Layer 3"
+    status: active
+    priority: high
+    tests:
+      - tests/test_version_guard.py::test_file_locking
+
+  REQ-MCP-006:
+    title: "PIXELTABLE_HOME Support"
+    source: "ADR-001 Layer 3"
+    status: active
+    priority: medium
+    tests:
+      - tests/test_version_guard.py::test_pixeltable_home_env
+
+  REQ-MCP-007:
+    title: "Patch Version Safety"
+    source: "ADR-001 Layer 3"
+    status: active
+    priority: high
+    tests:
+      - tests/test_version_guard.py::test_patch_version_allowed
+      - tests/test_version_guard.py::test_minor_version_blocked
+
+  REQ-MCP-008:
+    title: "Successful Check Logging"
+    source: "ADR-001 Layer 7"
+    status: active
+    priority: low
+    tests:
+      - tests/test_version_guard.py::test_successful_check_logged
+
+  NEG-MCP-001:
+    title: "No Warning-Only Mode"
+    source: "ADR-001 Layer 3"
+    status: active
+    priority: critical
+    tests:
+      - tests/test_version_guard.py::test_no_warning_only_mode
+
+  NEG-MCP-002:
+    title: "No Automatic Migration"
+    source: "ADR-001 Layer 6"
+    status: active
+    priority: high
+    tests:
+      - tests/test_version_guard.py::test_no_auto_migration
+
+# =============================================================================
+# MEMORY SYSTEM REQUIREMENTS (ADR-003)
+# =============================================================================
+
+  REQ-MEM-001:
+    title: "Evaluation Harness"
+    source: "ADR-003 Phase 0"
+    status: active
+    priority: critical
+    tests:
+      - tests/memory/test_evaluation_harness.py::TestEvaluationHarnessMetrics
+      - tests/memory/test_evaluation_harness.py::TestEvaluationMetricsModule::test_precision_calculation
+      - tests/memory/test_evaluation_harness.py::TestEvaluationMetricsModule::test_recall_calculation
+
+  REQ-MEM-002:
+    title: "Golden Dataset"
+    source: "ADR-003 Phase 0"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_golden_dataset.py::TestGoldenDataset
+      - tests/memory/test_evaluation_harness.py::TestEvaluationHarness::test_evaluation_harness_load_dataset
+
+  REQ-MEM-003:
+    title: "HNSW Recall Monitoring"
+    source: "ADR-003 Phase 0"
+    status: active
+    priority: critical
+    tests:
+      - tests/memory/evaluation/test_recall_health.py::TestRecallHealthMonitor::test_absolute_threshold_pass
+      - tests/memory/evaluation/test_recall_health.py::TestRecallHealthMonitor::test_drift_detection
+      - tests/memory/evaluation/test_recall_health.py::TestBruteForceSearcher::test_search_with_filter
+
+  REQ-MEM-004:
+    title: "Embedding Version Tracking"
+    source: "ADR-003 Phase 0"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/evaluation/test_recall_health.py::TestEmbeddingVersionTracker::test_get_current_version
+      - tests/memory/evaluation/test_recall_health.py::TestEmbeddingVersionTracker::test_requires_reindex_no_stored
+
+  REQ-MEM-005:
+    title: "Reindex Trigger"
+    source: "ADR-003 Phase 0"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/evaluation/test_recall_health.py::TestReindexTrigger::test_check_and_trigger_reindex_needed
+
+  REQ-MEM-010:
+    title: "Hot Memory Latency"
+    source: "ADR-003 Phase 1"
+    status: active
+    priority: critical
+    tests:
+      - tests/memory/benchmarks/test_hot_memory_latency.py
+
+  REQ-MEM-011:
+    title: "Extraction Precision"
+    source: "ADR-003 Phase 1"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_extraction_precision.py
+
+  REQ-MEM-012:
+    title: "Query Latency"
+    source: "ADR-003 Phase 1"
+    status: active
+    priority: critical
+    tests:
+      - tests/memory/benchmarks/test_retrieval_latency.py
+
+  REQ-MEM-013:
+    title: "User Isolation"
+    source: "ADR-003 Phase 1"
+    status: active
+    priority: critical
+    tests:
+      - tests/memory/security/test_memory_isolation.py::TestUserBoundary::test_user_isolation
+      - tests/memory/security/test_memory_isolation.py::TestUserBoundary::test_cross_user_query_blocked
+
+  REQ-MEM-014:
+    title: "Memory Consolidation"
+    source: "ADR-003 Phase 1d"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_janitor.py::test_deduplication
+      - tests/memory/test_janitor.py::test_similarity_threshold
+
+  REQ-MEM-015:
+    title: "Janitor Performance"
+    source: "ADR-003 Phase 1d"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_janitor.py::test_performance
+
+  REQ-MEM-020:
+    title: "Memory Blocks"
+    source: "ADR-003 Phase 2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/blocks/test_assembler.py
+      - tests/memory/blocks/test_schemas.py
+
+  REQ-MEM-021:
+    title: "Provenance Tracking"
+    source: "ADR-003 Phase 2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/provenance/test_service.py::TestCreateProvenance
+      - tests/memory/provenance/test_service.py::TestAttachProvenance
+
+  REQ-MEM-022:
+    title: "Token Efficiency"
+    source: "ADR-003 Phase 2"
+    status: active
+    priority: medium
+    tests:
+      - tests/memory/evaluation/test_token_efficiency.py
+
+  REQ-MEM-023:
+    title: "Grounded Ingestion"
+    source: "ADR-003 Phase 2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestTier1Approval
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestTier2Flagging
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestTier3Blocking
+
+  REQ-MEM-030:
+    title: "Two-Stage Retrieval"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/retrieval/test_hybrid.py::TestHybridRetrieval
+      - tests/memory/retrieval/test_hybrid.py::TestTwoStageRetrieval
+
+  REQ-MEM-031:
+    title: "RRF Fusion"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/retrieval/test_fusion.py::TestRRFFusion
+      - tests/memory/retrieval/test_fusion.py::TestWeightedFusion
+
+  REQ-MEM-032:
+    title: "HybridRAG Latency"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/benchmarks/test_retrieval_latency.py::TestHybridRAGLatency
+
+  NEG-MEM-001:
+    title: "No Hallucination Write-back"
+    source: "ADR-003 Phase 2"
+    status: active
+    priority: critical
+    tests:
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestNoHallucination
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestSpeculationBlocking
+
+  NEG-MEM-002:
+    title: "No Cross-User Access"
+    source: "ADR-003 Phase 1"
+    status: active
+    priority: critical
+    tests:
+      - tests/memory/security/test_memory_isolation.py::TestUserBoundary::test_cross_user_query_blocked
+
+# =============================================================================
+# EXTENSION SYSTEM REQUIREMENTS (ADR-005)
+# =============================================================================
+
+  REQ-EXT-001:
+    title: "Singleton Pattern"
+    source: "ADR-005 Repository Structure"
+    status: active
+    priority: high
+    tests:
+      - tests/test_extensions.py::test_singleton_pattern
+      - tests/test_extensions.py::test_get_returns_same_instance
+
+  REQ-EXT-002:
+    title: "Protocol-Based Extensions"
+    source: "ADR-005 Repository Structure"
+    status: active
+    priority: high
+    tests:
+      - tests/test_extensions.py::test_protocol_compliance
+      - tests/test_extensions.py::test_duck_typing
+
+  REQ-EXT-003:
+    title: "Graceful Degradation"
+    source: "ADR-005 Feature Separation"
+    status: active
+    priority: high
+    tests:
+      - tests/test_extensions.py::test_graceful_degradation
+      - tests/test_extensions.py::test_oss_mode_functional
+
+  REQ-EXT-004:
+    title: "Mode Detection"
+    source: "ADR-005 Repository Structure"
+    status: active
+    priority: medium
+    tests:
+      - tests/test_extensions.py::test_mode_detection
+      - tests/test_extensions.py::test_oss_status
+      - tests/test_extensions.py::test_cloud_status
+
+  REQ-EXT-010:
+    title: "TenantProvider Protocol"
+    source: "ADR-005 Repository Structure"
+    status: active
+    priority: high
+    tests:
+      - tests/test_extensions.py::test_tenant_provider_protocol
+
+  REQ-EXT-011:
+    title: "UsageTracker Protocol"
+    source: "ADR-005 Repository Structure"
+    status: active
+    priority: high
+    tests:
+      - tests/test_extensions.py::test_usage_tracker_protocol
+
+  REQ-EXT-012:
+    title: "AuditLogger Protocol"
+    source: "ADR-005 Repository Structure"
+    status: active
+    priority: high
+    tests:
+      - tests/test_extensions.py::test_audit_logger_protocol
+
+  REQ-EXT-013:
+    title: "MemoryProvider Export"
+    source: "ADR-005 Dual-Repo Compliance"
+    status: active
+    priority: high
+    tests:
+      - tests/test_extensions.py::test_memory_provider_export
+      - tests/test_extensions.py::test_response_filter_export
+      - tests/test_extensions.py::test_version_export
+
+  REQ-EXT-020:
+    title: "Free Tier Features"
+    source: "ADR-005 Feature Separation"
+    status: active
+    priority: high
+    tests:
+      - tests/test_extensions.py::test_free_tier_features
+
+  REQ-EXT-021:
+    title: "Paid Tier Gates"
+    source: "ADR-005 Feature Separation"
+    status: active
+    priority: high
+    tests:
+      - tests/test_extensions.py::test_paid_tier_gates
+
+  NEG-EXT-001:
+    title: "No Auth in Internal APIs"
+    source: "ADR-003 Phase 4.2 Trust Model"
+    status: active
+    priority: high
+    tests:
+      - tests/test_extensions.py::test_no_internal_auth
+
+# =============================================================================
+# CHATBOT REQUIREMENTS (ADR-006)
+# =============================================================================
+
+  REQ-BOT-001:
+    title: "Central Gateway"
+    source: "ADR-006 Architecture"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/test_gateway.py::test_central_routing
+      - tests/chatbot/test_gateway.py::test_message_normalization
+
+  REQ-BOT-002:
+    title: "Thin Adapter Pattern"
+    source: "ADR-006 Architecture"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/adapters/test_base.py::TestBasePlatformAdapterProtocol
+
+  REQ-BOT-003:
+    title: "Platform Parity"
+    source: "ADR-006 Decision"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/adapters/test_base.py::TestProtocolCompliance
+
+  REQ-BOT-010:
+    title: "Thread Context Persistence"
+    source: "ADR-006 Council Decisions"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/test_context.py::test_message_limit
+      - tests/chatbot/test_context.py::test_ttl_expiration
+      - tests/chatbot/test_context.py::test_thread_isolation
+
+  REQ-BOT-011:
+    title: "Context Store Backend"
+    source: "ADR-006 Context Persistence"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/test_context.py::test_pixeltable_storage
+      - tests/chatbot/test_context.py::test_retention_policy
+
+  REQ-BOT-020:
+    title: "Free Tier Limits"
+    source: "ADR-006 Tier Definitions"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/test_rate_limiter.py::TestTokenBucketAlgorithm::test_bucket_rejects_when_empty
+      - tests/chatbot/test_rate_limiter.py::TestPerUserRateLimits
+
+  REQ-BOT-021:
+    title: "Rate Limit Feedback"
+    source: "ADR-006 User Experience"
+    status: active
+    priority: medium
+    tests:
+      - tests/chatbot/test_rate_limiter.py::TestRateLimitResult::test_result_denied
+
+  REQ-BOT-030:
+    title: "Default Access Policy"
+    source: "ADR-006 Access Control"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/test_access_control.py::test_default_policy
+
+  REQ-BOT-031:
+    title: "Configurable Access Policy"
+    source: "ADR-006 Access Control"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/test_access_control.py::test_configurable_policy
+      - tests/chatbot/test_access_control.py::test_channel_filtering
+      - tests/chatbot/test_access_control.py::test_command_filtering
+
+  REQ-BOT-032:
+    title: "Response Filtering"
+    source: "ADR-006 Access Control"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/test_access_control.py::test_response_filtering
+      - tests/chatbot/test_access_control.py::test_sensitive_pattern_redaction
+
+  REQ-BOT-040:
+    title: "Chat Metrics"
+    source: "ADR-006 Observability"
+    status: active
+    priority: medium
+    tests:
+      - tests/chatbot/test_metrics.py::test_metric_recording
+      - tests/chatbot/test_metrics.py::test_metric_fields
+
+  NEG-BOT-001:
+    title: "No True Streaming (V1)"
+    source: "ADR-006 Council Decisions"
+    status: active
+    priority: medium
+    tests:
+      - tests/chatbot/test_gateway.py::test_no_true_streaming
+      - tests/chatbot/test_gateway.py::test_pseudo_streaming
+
+  NEG-BOT-002:
+    title: "No Voice Processing (V1)"
+    source: "ADR-006 Council Decisions"
+    status: active
+    priority: low
+    tests:
+      - tests/chatbot/test_gateway.py::test_no_voice_processing
+
+# =============================================================================
+# SECURITY REQUIREMENTS (ADR-003, ADR-006, ADR-007)
+# =============================================================================
+
+  REQ-SEC-001:
+    title: "User Isolation"
+    source: "ADR-003 Phase 1"
+    status: active
+    priority: critical
+    tests:
+      - tests/memory/security/test_memory_isolation.py::TestUserBoundary::test_user_isolation
+      - tests/memory/security/test_memory_isolation.py::TestUserBoundary::test_cross_user_query_blocked
+
+  REQ-SEC-002:
+    title: "Scope Hierarchy"
+    source: "ADR-003 Phase 4.2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/maas/test_maas_pool.py::TestScopeHierarchy
+      - tests/memory/maas/test_maas_pool.py::TestScopeEnforcement
+
+  REQ-SEC-003:
+    title: "Capacity Limits"
+    source: "ADR-003 Phase 4.2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/maas/test_maas_security.py::TestCapacityLimits::test_agent_registry_capacity_limit
+      - tests/memory/maas/test_maas_security.py::TestCapacityLimits::test_pool_registry_capacity_limit
+      - tests/memory/maas/test_maas_security.py::TestCapacityLimits::test_handoff_capacity_limit
+
+  REQ-SEC-004:
+    title: "Audit Logging"
+    source: "ADR-003 Phase 4.2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/maas/test_maas_security.py::TestAuditLogging
+      - tests/memory/maas/test_maas_security.py::TestAuditLoggerIntegration
+
+  REQ-SEC-005:
+    title: "ID Entropy"
+    source: "ADR-003 Phase 4.2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/maas/test_maas_registry.py::TestAgentRegistry::test_agent_id_entropy
+
+  REQ-SEC-006:
+    title: "Defensive Copies"
+    source: "ADR-003 Phase 4.2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/maas/test_maas_security.py::TestDefensiveCopies
+
+  REQ-SEC-010:
+    title: "Citation Detection"
+    source: "ADR-003 Phase 2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestCitationDetection
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestADRReference
+
+  REQ-SEC-011:
+    title: "Hedge Word Detection"
+    source: "ADR-003 Phase 2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestHedgeDetection
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestSpeculationBlocking
+
+  REQ-SEC-012:
+    title: "Deduplication Safety"
+    source: "ADR-003 Phase 2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestDeduplicationSafety
+
+  REQ-SEC-020:
+    title: "Bounded Storage"
+    source: "ADR-003 Phase 2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/provenance/test_service.py::TestMemoryBoundedStorage::test_provenance_store_is_bounded
+      - tests/memory/provenance/test_service.py::TestMemoryBoundedStorage::test_provenance_store_lru_updates_on_access
+
+  REQ-SEC-021:
+    title: "Input Validation"
+    source: "ADR-003 Phase 2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/provenance/test_service.py::TestStringIdValidation
+      - tests/memory/provenance/test_service.py::TestMetadataBoundsValidation
+      - tests/memory/provenance/test_service.py::TestScoreRangeValidation
+
+  REQ-SEC-022:
+    title: "TOCTOU Prevention"
+    source: "ADR-003 Phase 2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/provenance/test_service.py::TestTOCTOUPrevention
+
+  REQ-SEC-030:
+    title: "Sensitive Data Filtering"
+    source: "ADR-006 Access Control"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/test_access_control.py::test_sensitive_filtering
+
+  REQ-SEC-031:
+    title: "Channel Authorization"
+    source: "ADR-006 Access Control"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/test_access_control.py::test_channel_authorization
+
+  NEG-SEC-001:
+    title: "No Secret Storage"
+    source: "ADR-003 Non-Goals"
+    status: active
+    priority: critical
+    tests:
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestSecretExclusion
+
+  NEG-SEC-002:
+    title: "No Cross-Tenant Access"
+    source: "ADR-005 Multi-tenancy"
+    status: active
+    priority: critical
+    tests:
+      - tests/test_extensions.py::test_tenant_isolation
+
+  NEG-SEC-003:
+    title: "No Review Queue Cross-Access"
+    source: "ADR-003 Phase 2"
+    status: active
+    priority: critical
+    tests:
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestReviewQueueIsolation
+
+# =============================================================================
+# WORKFLOW REQUIREMENTS (ADR-002)
+# =============================================================================
+
+  REQ-WKF-001:
+    title: "Temporal Integration"
+    source: "ADR-002 Decision"
+    status: active
+    priority: high
+    tests:
+      - tests/test_workflow.py::test_temporal_integration
+      - tests/test_workflow.py::test_deterministic_replay
+
+  REQ-WKF-002:
+    title: "Checkpoint Serialization"
+    source: "ADR-002 Implementation"
+    status: active
+    priority: high
+    tests:
+      - tests/test_workflow.py::test_checkpoint_serialization
+      - tests/test_workflow.py::test_checkpoint_restore
+
+  REQ-WKF-003:
+    title: "Activity Idempotency"
+    source: "ADR-002 Implementation"
+    status: active
+    priority: high
+    tests:
+      - tests/test_workflow.py::test_activity_idempotency
+
+  REQ-WKF-010:
+    title: "Git Hook Triggers"
+    source: "ADR-003 Risks"
+    status: active
+    priority: medium
+    tests:
+      - tests/test_workflow.py::test_git_hook_trigger
+
+  REQ-WKF-011:
+    title: "Async Extraction"
+    source: "ADR-003 Phase 1"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_extraction.py::test_async_extraction
+      - tests/memory/test_extraction.py::test_non_blocking
+
+  REQ-WKF-020:
+    title: "Scheduled Consolidation"
+    source: "ADR-003 Phase 1d"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_janitor.py::test_scheduled_execution
+
+  REQ-WKF-021:
+    title: "Expiration Cleanup"
+    source: "ADR-003 Phase 1d"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_janitor.py::test_expiration_cleanup
+      - tests/memory/test_janitor.py::test_ttl_enforcement
+
+  NEG-WKF-001:
+    title: "No Synchronous Extraction"
+    source: "ADR-003 Phase 1"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_extraction.py::test_no_sync_extraction
+
+# =============================================================================
+# INTEGRATION REQUIREMENTS (ADR-007)
+# =============================================================================
+
+  REQ-INT-001:
+    title: "Unified ContextStore"
+    source: "ADR-007 Protocol Consolidation"
+    status: active
+    priority: high
+    tests:
+      - tests/test_integration.py::test_context_store_protocol
+      - tests/test_integration.py::test_unified_interface
+
+  REQ-INT-002:
+    title: "Protocol Versioning"
+    source: "ADR-007 Protocol Consolidation"
+    status: active
+    priority: high
+    tests:
+      - tests/test_integration.py::test_protocol_versioning
+
+  REQ-INT-010:
+    title: "Phase Dependencies"
+    source: "ADR-007 Phase Alignment"
+    status: active
+    priority: high
+    tests:
+      - tests/test_integration.py::test_phase_dependencies
+
+  REQ-INT-011:
+    title: "Cross-Phase Testing"
+    source: "ADR-007 Integration Testing"
+    status: active
+    priority: high
+    tests:
+      - tests/test_mcp_extension_integration.py::test_memory_chatbot
+      - tests/test_mcp_extension_integration.py::test_extensions_memory
+
+  REQ-INT-020:
+    title: "Tier Feature Gates"
+    source: "ADR-004, ADR-007"
+    status: active
+    priority: high
+    tests:
+      - tests/test_integration.py::test_tier_gates
+
+  REQ-INT-021:
+    title: "Retention Policies"
+    source: "ADR-007 Section 4"
+    status: active
+    priority: high
+    tests:
+      - tests/test_integration.py::test_retention_policies
+
+  REQ-INT-030:
+    title: "ADR Traceability"
+    source: "ADR-007 Related Decisions"
+    status: manual
+    priority: medium
+    tests: []
+    notes: "Documentation requirement - verified via ADR presence and structure"
+
+  REQ-INT-031:
+    title: "Implementation Tracker"
+    source: "ADR-003 Implementation Tracker"
+    status: manual
+    priority: medium
+    tests: []
+    notes: "Documentation requirement - verified via implementation tracker presence"
+
+  NEG-INT-001:
+    title: "No Circular Dependencies"
+    source: "ADR-007 Architecture"
+    status: active
+    priority: high
+    tests:
+      - tests/test_integration.py::test_no_circular_deps
+
+  NEG-INT-002:
+    title: "No Phase Skipping"
+    source: "ADR-007 Phase Alignment"
+    status: active
+    priority: high
+    tests:
+      - tests/test_integration.py::test_no_phase_skip
