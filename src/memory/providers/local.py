@@ -24,6 +24,8 @@ from typing import TYPE_CHECKING, Any, Optional
 from src.memory.schemas import Memory, MemoryType
 
 if TYPE_CHECKING:
+    from src.memory.graph.graph_builder import GraphBuilder
+    from src.memory.graph.graph_search import GraphSearch
     from src.memory.retrieval.hybrid import HybridRetriever, RetrievalMetrics
 
 
@@ -33,6 +35,9 @@ class LocalMemoryProvider:
     Provides memory storage and retrieval with optional two-stage
     hybrid retrieval (BM25 + Vector + RRF + Cross-Encoder). Falls
     back to simple substring matching when hybrid retrieval is disabled.
+
+    Optionally supports Knowledge Graph for multi-hop queries when
+    use_graph is enabled (requires hybrid retrieval).
 
     This implementation is suitable for:
     - Development and testing
@@ -53,9 +58,14 @@ class LocalMemoryProvider:
         >>> memory_id = await provider.store(memory, {})
         >>> result = await provider.retrieve("coding preferences", "user-123")
 
+        >>> # Hybrid + Graph mode (multi-hop queries)
+        >>> provider = LocalMemoryProvider(use_hybrid_retrieval=True, use_graph=True)
+        >>> result = await provider.retrieve("services using PostgreSQL", "user-123")
+
     Attributes:
         use_hybrid_retrieval: If True, use two-stage hybrid retrieval.
         use_cross_encoder: If True, use cross-encoder reranking (slower but better).
+        use_graph: If True, enable Knowledge Graph for multi-hop queries.
     """
 
     def __init__(
@@ -63,6 +73,7 @@ class LocalMemoryProvider:
         use_hybrid_retrieval: bool = False,
         use_cross_encoder: bool = True,
         use_query_rewriter: bool = True,
+        use_graph: bool = False,
     ):
         """Initialize the local memory provider.
 
@@ -74,25 +85,47 @@ class LocalMemoryProvider:
                 Improves quality but increases latency. Default: True.
             use_query_rewriter: Use query rewriter for expansion in hybrid mode.
                 Default: True.
+            use_graph: Enable Knowledge Graph for multi-hop queries.
+                Requires hybrid retrieval. Default: False.
         """
         self._memories: dict[str, Memory] = {}
         self._memory_ids_by_user: dict[str, list[str]] = {}
         self._use_hybrid = use_hybrid_retrieval
         self._use_cross_encoder = use_cross_encoder
         self._use_query_rewriter = use_query_rewriter
+        self._use_graph = use_graph and use_hybrid_retrieval  # Graph requires hybrid
         self._hybrid_retriever: Optional["HybridRetriever"] = None
+        self._graph_search: Optional["GraphSearch"] = None
+        self._graph_builders: dict[str, "GraphBuilder"] = {}
 
         if use_hybrid_retrieval:
             self._init_hybrid_retriever()
 
     def _init_hybrid_retriever(self) -> None:
         """Initialize the hybrid retriever lazily."""
-        from src.memory.retrieval.hybrid import create_hybrid_retriever
+        from src.memory.retrieval.hybrid import HybridRetriever, create_hybrid_retriever
 
-        self._hybrid_retriever = create_hybrid_retriever(
-            use_cross_encoder=self._use_cross_encoder,
-            use_query_rewriter=self._use_query_rewriter,
-        )
+        if self._use_graph:
+            # Initialize graph search component
+            from src.memory.graph.graph_search import GraphSearch
+
+            self._graph_search = GraphSearch()
+
+            # Create hybrid retriever with graph
+            self._hybrid_retriever = HybridRetriever(
+                graph=self._graph_search,
+                use_cross_encoder=self._use_cross_encoder,
+                query_rewriter=None,  # Will be set if needed
+            )
+
+            if self._use_query_rewriter:
+                from src.memory.retrieval.query_rewriter import QueryRewriter
+                self._hybrid_retriever.query_rewriter = QueryRewriter()
+        else:
+            self._hybrid_retriever = create_hybrid_retriever(
+                use_cross_encoder=self._use_cross_encoder,
+                use_query_rewriter=self._use_query_rewriter,
+            )
 
     async def store(self, memory: Memory, context: dict) -> str:
         """Store a memory and return its ID.
@@ -119,7 +152,33 @@ class LocalMemoryProvider:
         if self._hybrid_retriever is not None:
             self._hybrid_retriever.add_memory(user_id, stored_memory, memory_id)
 
+        # Update graph if enabled
+        if self._use_graph and self._graph_search is not None:
+            self._update_graph(user_id, stored_memory, memory_id)
+
         return memory_id
+
+    def _update_graph(self, user_id: str, memory: Memory, memory_id: str) -> None:
+        """Update the knowledge graph with a new memory.
+
+        Args:
+            user_id: User ID.
+            memory: Memory to add to graph.
+            memory_id: ID of the memory.
+        """
+        from src.memory.graph.graph_builder import GraphBuilder
+
+        # Get or create graph builder for user
+        if user_id not in self._graph_builders:
+            self._graph_builders[user_id] = GraphBuilder(user_id)
+
+        builder = self._graph_builders[user_id]
+        builder.add_memory(memory, memory_id)
+
+        # Rebuild and register graph
+        graph = builder.build()
+        if self._graph_search is not None:
+            self._graph_search.register_graph(user_id, graph)
 
     async def retrieve(
         self, query: str, user_id: str, limit: int = 5
@@ -367,6 +426,12 @@ class LocalMemoryProvider:
             for user_id in list(self._memory_ids_by_user.keys()):
                 self._hybrid_retriever.clear_index(user_id)
 
+        # Clear graph for all users
+        if self._graph_search is not None:
+            for user_id in list(self._graph_builders.keys()):
+                self._graph_search.clear(user_id)
+            self._graph_builders.clear()
+
         self._memories.clear()
         self._memory_ids_by_user.clear()
 
@@ -378,6 +443,11 @@ class LocalMemoryProvider:
     def is_hybrid_enabled(self) -> bool:
         """Check if hybrid retrieval is enabled."""
         return self._hybrid_retriever is not None
+
+    @property
+    def is_graph_enabled(self) -> bool:
+        """Check if Knowledge Graph is enabled."""
+        return self._use_graph and self._graph_search is not None
 
     async def retrieve_with_scores(
         self, query: str, user_id: str, limit: int = 5

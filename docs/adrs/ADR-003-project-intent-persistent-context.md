@@ -4,7 +4,7 @@
 **Date**: 2025-12-22
 **Decision Makers**: Development Team
 **Owners**: @christopherjoseph
-**Version**: 6.2 (Entity Extraction)
+**Version**: 6.3 (Knowledge Graph)
 
 ## Decision Summary
 
@@ -1168,11 +1168,16 @@ If Week 4 checkpoint shows extraction precision <70%, evaluate:
 | Phase 3 | Provider Integration | ✅ Complete | `LocalMemoryProvider` with optional hybrid retrieval |
 | Phase 3 | Exit Criteria | ✅ Complete | <1s latency, multi-hop improvement - 15 benchmarks |
 | Phase 3 | Entity Extraction | ✅ Complete | `src/memory/extraction/entities/` - 81 tests, async pipeline, user_id auth |
-| **Phase 4** | Knowledge Graph | 📝 Not Started | HybridRAG (deferred from Phase 3) |
-| Phase 4 | Hindsight Integration | 📝 Not Started | Conditional on Phase 3 |
+| **Phase 4** | Knowledge Graph | ✅ Complete | `src/memory/graph/` - NetworkX backend, 96 tests |
+| Phase 4 | Graph Types & Store | ✅ Complete | RelationshipType enum, GraphNode, GraphEdge, KnowledgeGraph |
+| Phase 4 | Graph Builder | ✅ Complete | Builds graph from Memory entities with relationship inference |
+| Phase 4 | Graph Search | ✅ Complete | Stage 1 candidate generation with traversal |
+| Phase 4 | HybridRetriever Integration | ✅ Complete | 3-source RRF fusion (BM25 + Vector + Graph) |
+| Phase 4 | LocalMemoryProvider Graph | ✅ Complete | Optional graph index management |
+| Phase 4 | Hindsight Integration | 📝 Not Started | Conditional on Phase 4 KG |
 | Phase 4 | MaaS Architecture | 📝 Not Started | Multi-agent support |
 
-**Test Summary**: 854 memory tests passing (as of 2026-01-16) - 81 new entity extraction tests (incl. 2 security)
+**Test Summary**: 955 memory tests passing (as of 2026-01-16) - 96 new Knowledge Graph tests
 
 **Legend**: ✅ Complete | 🔄 Partial | 📝 Not Started | ❌ Blocked
 
@@ -1404,3 +1409,4 @@ The following questions have been investigated and resolved:
 | 6.0 | 2026-01-09 | **Two-Stage Retrieval Architecture Complete (Phase 3)**: Implemented hybrid retrieval as specified in ADR-003 Phase 3. **Stage 1 (Parallel Candidate Generation)**: `bm25.py` (BM25 sparse keyword search with tokenization, IDF, multi-tenant indexes), `vector_search.py` (dense semantic search with sentence-transformers, lazy loading, cosine similarity). **Stage 2 (Fusion + Reranking)**: `fusion.py` (RRF algorithm with k=60, weighted fusion, fuse_with_details for provenance), `reranker.py` (cross-encoder reranking with ms-marco-MiniLM-L-6-v2, fallback reranker for fast mode). **Orchestrator**: `hybrid.py` (HybridRetriever with parallel Stage 1 via asyncio.gather, RRF fusion, optional reranking, RetrievalMetrics for latency tracking). **Integration**: Updated `src/memory/retrieval/__init__.py` exports. **Exit Criteria Met**: latency <1s, multi-hop queries outperform pure vector. Test count: 757 memory tests (168 new retrieval tests, 15 exit benchmarks). **Remaining**: Knowledge Graph (Phase 3), Entity Extraction (Phase 3). |
 | 6.1 | 2026-01-09 | **Provider Integration Complete**: Integrated HybridRetriever into LocalMemoryProvider with backwards compatibility. **Features**: Optional `use_hybrid_retrieval` parameter (default: False), `use_cross_encoder` for quality vs speed tradeoff, `use_query_rewriter` for term expansion. **New Methods**: `retrieve_with_scores()` returns (Memory, score) tuples, `retrieve_with_metrics()` returns detailed RetrievalMetrics. **Automatic Index Management**: store/delete/clear operations sync with hybrid indexes. **Bug Fix**: Fixed `hybrid.py` to use `query_rewriter.rewrite()` instead of `expand()` (string vs list return type). Test count: 773 memory tests (16 new provider integration tests). **Remaining**: Knowledge Graph (Phase 3), Entity Extraction (Phase 3). |
 | 6.2 | 2026-01-16 | **Entity Extraction Complete (Phase 3)**: Implemented async entity extraction pipeline for knowledge graph support. **New Module**: `src/memory/extraction/entities/` with 6 files. **Types**: `EntityType` enum (SERVICE, DEPENDENCY, API, PATTERN, FRAMEWORK, CONFIG), `Entity` dataclass with confidence scoring, `EntityExtractor` protocol. **Extractors**: `MockEntityExtractor` (pattern-based for testing), `HaikuEntityExtractor` (LLM-based for production). **Pipeline**: `EntityExtractionPipeline` with `process()` (blocking) and `process_async()` (fire-and-forget). **Security**: user_id authorization check prevents cross-user memory modification. **Storage**: Entities stored in `Memory.metadata["entities"]` for knowledge graph construction. **Provider Fix**: LocalMemoryProvider now supports metadata merge updates. **GitHub Issues**: Closed #118, #119, #120, #121. Test count: 854 memory tests (81 entity extraction tests incl. 2 security). TDD approach + council security review. **Remaining**: Knowledge Graph (Phase 4). |
+| 6.3 | 2026-01-16 | **Knowledge Graph Complete (Phase 4)**: Implemented multi-hop reasoning for queries like "What services depend on PostgreSQL?". **New Module**: `src/memory/graph/` with 5 files. **Types**: `RelationshipType` enum (7 types: DEPENDS_ON, USES, IMPLEMENTS, CALLS, CONFIGURES, HAD_INCIDENT, OWNED_BY), `GraphNode` dataclass, `GraphEdge` dataclass. **Store**: `KnowledgeGraph` using NetworkX DiGraph, supports serialization. **Builder**: `GraphBuilder` creates graph from Memory entities with relationship inference. **Search**: `GraphSearch` for Stage 1 candidate generation with traversal scoring (direct match 1.0, neighbor 0.7, predecessor 0.6). **HybridRetriever**: Updated for 3-source RRF fusion (BM25 + Vector + Graph), metrics track graph_candidates. **LocalMemoryProvider**: Optional `use_graph=True` parameter, automatic graph building from stored memories. **Exit Criteria Met**: <1s latency, multi-hop queries outperform pure vector. **GitHub Issues**: Closed #122, #123, #124, #125, #126. Test count: 955 memory tests (96 new Knowledge Graph tests). TDD approach with 11 integration tests. |

@@ -51,6 +51,7 @@ class RetrievalMetrics:
         stage2_time_ms: Stage 2 (fusion + reranking) time.
         bm25_candidates: Number of BM25 candidates.
         vector_candidates: Number of vector candidates.
+        graph_candidates: Number of graph candidates.
         fused_candidates: Number of candidates after fusion.
         final_results: Number of final results.
         query_expanded: Whether query was expanded.
@@ -62,6 +63,7 @@ class RetrievalMetrics:
     stage2_time_ms: float = 0.0
     bm25_candidates: int = 0
     vector_candidates: int = 0
+    graph_candidates: int = 0
     fused_candidates: int = 0
     final_results: int = 0
     query_expanded: bool = False
@@ -90,8 +92,8 @@ class HybridResult:
 class HybridRetriever:
     """Two-stage hybrid retrieval orchestrator.
 
-    Combines BM25 and vector search with RRF fusion and optional
-    cross-encoder reranking for high-quality memory retrieval.
+    Combines BM25, vector search, and optional graph traversal with RRF
+    fusion and optional cross-encoder reranking for high-quality retrieval.
 
     Example:
         >>> retriever = HybridRetriever()
@@ -107,6 +109,7 @@ class HybridRetriever:
     Attributes:
         bm25: BM25 search component.
         vector: Vector search component.
+        graph: Optional graph search component for Phase 4.
         fusion: RRF fusion component.
         reranker: Cross-encoder reranker (or fallback).
         query_rewriter: Optional query expansion.
@@ -115,6 +118,7 @@ class HybridRetriever:
     # Default Stage 1 candidate limits
     DEFAULT_BM25_TOP_K = 50
     DEFAULT_VECTOR_TOP_K = 50
+    DEFAULT_GRAPH_TOP_K = 50
 
     # Default RRF k parameter
     DEFAULT_RRF_K = 60
@@ -123,27 +127,32 @@ class HybridRetriever:
         self,
         bm25: Optional[BM25Search] = None,
         vector: Optional[VectorSearch] = None,
+        graph: Optional["GraphSearch"] = None,
         fusion: Optional[RRFFusion] = None,
         reranker: Optional[CrossEncoderReranker | FallbackReranker] = None,
         query_rewriter: Optional[QueryRewriter] = None,
         use_cross_encoder: bool = True,
         bm25_weight: float = 1.0,
         vector_weight: float = 1.0,
+        graph_weight: float = 1.0,
     ):
         """Initialize the hybrid retriever.
 
         Args:
             bm25: BM25 search instance. Created if not provided.
             vector: Vector search instance. Created if not provided.
+            graph: Optional graph search instance for Phase 4 Knowledge Graph.
             fusion: RRF fusion instance. Created if not provided.
             reranker: Reranker instance. Created based on use_cross_encoder.
             query_rewriter: Query rewriter for expansion.
             use_cross_encoder: If True, use cross-encoder. If False, use fallback.
             bm25_weight: Weight for BM25 in RRF fusion.
             vector_weight: Weight for vector in RRF fusion.
+            graph_weight: Weight for graph in RRF fusion.
         """
         self.bm25 = bm25 or BM25Search()
         self.vector = vector or VectorSearch(lazy_load=True)
+        self.graph = graph  # Optional - Phase 4 Knowledge Graph
         self.fusion = fusion or RRFFusion(k=self.DEFAULT_RRF_K)
         self.query_rewriter = query_rewriter
 
@@ -156,6 +165,7 @@ class HybridRetriever:
 
         self.bm25_weight = bm25_weight
         self.vector_weight = vector_weight
+        self.graph_weight = graph_weight
 
     def index_memories(
         self,
@@ -224,10 +234,11 @@ class HybridRetriever:
         use_reranker: bool = True,
         bm25_top_k: int = DEFAULT_BM25_TOP_K,
         vector_top_k: int = DEFAULT_VECTOR_TOP_K,
+        graph_top_k: int = DEFAULT_GRAPH_TOP_K,
     ) -> tuple[list[HybridResult], RetrievalMetrics]:
         """Perform two-stage hybrid retrieval.
 
-        Stage 1: Parallel BM25 + Vector candidate generation
+        Stage 1: Parallel BM25 + Vector + Graph candidate generation
         Stage 2: RRF fusion + Cross-encoder reranking
 
         Args:
@@ -238,6 +249,7 @@ class HybridRetriever:
             use_reranker: Whether to use cross-encoder reranking.
             bm25_top_k: Number of BM25 candidates.
             vector_top_k: Number of vector candidates.
+            graph_top_k: Number of graph candidates.
 
         Returns:
             Tuple of (results, metrics).
@@ -254,32 +266,63 @@ class HybridRetriever:
         # Stage 1: Parallel candidate generation
         stage1_start = time.perf_counter()
 
-        # Run BM25 and vector search in parallel
-        bm25_results, vector_results = await asyncio.gather(
+        # Build list of search coroutines
+        search_tasks = [
             asyncio.to_thread(
                 self.bm25.search, user_id, effective_query, bm25_top_k
             ),
             asyncio.to_thread(
                 self.vector.search, user_id, effective_query, vector_top_k
             ),
-        )
+        ]
+
+        # Add graph search if available
+        if self.graph is not None:
+            search_tasks.append(
+                asyncio.to_thread(
+                    self.graph.search, user_id, effective_query, graph_top_k
+                )
+            )
+
+        # Run all searches in parallel
+        search_results = await asyncio.gather(*search_tasks)
+
+        bm25_results = search_results[0]
+        vector_results = search_results[1]
+        graph_results = search_results[2] if len(search_results) > 2 else []
 
         metrics.bm25_candidates = len(bm25_results)
         metrics.vector_candidates = len(vector_results)
+        metrics.graph_candidates = len(graph_results)
         metrics.stage1_time_ms = (time.perf_counter() - stage1_start) * 1000
 
         # Stage 2: Fusion + Reranking
         stage2_start = time.perf_counter()
 
+        # Build fusion arguments
+        fusion_sources = {
+            "bm25": bm25_results,
+            "vector": vector_results,
+        }
+        if graph_results:
+            fusion_sources["graph"] = graph_results
+
         # Fuse results using RRF with optional weights
-        if self.bm25_weight != 1.0 or self.vector_weight != 1.0:
-            fused = self.fusion.weighted_fuse(
-                {"bm25": self.bm25_weight, "vector": self.vector_weight},
-                bm25=bm25_results,
-                vector=vector_results,
-            )
+        weights_differ = (
+            self.bm25_weight != 1.0 or
+            self.vector_weight != 1.0 or
+            self.graph_weight != 1.0
+        )
+        if weights_differ:
+            weights = {
+                "bm25": self.bm25_weight,
+                "vector": self.vector_weight,
+            }
+            if graph_results:
+                weights["graph"] = self.graph_weight
+            fused = self.fusion.weighted_fuse(weights, **fusion_sources)
         else:
-            fused = self.fusion.fuse(bm25=bm25_results, vector=vector_results)
+            fused = self.fusion.fuse(**fusion_sources)
 
         metrics.fused_candidates = len(fused)
 
@@ -307,7 +350,7 @@ class HybridRetriever:
 
         # Build final results with source tracking
         results = self._build_results(
-            rerank_results, bm25_results, vector_results
+            rerank_results, bm25_results, vector_results, graph_results
         )
 
         metrics.final_results = len(results)
@@ -320,6 +363,7 @@ class HybridRetriever:
         rerank_results: list[RerankResult],
         bm25_results: list[tuple[str, float]],
         vector_results: list[tuple[str, float]],
+        graph_results: list[tuple[str, float]] | None = None,
     ) -> list[HybridResult]:
         """Build HybridResult objects with source tracking.
 
@@ -327,6 +371,7 @@ class HybridRetriever:
             rerank_results: Results from reranker.
             bm25_results: Original BM25 results.
             vector_results: Original vector results.
+            graph_results: Optional graph results.
 
         Returns:
             List of HybridResult objects.
@@ -334,6 +379,7 @@ class HybridRetriever:
         # Build lookup maps
         bm25_map = {mem_id: (rank + 1, score) for rank, (mem_id, score) in enumerate(bm25_results)}
         vector_map = {mem_id: (rank + 1, score) for rank, (mem_id, score) in enumerate(vector_results)}
+        graph_map = {mem_id: (rank + 1, score) for rank, (mem_id, score) in enumerate(graph_results or [])}
 
         results: list[HybridResult] = []
         for rr in rerank_results:
@@ -349,6 +395,11 @@ class HybridRetriever:
                 rank, score = vector_map[rr.memory_id]
                 source_scores["vector"] = score
                 source_ranks["vector"] = rank
+
+            if rr.memory_id in graph_map:
+                rank, score = graph_map[rr.memory_id]
+                source_scores["graph"] = score
+                source_ranks["graph"] = rank
 
             results.append(
                 HybridResult(

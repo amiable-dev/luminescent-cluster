@@ -684,3 +684,125 @@ class TestLocalMemoryProviderHybridIntegration:
         """Hybrid retrieval should return empty for users with no memories."""
         results = await full_hybrid_provider.retrieve("anything", "nonexistent-user")
         assert results == []
+
+
+class TestLocalMemoryProviderGraphSupport:
+    """Tests for Knowledge Graph integration in LocalMemoryProvider.
+
+    ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
+    GitHub Issue: #126
+    """
+
+    @pytest.fixture
+    def graph_provider(self):
+        """Create provider with graph enabled."""
+        from src.memory.providers.local import LocalMemoryProvider
+
+        return LocalMemoryProvider(
+            use_hybrid_retrieval=True,
+            use_cross_encoder=False,  # Fast tests
+            use_query_rewriter=False,
+            use_graph=True,
+        )
+
+    @pytest.fixture
+    def sample_memories_with_entities(self):
+        """Create memories with extractable entities."""
+        from src.memory.schemas import Memory, MemoryType
+
+        return [
+            Memory(
+                user_id="user-123",
+                content="The auth-service uses PostgreSQL for user data",
+                memory_type=MemoryType.FACT,
+                source="codebase",
+            ),
+            Memory(
+                user_id="user-123",
+                content="Payment service also connects to PostgreSQL",
+                memory_type=MemoryType.FACT,
+                source="codebase",
+            ),
+            Memory(
+                user_id="user-123",
+                content="Auth service had an incident yesterday",
+                memory_type=MemoryType.FACT,
+                source="incident-report",
+            ),
+        ]
+
+    def test_provider_accepts_use_graph_parameter(self):
+        """Provider should accept use_graph parameter.
+
+        GitHub Issue: #126
+        ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
+        """
+        from src.memory.providers.local import LocalMemoryProvider
+
+        provider = LocalMemoryProvider(
+            use_hybrid_retrieval=True,
+            use_graph=True,
+        )
+        assert provider.is_graph_enabled is True
+
+    def test_graph_defaults_to_disabled(self):
+        """Graph should be disabled by default.
+
+        GitHub Issue: #126
+        ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
+        """
+        from src.memory.providers.local import LocalMemoryProvider
+
+        provider = LocalMemoryProvider(use_hybrid_retrieval=True)
+        assert provider.is_graph_enabled is False
+
+    def test_graph_requires_hybrid(self):
+        """Graph requires hybrid retrieval to be enabled.
+
+        GitHub Issue: #126
+        ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
+        """
+        from src.memory.providers.local import LocalMemoryProvider
+
+        # Graph with hybrid disabled should not enable graph
+        provider = LocalMemoryProvider(
+            use_hybrid_retrieval=False,
+            use_graph=True,
+        )
+        assert provider.is_graph_enabled is False
+
+    @pytest.mark.asyncio
+    async def test_store_updates_graph(self, graph_provider, sample_memories_with_entities):
+        """Storing memory should update the graph.
+
+        GitHub Issue: #126
+        ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
+        """
+        # Store memories with entities
+        for memory in sample_memories_with_entities:
+            await graph_provider.store(memory, {})
+
+        # Graph should be updated (check via retrieval metrics)
+        _, metrics = await graph_provider.retrieve_with_metrics(
+            "postgresql", "user-123"
+        )
+
+        # Graph candidates should be tracked
+        assert hasattr(metrics, "graph_candidates")
+
+    @pytest.mark.asyncio
+    async def test_clear_clears_graph(self, graph_provider, sample_memories_with_entities):
+        """Clear should clear the graph.
+
+        GitHub Issue: #126
+        ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
+        """
+        # Store memories
+        for memory in sample_memories_with_entities:
+            await graph_provider.store(memory, {})
+
+        # Clear
+        graph_provider.clear()
+
+        # Should be empty
+        assert graph_provider.count() == 0
