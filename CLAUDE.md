@@ -4,10 +4,71 @@ This file provides context and instructions for Claude Code when working on this
 
 ## Project Overview
 
-Luminescent Cluster is a context-aware AI development system with:
-- **Session Memory**: Short-term context persistence via MCP server
-- **Pixeltable Memory**: Long-term organizational knowledge base
-- **MCP Servers**: Model Context Protocol integration for Claude
+Luminescent Cluster is a context-aware AI development system that provides persistent memory and multi-platform chatbot capabilities for AI agents. The system is designed around three core architectural patterns:
+
+1. **Three-Tier Memory Architecture** - Hot session memory → Persistent Pixeltable storage → LLM Council orchestration
+2. **Protocol-Based Extension System** - Duck-typed interfaces enabling OSS/Cloud separation
+3. **Chatbot Gateway Pattern** - Central router with platform-specific adapters
+
+## High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Claude Code / Agent                       │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │ MCP Protocol
+         ┌─────────────────────┼─────────────────────┐
+         ▼                     ▼                     ▼
+┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+│  Session Memory │  │Pixeltable Memory│  │   LLM Council   │
+│   (Hot State)   │  │  (Persistent)   │  │ (Orchestration) │
+└─────────────────┘  └─────────────────┘  └─────────────────┘
+         │                     │                     │
+         └─────────────────────┼─────────────────────┘
+                               ▼
+                    ┌─────────────────────┐
+                    │   Chatbot Gateway   │
+                    │  (Multi-Platform)   │
+                    └─────────────────────┘
+                               │
+         ┌──────────┬──────────┼──────────┬──────────┐
+         ▼          ▼          ▼          ▼          ▼
+     Discord     Slack    Telegram   WhatsApp    CLI
+```
+
+### Memory Tiers
+
+| Tier | Purpose | Persistence | Location |
+|------|---------|-------------|----------|
+| **Session** | Task context, git state, recent conversation | Per-session | `integrations/session_memory_mcp_server.py` |
+| **Pixeltable** | ADRs, code embeddings, incident history | Permanent | `integrations/pixeltable_mcp_server.py` |
+| **Council** | Multi-LLM consensus, verification | Per-request | `integrations/llm_council_mcp_server.py` |
+
+### Extension System (ADR-005)
+
+The system uses **protocol-based interfaces** for extensibility:
+
+```python
+# src/extensions/protocols.py - Duck-typed extension contracts
+class MemoryProvider(Protocol):
+    async def store(self, key: str, value: Any) -> None: ...
+    async def retrieve(self, key: str) -> Any: ...
+
+class EmbeddingProvider(Protocol):
+    async def embed(self, text: str) -> list[float]: ...
+```
+
+**Key insight**: Extensions are discovered at runtime via entry points, allowing the OSS version to use local embeddings while cloud deployments can swap in proprietary providers.
+
+### MaaS: Memory as a Service (ADR-003)
+
+Multi-agent workflows use **memory pools** with ownership semantics:
+
+- **Agent Handoffs**: Memory transfers between specialized agents
+- **Shared Pools**: Concurrent access with locking
+- **Provenance Tracking**: Full audit trail for memory mutations
+
+See `src/memory/maas/` for implementation.
 
 ## Session Management
 
@@ -57,18 +118,88 @@ def test_feature():
 | Path | Purpose |
 |------|---------|
 | `src/` | Core source code |
+| `src/memory/` | Memory system (extraction, evaluation, MaaS) |
+| `src/extensions/` | Extension protocols and registry |
+| `src/chatbot/` | Chatbot gateway and adapters |
 | `integrations/` | MCP server implementations |
-| `tests/` | Test suite (pytest) |
+| `tests/` | Test suite (pytest, 121 tests) |
 | `spec/` | Requirements ledger and validation |
+| `spec/ledger.yml` | Requirement-to-test mappings (89 requirements) |
 | `docs/adrs/` | Architecture Decision Records |
 | `.claude/skills/` | Agent skills for session management |
 
+## Important Files
+
+| File | Purpose |
+|------|---------|
+| `integrations/session_memory_mcp_server.py` | Session memory MCP server |
+| `integrations/pixeltable_mcp_server.py` | Pixeltable knowledge base MCP server |
+| `integrations/llm_council_mcp_server.py` | LLM Council MCP server |
+| `src/version_guard.py` | Python version safety guard (ADR-001) |
+| `spec/validation/reconcile.py` | Requirement traceability validation |
+| `.spec-baseline.json` | Coverage baseline for ratchet mechanism |
+
 ## MCP Servers
 
-This project provides two MCP servers:
+This project provides three MCP servers:
 
-1. **session-memory** - Task context, git integration, user memories
-2. **pixeltable-memory** - Long-term organizational knowledge, ADRs, code search
+| Server | Purpose | Key Tools |
+|--------|---------|-----------|
+| **session-memory** | Task context, git integration, user memories | `set_task_context`, `get_recent_commits`, `create_user_memory` |
+| **pixeltable-memory** | Long-term organizational knowledge | `search_organizational_memory`, `get_architectural_decisions`, `ingest_codebase` |
+| **llm-council** | Multi-model consensus and verification | `consult_council`, `verify`, `audit` |
+
+### Chatbot Gateway (ADR-006)
+
+The chatbot system uses a **gateway pattern** with platform-specific adapters:
+
+```
+User Message → Gateway Router → Platform Adapter → Normalized Message → AI Processing
+                    ↓
+         Rate Limiting, Auth, Routing
+```
+
+**Supported platforms**: Discord, Slack, Telegram, WhatsApp (planned)
+
+Each adapter translates platform-specific events to a common message format, enabling uniform AI processing across all platforms.
+
+## Architecture Decision Records (ADRs)
+
+Key architectural decisions are documented in `docs/adrs/`:
+
+| ADR | Topic | Key Decision |
+|-----|-------|--------------|
+| ADR-001 | Python Version Guard | Hard exit on version mismatch (no warning mode) |
+| ADR-002 | Agent Skills | Slash commands for workflow automation |
+| ADR-003 | Memory Architecture | Three-tier system with MaaS multi-agent support |
+| ADR-005 | Extension System | Protocol-based interfaces for OSS/Cloud separation |
+| ADR-006 | Chatbot Gateway | Platform adapters with rate limiting and routing |
+| ADR-007 | Cross-ADR Integration | System-wide consistency requirements |
+| ADR-009 | Spec/Ledger Reconciliation | Requirement traceability with pytest markers |
+
+## Common Patterns
+
+### Adding a New MCP Tool
+
+1. Define tool schema in `list_tools()` method
+2. Implement handler in `call_tool()` method
+3. Add requirement to `spec/ledger.yml`
+4. Create test with `@pytest.mark.requirement()` marker
+5. Run `python spec/validation/reconcile.py` to verify
+
+### Adding a New Chatbot Adapter
+
+1. Create adapter in `src/chatbot/adapters/`
+2. Implement the adapter protocol
+3. Register in gateway router
+4. Add rate limiting configuration
+5. Create integration tests
+
+### Adding a New Memory Provider
+
+1. Implement protocol from `src/extensions/protocols.py`
+2. Register via entry points in `pyproject.toml`
+3. Add tests for store/retrieve operations
 
 ## Commit Guidelines
 
@@ -81,16 +212,78 @@ Use conventional commits:
 
 Always include `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>` when Claude contributes.
 
-## Testing
+## Build & Development Commands
+
+### Environment Setup
 
 ```bash
-# Run all tests
+# Verify Python version (CRITICAL - must be 3.11)
+cat .python-version && python --version
+
+# Create virtual environment
+uv venv --python 3.11
+source .venv/bin/activate
+
+# Install dependencies
+uv pip install -e ".[dev]"
+
+# Quick start (does all of the above)
+./quickstart.sh
+```
+
+### Testing
+
+```bash
+# Run all tests (121 tests)
 pytest tests/ -v --ignore=tests/test_pixeltable_mcp_server.py
 
-# Run spec reconciliation
-python spec/validation/reconcile.py
+# Run a single test file
+pytest tests/test_version_guard.py -v
 
-# Run specific domain tests
-pytest tests/memory/ -v
-pytest tests/chatbot/ -v
+# Run a single test function
+pytest tests/test_version_guard.py::test_version_mismatch_exit_code -v
+
+# Run tests by marker
+pytest -m "critical" -v           # Critical priority tests
+pytest -m "security" -v           # Security tests
+pytest -m "requirement" -v        # Tests linked to requirements
+
+# Run with coverage
+pytest tests/ -v --cov=src --cov=integrations
+
+# Run spec reconciliation (requirement traceability)
+python spec/validation/reconcile.py --verbose
+```
+
+### Linting & Formatting
+
+```bash
+# Format code
+ruff format .
+
+# Lint code
+ruff check .
+
+# Fix auto-fixable issues
+ruff check --fix .
+```
+
+### Documentation
+
+```bash
+# Serve docs locally
+mkdocs serve
+
+# Build docs
+mkdocs build
+```
+
+### MCP Server Development
+
+```bash
+# Test MCP server directly
+python -m integrations.session_memory_mcp_server
+
+# Run MCP server tests
+pytest tests/test_session_memory_mcp_server.py -v
 ```
