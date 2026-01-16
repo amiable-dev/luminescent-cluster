@@ -25,7 +25,7 @@ def create_git_mock(file_content):
     """Create a mock for subprocess.run that handles git commands.
 
     Used to simulate git operations in tests without a real git repo.
-    Handles: git show, git cat-file -s, git branch --show-current
+    Handles: git show, git cat-file -t, git cat-file -s, git branch --show-current
 
     Note: git show uses text=False (binary mode) so returns bytes,
     while other commands use text=True so return strings.
@@ -37,6 +37,9 @@ def create_git_mock(file_content):
         if "show" in cmd:
             # git show <commit>:<path> - returns bytes (text=False)
             result.stdout = file_content.encode("utf-8") if isinstance(file_content, str) else file_content
+        elif "cat-file" in cmd and "-t" in cmd:
+            # git cat-file -t <commit>:<path> - returns object type (text=True)
+            result.stdout = "blob"
         elif "cat-file" in cmd and "-s" in cmd:
             # git cat-file -s <commit>:<path> - returns string (text=True)
             content_bytes = file_content.encode("utf-8") if isinstance(file_content, str) else file_content

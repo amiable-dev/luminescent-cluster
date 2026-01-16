@@ -285,17 +285,18 @@ def _matches_pattern(file_path: str, pattern: str) -> bool:
 
 
 def _fnmatch_parts(path_parts: list, pattern_parts: list) -> bool:
-    """Check if pattern_parts matches any suffix of path_parts using fnmatch."""
+    """Check if pattern_parts matches the suffix of path_parts using fnmatch.
+
+    This anchors matching to the END of the path to prevent policy bypass.
+    E.g., pattern "*.md" should only match files ending in .md, not directories.
+    """
     if len(pattern_parts) > len(path_parts):
         return False
 
-    # Try to match pattern_parts against any suffix of path_parts
-    for start in range(len(path_parts) - len(pattern_parts) + 1):
-        match = True
-        for i, ppart in enumerate(pattern_parts):
-            if not fnmatch(path_parts[start + i], ppart):
-                match = False
-                break
-        if match:
-            return True
-    return False
+    # Only match at the end (suffix matching) to prevent policy bypass
+    # E.g., "docs/readme.md/secret.key" should NOT match "*.md"
+    start = len(path_parts) - len(pattern_parts)
+    for i, ppart in enumerate(pattern_parts):
+        if not fnmatch(path_parts[start + i], ppart):
+            return False
+    return True

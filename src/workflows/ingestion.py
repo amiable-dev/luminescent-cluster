@@ -277,6 +277,35 @@ def ingest_file(
         }
 
 
+def _is_blob(relative_path: str, commit_sha: str, project_root: Path) -> bool:
+    """Check if the git object at path is a blob (file), not a tree (directory).
+
+    Prevents ingestion of directory listings by verifying object type.
+
+    Args:
+        relative_path: Path relative to project root
+        commit_sha: Git commit SHA
+        project_root: Project root directory
+
+    Returns:
+        True if the object is a blob (file), False otherwise
+    """
+    try:
+        result = subprocess.run(
+            ["git", "cat-file", "-t", f"{commit_sha}:{relative_path}"],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            obj_type = result.stdout.strip()
+            return obj_type == "blob"
+        return False
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return False
+
+
 def _get_blob_size(relative_path: str, commit_sha: str, project_root: Path) -> Optional[int]:
     """Get the size of a blob in the git object database.
 
@@ -288,9 +317,14 @@ def _get_blob_size(relative_path: str, commit_sha: str, project_root: Path) -> O
         project_root: Project root directory
 
     Returns:
-        Blob size in bytes, or None if git command fails
+        Blob size in bytes, or None if git command fails or not a blob
     """
     try:
+        # First verify it's a blob (file), not a tree (directory)
+        # This prevents ingestion of directory listings
+        if not _is_blob(relative_path, commit_sha, project_root):
+            return None
+
         # Note: cat-file uses <commit>:<path> format which doesn't need -- separator
         # The path is part of the object specifier, not a positional argument
         result = subprocess.run(

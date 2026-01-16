@@ -122,7 +122,7 @@ def mock_git_commands(temp_project_dir, sample_markdown_file):
     """Mock git commands for testing.
 
     This fixture mocks git commands so tests work without a real git repo.
-    It handles: rev-parse, branch, diff-tree, show (for content), cat-file -s (for size)
+    It handles: rev-parse, branch, diff-tree, show (for content), cat-file -t/-s
 
     Note: git show uses text=False (binary mode) so returns bytes,
     while other commands use text=True so return strings.
@@ -145,6 +145,9 @@ def mock_git_commands(temp_project_dir, sample_markdown_file):
         elif "show" in cmd:
             # git show <commit>:<path> - return bytes (text=False)
             result.stdout = sample_content.encode("utf-8")
+        elif "cat-file" in cmd and "-t" in cmd:
+            # git cat-file -t <commit>:<path> - return object type
+            result.stdout = "blob"
         elif "cat-file" in cmd and "-s" in cmd:
             # git cat-file -s <commit>:<path> - return file size as string (text=True)
             result.stdout = str(len(sample_content.encode("utf-8")))
@@ -172,6 +175,9 @@ def mock_git_for_ingestion(temp_project_dir):
                 # git show returns bytes (text=False)
                 content_bytes = file_content.encode("utf-8") if isinstance(file_content, str) else file_content
                 result.stdout = content_bytes
+            elif "cat-file" in cmd and "-t" in cmd:
+                # git cat-file -t returns object type
+                result.stdout = "blob"
             elif "cat-file" in cmd and "-s" in cmd:
                 # git cat-file -s returns string (text=True)
                 content_bytes = file_content.encode("utf-8") if isinstance(file_content, str) else file_content
