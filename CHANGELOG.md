@@ -25,13 +25,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `should_ingest_file()`: Pattern-based filtering for allowlist/denylist
     - `is_secret_file()`: Secrets detection to prevent sensitive file ingestion
   - Configuration via `.agent/config.yaml`
-  - 112 new workflow tests (TDD approach)
+  - 115 new workflow tests (TDD approach)
 
 ### Security
 - **Secrets Protection (ADR-002)**
   - Pattern-based filtering: `.env`, `*.key`, `*.pem`, `*secret*`, `*password*`, `*token*`
   - Content never ingested for files matching secrets patterns
   - Audit logging for skipped files
+
+- **Ingestion Security Hardening (10 LLM Council reviews)**
+  - Path traversal prevention with canonical path resolution (fail-closed)
+  - Commit SHA validation (7-40 hex character regex)
+  - Null byte injection prevention
+  - Hyphen prefix rejection (git argument injection prevention)
+  - Blob type verification (prevents directory listing ingestion)
+  - Git object database reading (provenance integrity, no working tree access)
+  - Size check before content load (DoS prevention)
+  - Binary file handling with explicit UTF-8 decode (errors='replace')
+  - Config validation with hard limits (max 10MB file size)
+  - Safe pattern matching without regex (fnmatch-based, no ReDoS)
 
 ## [0.3.0] - 2026-01-16
 
