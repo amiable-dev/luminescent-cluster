@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from .config import WorkflowConfig, load_config, is_secret_file
+from .config import WorkflowConfig, load_config, is_secret_file, should_ingest_file
 
 
 def get_knowledge_base():
@@ -109,36 +109,18 @@ def ingest_file(
                 "path": relative_path,
             }
 
-        # Security check: reject secrets files (using config's patterns)
-        if is_secret_file(relative_path, config.secrets_patterns):
+        # Policy check: enforce include/exclude patterns from config
+        if not should_ingest_file(relative_path, config):
             return {
                 "success": False,
                 "skipped": True,
-                "reason": f"Skipped secret/sensitive file: {relative_path}",
-                "path": relative_path,
-            }
-
-        # Check file size
-        file_size_kb = file_path.stat().st_size / 1024
-        if file_size_kb > config.max_file_size_kb:
-            return {
-                "success": False,
-                "skipped": True,
-                "reason": f"File too large ({file_size_kb:.1f}KB > {config.max_file_size_kb}KB)",
-                "path": relative_path,
-            }
-
-        # Check if binary file
-        if config.skip_binary and _is_binary_file(file_path):
-            return {
-                "success": False,
-                "skipped": True,
-                "reason": "Skipped binary file",
+                "reason": f"File excluded by policy (include/exclude patterns): {relative_path}",
                 "path": relative_path,
             }
 
         # Read content from git object database (not working tree) for provenance integrity
         # This ensures we ingest exactly what was committed, not potentially modified working tree
+        # Also avoids TOCTOU by doing all checks on the committed content, not working tree
         try:
             content = _read_committed_content(relative_path, commit_sha, project_root)
             if content is None:
@@ -149,6 +131,25 @@ def ingest_file(
                 "success": False,
                 "skipped": True,
                 "reason": "Could not decode file as UTF-8 (likely binary)",
+                "path": relative_path,
+            }
+
+        # Check file size on committed content (avoid TOCTOU with working tree)
+        content_size_kb = len(content.encode("utf-8")) / 1024
+        if content_size_kb > config.max_file_size_kb:
+            return {
+                "success": False,
+                "skipped": True,
+                "reason": f"File too large ({content_size_kb:.1f}KB > {config.max_file_size_kb}KB)",
+                "path": relative_path,
+            }
+
+        # Check if binary content (null bytes indicate binary)
+        if config.skip_binary and "\x00" in content:
+            return {
+                "success": False,
+                "skipped": True,
+                "reason": "Skipped binary file",
                 "path": relative_path,
             }
 

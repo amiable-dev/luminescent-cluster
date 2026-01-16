@@ -412,7 +412,9 @@ class TestIngestFileSecurity:
             )
 
         assert result["success"] is False
-        assert "secret" in result.get("reason", "").lower() or "skip" in result.get("reason", "").lower()
+        # May be rejected for secrets pattern or policy exclusion
+        reason = result.get("reason", "").lower()
+        assert "secret" in reason or "skip" in reason or "excluded" in reason or "policy" in reason
         mock_kb.insert.assert_not_called()
 
     def test_ingest_file_rejects_key_file(self, temp_project_dir):
