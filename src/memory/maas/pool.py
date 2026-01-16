@@ -266,12 +266,13 @@ class PoolRegistry:
             if pool_id in self._pools:
                 raise DuplicatePoolError(pool_id)
 
+            # Copy metadata to prevent external mutation
             pool = SharedMemoryPool(
                 id=pool_id,
                 name=name,
                 owner_id=owner_id,
                 scope=scope,
-                metadata=metadata or {},
+                metadata=(metadata or {}).copy(),  # Defensive copy of input
             )
 
             self._pools[pool_id] = pool

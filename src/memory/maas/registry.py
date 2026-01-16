@@ -231,17 +231,19 @@ class AgentRegistry:
                 )
                 raise DuplicateAgentError(agent_id)
 
-            # Use default capabilities if not provided
+            # Use default capabilities if not provided (copy to prevent external mutation)
             if capabilities is None:
                 capabilities = get_default_capabilities(agent_type)
+            else:
+                capabilities = capabilities.copy()  # Defensive copy of input
 
-            # Create identity
+            # Create identity (copy metadata to prevent external mutation)
             identity = AgentIdentity(
                 id=agent_id,
                 agent_type=agent_type,
                 owner_id=owner_id,
                 capabilities=capabilities,
-                metadata=metadata or {},
+                metadata=(metadata or {}).copy(),  # Defensive copy of input
             )
 
             # Register
@@ -388,12 +390,12 @@ class AgentRegistry:
                 if old_session_id in self._sessions:
                     del self._sessions[old_session_id]
 
-            # Create new session
+            # Create new session (copy metadata to prevent external mutation)
             session_id = f"session-{uuid.uuid4().hex}"
             session = SessionInfo(
                 session_id=session_id,
                 agent_id=agent_id,
-                metadata=metadata or {},
+                metadata=(metadata or {}).copy(),  # Defensive copy of input
             )
 
             # Store session

@@ -334,11 +334,12 @@ class HandoffManager:
             if ttl_seconds is not None:
                 expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
 
+            # Copy context to prevent external mutation
             handoff = Handoff(
                 id=handoff_id,
                 source_agent_id=source_agent_id,
                 target_agent_id=target_agent_id,
-                context=context,
+                context=context.copy(),  # Defensive copy of input
                 expires_at=expires_at,
             )
 
@@ -579,7 +580,7 @@ class HandoffManager:
 
             handoff.status = HandoffStatus.COMPLETED
             handoff.completed_at = datetime.now(timezone.utc)
-            handoff.result = result
+            handoff.result = result.copy() if result else None  # Defensive copy of input
 
             # Log completion
             self._log_event(
