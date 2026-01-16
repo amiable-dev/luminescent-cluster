@@ -12,8 +12,14 @@ Related GitHub Issues:
 - #93: Async Extraction Pipeline
 - #94: Confidence Scoring
 - #95: Version Tracking
+- #118: Entity Types and Schema Definition
+- #119: MockEntityExtractor for testing
+- #120: HaikuEntityExtractor for LLM extraction
+- #121: EntityExtractionPipeline integration
 
-ADR Reference: ADR-003 Memory Architecture, Phase 1b (Async Extraction)
+ADR Reference: ADR-003 Memory Architecture
+- Phase 1b (Async Extraction)
+- Phase 3 (Entity Extraction)
 """
 
 from src.memory.extraction.confidence import calculate_confidence
@@ -26,20 +32,39 @@ from src.memory.extraction.prompts import (
 )
 from src.memory.extraction.types import ExtractionResult, MemoryExtractor
 
+# Entity extraction (Phase 3)
+from src.memory.extraction.entities import (
+    Entity,
+    EntityExtractor,
+    EntityExtractionPipeline,
+    EntityType,
+    HaikuEntityExtractor,
+    MockEntityExtractor,
+)
+
 __all__ = [
     # Version
     "EXTRACTION_VERSION",
-    # Types
+    # Memory Types
     "ExtractionResult",
     "MemoryExtractor",
-    # Extractors
+    # Memory Extractors
     "MockExtractor",
     "HaikuExtractor",
-    # Pipeline
+    # Memory Pipeline
     "ExtractionPipeline",
     # Confidence
     "calculate_confidence",
     # Prompts
     "EXTRACTION_SYSTEM_PROMPT",
     "EXTRACTION_USER_PROMPT_TEMPLATE",
+    # Entity Types (Phase 3)
+    "Entity",
+    "EntityExtractor",
+    "EntityType",
+    # Entity Extractors (Phase 3)
+    "MockEntityExtractor",
+    "HaikuEntityExtractor",
+    # Entity Pipeline (Phase 3)
+    "EntityExtractionPipeline",
 ]

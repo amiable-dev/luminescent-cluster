@@ -351,7 +351,10 @@ class LocalMemoryProvider:
 
         # Apply updates
         for key, value in updates.items():
-            if key in new_data and key != "metadata":
+            if key == "metadata":
+                # Merge metadata updates
+                new_data["metadata"] = {**new_data["metadata"], **value}
+            elif key in new_data:
                 new_data[key] = value
 
         self._memories[memory_id] = Memory(**new_data)
