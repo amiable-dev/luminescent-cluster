@@ -22,11 +22,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - MCP tools: 15 async functions for agent/pool/handoff management
   - Security: `MEXTRAValidator` (injection detection), `MemoryPoisoningDefense` (output filtering), `AgentRateLimiter`, `MaaSAuditLogger`
   - `MaaSProvider` protocol added to extensions
-  - 150 MaaS tests (TDD approach)
+  - 149 MaaS tests (TDD approach, including 12 security tests)
   - Exit criteria benchmarks: sync <500ms p95, handoff <2s p95, registry lookup <50ms
 
 ### Changed
 - ADR-003 updated to v6.7 with Phase 4.2 implementation tracker
+
+### Security
+- **MaaS Security Hardening (LLM Council verified)**
+  - ID entropy increased from 48-bit to 128-bit (full UUID hex) for agents, sessions, pools, handoffs
+  - DoS prevention with configurable capacity limits:
+    - `RegistryCapacityError`: max agents (10,000), max sessions (50,000)
+    - `PoolCapacityError`: max pools (10,000), max memberships per pool (1,000), max shared memories (100,000)
+    - `HandoffCapacityError`: max handoffs (50,000), max pending per target (100)
+  - DoS recovery methods: `unregister_agent()`, `cleanup_terminal_handoffs()`
+  - Audit logging integration with TOCTOU-safe access pattern
+  - Defensive copies on all inputs (capabilities, metadata, context, result)
+  - Defensive copies on all outputs (agents, pools, handoffs, sessions)
+  - Integrity check: `join_pool` verifies agent exists in registry
+  - 12 new security tests for capacity limits, defensive copies, audit integration
 
 ## [0.2.0] - 2026-01-16
 
