@@ -1,6 +1,6 @@
 {
-  "version": "1.0",
-  "timestamp": "2026-01-16T00:00:00Z",
+  "version": "1.1",
+  "timestamp": "2026-01-17T00:00:00Z",
   "coverage": {
     "overall": 100.0,
     "by_priority": {
@@ -16,8 +16,8 @@
       "BOT": 100.0,
       "SEC": 100.0,
       "WKF": 100.0,
-      "INT": 80.0
+      "INT": 100.0
     }
   },
-  "notes": "Initial baseline after ADR-009 Phase 2/3 implementation. INT domain at 80% due to 2 manual verification requirements."
+  "notes": "Added 63 requirements for previously orphaned test files. Total requirements: 152 (150 active, 2 manual)."
 }

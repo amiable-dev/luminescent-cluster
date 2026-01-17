@@ -118,6 +118,38 @@ requirements:
     tests:
       - tests/test_version_guard.py::test_no_auto_migration
 
+  REQ-MCP-010:
+    title: "Backup and Restore"
+    source: "ADR-001 Operations"
+    status: active
+    priority: high
+    tests:
+      - tests/test_backup_restore.py
+
+  REQ-MCP-011:
+    title: "Database Repair"
+    source: "ADR-001 Operations"
+    status: active
+    priority: high
+    tests:
+      - tests/test_db_repair.py
+
+  REQ-MCP-012:
+    title: "GitHub PAT Integration"
+    source: "ADR-001 Authentication"
+    status: active
+    priority: medium
+    tests:
+      - tests/test_github_pat.py
+
+  REQ-MCP-013:
+    title: "GitLab PAT Integration"
+    source: "ADR-001 Authentication"
+    status: active
+    priority: medium
+    tests:
+      - tests/test_gitlab_pat.py
+
 # =============================================================================
 # MEMORY SYSTEM REQUIREMENTS (ADR-003)
 # =============================================================================
@@ -297,6 +329,321 @@ requirements:
     tests:
       - tests/memory/security/test_memory_isolation.py::TestUserBoundary::test_cross_user_query_blocked
 
+  # Benchmark Requirements
+  REQ-MEM-040:
+    title: "Janitor Performance Benchmarks"
+    source: "ADR-003 Performance"
+    status: active
+    priority: medium
+    tests:
+      - tests/memory/benchmarks/test_janitor_performance.py
+
+  REQ-MEM-041:
+    title: "MaaS Exit Criteria Benchmarks"
+    source: "ADR-003 Phase 4"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/benchmarks/test_maas_exit_criteria.py
+
+  REQ-MEM-042:
+    title: "Phase 2 Exit Criteria Benchmarks"
+    source: "ADR-003 Phase 2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/benchmarks/test_phase2_exit_criteria.py
+
+  REQ-MEM-043:
+    title: "Retrieval Exit Criteria Benchmarks"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/benchmarks/test_retrieval_exit.py
+
+  # Block Requirements
+  REQ-MEM-044:
+    title: "Memory Block Compression"
+    source: "ADR-003 Phase 2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/blocks/test_compressor.py
+
+  # Extraction Requirements
+  REQ-MEM-050:
+    title: "Entity Haiku Extractor"
+    source: "ADR-003 Phase 1"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/extraction/test_entity_haiku_extractor.py
+
+  REQ-MEM-051:
+    title: "Entity Mock Extractor"
+    source: "ADR-003 Testing"
+    status: active
+    priority: low
+    tests:
+      - tests/memory/extraction/test_entity_mock_extractor.py
+
+  REQ-MEM-052:
+    title: "Entity Extraction Pipeline"
+    source: "ADR-003 Phase 1"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/extraction/test_entity_pipeline.py
+
+  REQ-MEM-053:
+    title: "Entity Type Definitions"
+    source: "ADR-003 Phase 1"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/extraction/test_entity_types.py
+
+  # Graph Requirements
+  REQ-MEM-060:
+    title: "Knowledge Graph Builder"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/graph/test_graph_builder.py
+
+  REQ-MEM-061:
+    title: "Knowledge Graph Integration"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/graph/test_graph_integration.py
+
+  REQ-MEM-062:
+    title: "Knowledge Graph Search"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/graph/test_graph_search.py
+
+  REQ-MEM-063:
+    title: "Knowledge Graph Store"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/graph/test_graph_store.py
+
+  REQ-MEM-064:
+    title: "Knowledge Graph Types"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: medium
+    tests:
+      - tests/memory/graph/test_graph_types.py
+
+  # Hindsight Requirements
+  REQ-MEM-070:
+    title: "Hindsight Integration"
+    source: "ADR-003 Phase 4"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/hindsight/test_hindsight_integration.py
+
+  REQ-MEM-071:
+    title: "Temporal Search"
+    source: "ADR-003 Phase 4"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/hindsight/test_temporal_search.py
+
+  REQ-MEM-072:
+    title: "Temporal Types"
+    source: "ADR-003 Phase 4"
+    status: active
+    priority: medium
+    tests:
+      - tests/memory/hindsight/test_temporal_types.py
+
+  REQ-MEM-073:
+    title: "Timeline Management"
+    source: "ADR-003 Phase 4"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/hindsight/test_timeline.py
+
+  # MaaS Requirements
+  REQ-MEM-080:
+    title: "MaaS Agent Handoff"
+    source: "ADR-003 Phase 4.2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/maas/test_maas_handoff.py
+
+  REQ-MEM-081:
+    title: "MaaS MCP Tools"
+    source: "ADR-003 Phase 4.2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/maas/test_maas_mcp_tools.py
+
+  REQ-MEM-082:
+    title: "MaaS Memory Provider"
+    source: "ADR-003 Phase 4.2"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/maas/test_maas_provider.py
+
+  REQ-MEM-083:
+    title: "MaaS Type Definitions"
+    source: "ADR-003 Phase 4.2"
+    status: active
+    priority: medium
+    tests:
+      - tests/memory/maas/test_maas_types.py
+
+  # Observability Requirements
+  REQ-MEM-090:
+    title: "Graph Metrics"
+    source: "ADR-003 Observability"
+    status: active
+    priority: medium
+    tests:
+      - tests/memory/observability/test_graph_metrics.py
+
+  REQ-MEM-091:
+    title: "Scale Milestones"
+    source: "ADR-003 Observability"
+    status: active
+    priority: medium
+    tests:
+      - tests/memory/observability/test_scale_milestones.py
+
+  # Provider Requirements
+  REQ-MEM-100:
+    title: "Cached Memory Provider"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/providers/test_cached_provider.py
+
+  # Retrieval Requirements
+  REQ-MEM-110:
+    title: "BM25 Retrieval"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/retrieval/test_bm25.py
+
+  REQ-MEM-111:
+    title: "Retrieval Cache"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/retrieval/test_cache.py
+
+  REQ-MEM-112:
+    title: "Retrieval Reranker"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/retrieval/test_reranker.py
+
+  REQ-MEM-113:
+    title: "Vector Search"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/retrieval/test_vector_search.py
+
+  # Security Requirements
+  REQ-MEM-120:
+    title: "MaaS Isolation"
+    source: "ADR-003 Phase 4.2"
+    status: active
+    priority: critical
+    tests:
+      - tests/memory/security/test_maas_isolation.py
+
+  # General Memory Requirements
+  REQ-MEM-130:
+    title: "Lifecycle Policies"
+    source: "ADR-003 Phase 1d"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_lifecycle_policies.py
+
+  REQ-MEM-131:
+    title: "Local Memory Provider"
+    source: "ADR-003 Phase 1"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_local_memory_provider.py
+
+  REQ-MEM-132:
+    title: "Memory MCP Tools"
+    source: "ADR-003 MCP Integration"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_mcp_tools.py
+
+  REQ-MEM-133:
+    title: "Memory Schemas"
+    source: "ADR-003 Phase 1"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_memory_schemas.py
+
+  REQ-MEM-134:
+    title: "Memory Observability"
+    source: "ADR-003 Observability"
+    status: active
+    priority: medium
+    tests:
+      - tests/memory/test_observability.py
+
+  REQ-MEM-135:
+    title: "Provider Compliance"
+    source: "ADR-003 Protocols"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_provider_compliance.py
+
+  REQ-MEM-136:
+    title: "Memory Retrieval"
+    source: "ADR-003 Phase 3"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_retrieval.py
+
+  REQ-MEM-137:
+    title: "User Memory Table"
+    source: "ADR-003 Phase 1"
+    status: active
+    priority: high
+    tests:
+      - tests/memory/test_user_memory_table.py
+
 # =============================================================================
 # EXTENSION SYSTEM REQUIREMENTS (ADR-005)
 # =============================================================================
@@ -395,6 +742,38 @@ requirements:
     priority: high
     tests:
       - tests/test_extensions.py::test_no_internal_auth
+
+  REQ-EXT-030:
+    title: "Context Store Implementation"
+    source: "ADR-005 Storage Layer"
+    status: active
+    priority: high
+    tests:
+      - tests/extensions/test_context_store.py
+
+  REQ-EXT-031:
+    title: "GDPR Audit Compliance"
+    source: "ADR-005 Compliance"
+    status: active
+    priority: high
+    tests:
+      - tests/extensions/test_gdpr_audit.py
+
+  REQ-EXT-032:
+    title: "Memory Protocol Implementation"
+    source: "ADR-005 Protocols"
+    status: active
+    priority: high
+    tests:
+      - tests/extensions/test_memory_protocol.py
+
+  REQ-EXT-033:
+    title: "Protocol Version Compatibility"
+    source: "ADR-005 Versioning"
+    status: active
+    priority: high
+    tests:
+      - tests/extensions/test_protocol_versions.py
 
 # =============================================================================
 # CHATBOT REQUIREMENTS (ADR-006)
@@ -513,6 +892,94 @@ requirements:
     priority: low
     tests:
       - tests/chatbot/test_gateway.py::test_no_voice_processing
+
+  REQ-BOT-050:
+    title: "Discord Adapter"
+    source: "ADR-006 Platform Support"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/adapters/test_discord_adapter.py
+
+  REQ-BOT-051:
+    title: "Slack Adapter"
+    source: "ADR-006 Platform Support"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/adapters/test_slack_adapter.py
+
+  REQ-BOT-052:
+    title: "Telegram Adapter"
+    source: "ADR-006 Platform Support"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/adapters/test_telegram_adapter.py
+
+  REQ-BOT-053:
+    title: "WhatsApp Adapter"
+    source: "ADR-006 Platform Support"
+    status: active
+    priority: medium
+    tests:
+      - tests/chatbot/adapters/test_whatsapp_adapter.py
+
+  REQ-BOT-054:
+    title: "Context Persistence"
+    source: "ADR-006 Context Management"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/test_context_persistence.py
+
+  REQ-BOT-055:
+    title: "Gateway Access Control"
+    source: "ADR-006 Security"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/test_gateway_access_control.py
+
+  REQ-BOT-056:
+    title: "Gateway Response Filtering"
+    source: "ADR-006 Security"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/test_gateway_response_filtering.py
+
+  REQ-BOT-057:
+    title: "Gateway Security"
+    source: "ADR-006 Security"
+    status: active
+    priority: critical
+    tests:
+      - tests/chatbot/test_gateway_security.py
+
+  REQ-BOT-058:
+    title: "Gateway Usage Tracking"
+    source: "ADR-006 Observability"
+    status: active
+    priority: medium
+    tests:
+      - tests/chatbot/test_gateway_usage_tracking.py
+
+  REQ-BOT-059:
+    title: "LLM Provider Integration"
+    source: "ADR-006 Architecture"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/test_llm_provider.py
+
+  REQ-BOT-060:
+    title: "Chatbot Protocols"
+    source: "ADR-006 Architecture"
+    status: active
+    priority: high
+    tests:
+      - tests/chatbot/test_protocols.py
 
 # =============================================================================
 # SECURITY REQUIREMENTS (ADR-003, ADR-006, ADR-007)
@@ -736,6 +1203,46 @@ requirements:
     tests:
       - tests/memory/test_extraction.py::test_no_sync_extraction
 
+  REQ-WKF-030:
+    title: "Workflow Config Parser"
+    source: "ADR-002 Configuration"
+    status: active
+    priority: high
+    tests:
+      - tests/workflows/test_config_parser.py
+
+  REQ-WKF-031:
+    title: "Workflow Hooks"
+    source: "ADR-002 Hooks"
+    status: active
+    priority: high
+    tests:
+      - tests/workflows/test_hooks.py
+
+  REQ-WKF-032:
+    title: "File Ingestion Workflow"
+    source: "ADR-002 Ingestion"
+    status: active
+    priority: high
+    tests:
+      - tests/workflows/test_ingest_file.py
+
+  REQ-WKF-033:
+    title: "Workflow Scripts"
+    source: "ADR-002 Scripting"
+    status: active
+    priority: medium
+    tests:
+      - tests/workflows/test_scripts.py
+
+  REQ-WKF-034:
+    title: "Agent Skills"
+    source: "ADR-002 Skills"
+    status: active
+    priority: high
+    tests:
+      - tests/workflows/test_skills.py
+
 # =============================================================================
 # INTEGRATION REQUIREMENTS (ADR-007)
 # =============================================================================
@@ -821,3 +1328,11 @@ requirements:
     priority: high
     tests:
       - tests/test_integration.py::test_no_phase_skip
+
+  REQ-INT-040:
+    title: "Spec/Ledger Reconciliation"
+    source: "ADR-009 Validation"
+    status: active
+    priority: high
+    tests:
+      - tests/spec/test_reconcile.py
