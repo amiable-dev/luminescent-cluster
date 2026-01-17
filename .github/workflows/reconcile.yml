@@ -9,12 +9,14 @@ on:
     paths:
       - 'spec/**'
       - 'tests/**'
+      - 'docs/adrs/**'
       - '.github/workflows/reconcile.yml'
   pull_request:
     branches: [main]
     paths:
       - 'spec/**'
       - 'tests/**'
+      - 'docs/adrs/**'
       - '.github/workflows/reconcile.yml'
   workflow_dispatch:
 
@@ -35,27 +37,72 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyyaml
 
+      # ADR-010: Schema validation, AST introspection, skip/orphan detection
       - name: Run reconciliation (warning mode)
         id: reconcile-warn
         run: |
-          python spec/validation/reconcile.py --warn --verbose
+          python spec/validation/reconcile.py --warn --verbose --check-skips --check-orphans
 
       - name: Run reconciliation (strict mode)
         id: reconcile-strict
         continue-on-error: true
         run: |
-          python spec/validation/reconcile.py --verbose
+          python spec/validation/reconcile.py --verbose --check-skips --check-orphans
 
       - name: Check reconciliation result
         if: github.event_name == 'pull_request'
         run: |
-          if [ "${{ steps.reconcile-strict.outcome }}" == "failure" ]; then
-            echo "::warning::Spec/Ledger reconciliation failed. Please ensure all requirements have tests."
+          exit_code=${{ steps.reconcile-strict.outcome == 'failure' && '1' || '0' }}
+          if [ "$exit_code" == "1" ]; then
+            echo "::warning::Spec/Ledger reconciliation failed. Please ensure all requirements have tests and ledger schema is valid."
           fi
 
-      # Block merge only after Phase 3 is complete
-      # Uncomment when ready to enforce:
-      # - name: Enforce reconciliation
-      #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      #   run: |
-      #     python spec/validation/reconcile.py
+      # ADR-010: Enforce strict reconciliation on main branch
+      - name: Enforce reconciliation (main branch)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          python spec/validation/reconcile.py --verbose --check-skips --check-orphans
+
+  doc-freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      # ADR-010: Documentation link checking
+      - name: Check documentation links
+        id: check-links
+        continue-on-error: true
+        run: |
+          python spec/validation/doc_freshness.py --check-links --verbose
+
+      # ADR-010: ADR-ledger synchronization
+      - name: Check ADR-ledger sync
+        id: check-adr-sync
+        continue-on-error: true
+        run: |
+          python spec/validation/doc_freshness.py --check-adr-sync --verbose
+
+      - name: Report documentation freshness
+        if: always()
+        run: |
+          links_status="${{ steps.check-links.outcome }}"
+          sync_status="${{ steps.check-adr-sync.outcome }}"
+
+          if [ "$links_status" == "failure" ]; then
+            echo "::warning::Documentation has broken internal links"
+          fi
+
+          if [ "$sync_status" == "failure" ]; then
+            echo "::warning::ADR-ledger synchronization issues found"
+          fi

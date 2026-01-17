@@ -58,6 +58,14 @@ jobs:
           path: ./docs/
           extra_args: --only-verified
 
+      # ADR-010: Internal link checking before build
+      - name: Install validation dependencies
+        run: pip install pyyaml
+
+      - name: Check documentation links (ADR-010)
+        run: |
+          python spec/validation/doc_freshness.py --check-links --verbose
+
       - name: Build documentation
         run: mkdocs build --strict
 

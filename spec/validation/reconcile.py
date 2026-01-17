@@ -7,20 +7,25 @@ Bidirectional validation between spec/ledger.yml and actual test files.
 Exit Codes:
     0: All requirements have mapped tests, all mapped tests exist
     1: Reconciliation failures found
-    2: Configuration/parsing error
+    2: Configuration/parsing error (or warning-only issues in strict mode)
 
 Usage:
-    python spec/validation/reconcile.py          # Run full reconciliation
-    python spec/validation/reconcile.py --warn   # Run in warning mode (always exit 0)
-    python spec/validation/reconcile.py --verbose # Show detailed output
-    python spec/validation/reconcile.py --update-baseline # Update baseline after improvements
+    python spec/validation/reconcile.py             # Run full reconciliation
+    python spec/validation/reconcile.py --warn      # Run in warning mode (always exit 0)
+    python spec/validation/reconcile.py --verbose   # Show detailed output
+    python spec/validation/reconcile.py --update-baseline  # Update baseline after improvements
+    python spec/validation/reconcile.py --check-skips      # Check for skipped tests
+    python spec/validation/reconcile.py --check-orphans    # Check for orphan tests
 
 See ADR-009 for the reconciliation system design.
+See ADR-010 for the validation system enhancements.
 """
 
 import argparse
+import ast
 import json
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -28,6 +33,14 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
+# =============================================================================
+# Schema Validation Constants (ADR-010 Layer 1)
+# =============================================================================
+
+VALID_STATUS = {"active", "deprecated", "proposed", "manual"}
+VALID_PRIORITY = {"critical", "high", "medium", "low"}
+REQUIRED_FIELDS = {"title", "source", "status", "priority"}
 
 # =============================================================================
 # Priority Thresholds (ADR-009 Phase 2/3)
@@ -38,6 +51,20 @@ PRIORITY_THRESHOLDS: dict[str, float] = {
     "high": 95.0,       # 95% coverage required
     "medium": 85.0,     # 85% coverage required
     "low": 75.0,        # 75% coverage required
+}
+
+# =============================================================================
+# Skip Detection Taxonomy (ADR-010 Layer 3)
+# =============================================================================
+
+# Tiered skip policy per ADR-010
+# - @pytest.skip (unconditional): Warning - indicates potential rot
+# - @pytest.skipif (conditional): Info - legitimate platform logic
+# - @pytest.mark.xfail: Info - known failures being tracked
+SKIP_SEVERITY = {
+    "unconditional": "warning",  # @pytest.skip without condition
+    "conditional": "info",       # @pytest.skipif
+    "xfail": "info",             # @pytest.mark.xfail
 }
 
 
@@ -78,6 +105,442 @@ def extract_domain(req_id: str) -> str:
     if match:
         return match.group(1)
     return "UNKNOWN"
+
+
+# =============================================================================
+# Schema Validation (ADR-010 Layer 1)
+# =============================================================================
+
+
+@dataclass
+class SchemaValidationResult:
+    """Result of schema validation."""
+
+    valid: bool = True
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+
+
+def validate_requirement_schema(req_id: str, req_data: dict[str, Any]) -> SchemaValidationResult:
+    """Validate a single requirement against the schema.
+
+    Args:
+        req_id: Requirement ID (e.g., REQ-MCP-001)
+        req_data: Requirement data from ledger
+
+    Returns:
+        SchemaValidationResult with errors/warnings
+    """
+    result = SchemaValidationResult()
+
+    if not isinstance(req_data, dict):
+        result.valid = False
+        result.errors.append(f"{req_id}: Invalid requirement format (expected dict)")
+        return result
+
+    # Check required fields
+    for field_name in REQUIRED_FIELDS:
+        if field_name not in req_data:
+            result.valid = False
+            result.errors.append(f"{req_id}: Missing required field '{field_name}'")
+
+    # Validate status
+    status = req_data.get("status")
+    if status and status not in VALID_STATUS:
+        result.valid = False
+        result.errors.append(
+            f"{req_id}: Invalid status '{status}'. "
+            f"Must be one of: {', '.join(sorted(VALID_STATUS))}"
+        )
+
+    # Validate priority
+    priority = req_data.get("priority")
+    if priority and priority not in VALID_PRIORITY:
+        result.valid = False
+        result.errors.append(
+            f"{req_id}: Invalid priority '{priority}'. "
+            f"Must be one of: {', '.join(sorted(VALID_PRIORITY))}"
+        )
+
+    # Validate tests is a list
+    tests = req_data.get("tests")
+    if tests is not None and not isinstance(tests, list):
+        result.valid = False
+        result.errors.append(f"{req_id}: 'tests' must be a list")
+
+    # Validate requirement ID format
+    if not re.match(r"(REQ|NEG)-[A-Z]+-\d+", req_id):
+        result.warnings.append(
+            f"{req_id}: Non-standard requirement ID format. "
+            "Expected (REQ|NEG)-DOMAIN-NNN"
+        )
+
+    return result
+
+
+def validate_ledger_schema(ledger: dict[str, Any]) -> SchemaValidationResult:
+    """Validate the entire ledger against the schema.
+
+    Args:
+        ledger: Parsed ledger data
+
+    Returns:
+        SchemaValidationResult with all errors/warnings
+    """
+    result = SchemaValidationResult()
+
+    # Check top-level structure
+    if "requirements" not in ledger:
+        result.valid = False
+        result.errors.append("Ledger missing 'requirements' section")
+        return result
+
+    if "version" not in ledger:
+        result.warnings.append("Ledger missing 'version' field")
+
+    requirements = ledger.get("requirements", {})
+
+    if not isinstance(requirements, dict):
+        result.valid = False
+        result.errors.append("'requirements' must be a dictionary")
+        return result
+
+    # Validate each requirement
+    for req_id, req_data in requirements.items():
+        req_result = validate_requirement_schema(req_id, req_data)
+        if not req_result.valid:
+            result.valid = False
+        result.errors.extend(req_result.errors)
+        result.warnings.extend(req_result.warnings)
+
+    return result
+
+
+# =============================================================================
+# AST Test Introspection (ADR-010 Layer 1)
+# =============================================================================
+
+
+@dataclass
+class TestIntrospectionResult:
+    """Result of test file introspection."""
+
+    functions: set[str] = field(default_factory=set)
+    classes: dict[str, set[str]] = field(default_factory=dict)  # class -> methods
+    errors: list[str] = field(default_factory=list)
+    parametrized: set[str] = field(default_factory=set)  # functions with @parametrize
+
+
+def introspect_test_file(file_path: Path) -> TestIntrospectionResult:
+    """Parse a test file using AST to extract test functions and classes.
+
+    Args:
+        file_path: Path to the test file
+
+    Returns:
+        TestIntrospectionResult with discovered test symbols
+    """
+    result = TestIntrospectionResult()
+
+    if not file_path.exists():
+        result.errors.append(f"File not found: {file_path}")
+        return result
+
+    try:
+        source = file_path.read_text(encoding="utf-8")
+        tree = ast.parse(source, filename=str(file_path))
+    except SyntaxError as e:
+        result.errors.append(f"SyntaxError in {file_path}: {e}")
+        return result
+    except UnicodeDecodeError as e:
+        result.errors.append(f"UnicodeDecodeError in {file_path}: {e}")
+        return result
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
+            # Top-level test function
+            result.functions.add(node.name)
+            # Check for parametrize decorator
+            for decorator in node.decorator_list:
+                if _is_parametrize_decorator(decorator):
+                    result.parametrized.add(node.name)
+
+        elif isinstance(node, ast.ClassDef) and node.name.startswith("Test"):
+            # Test class
+            methods = set()
+            for item in node.body:
+                if isinstance(item, ast.FunctionDef) and item.name.startswith("test_"):
+                    methods.add(item.name)
+                    # Check for parametrize decorator
+                    for decorator in item.decorator_list:
+                        if _is_parametrize_decorator(decorator):
+                            result.parametrized.add(f"{node.name}::{item.name}")
+            if methods:
+                result.classes[node.name] = methods
+
+    return result
+
+
+def _is_parametrize_decorator(decorator: ast.expr) -> bool:
+    """Check if a decorator is @pytest.mark.parametrize."""
+    # Handle @pytest.mark.parametrize
+    if isinstance(decorator, ast.Call):
+        func = decorator.func
+        if isinstance(func, ast.Attribute):
+            if func.attr == "parametrize":
+                return True
+    # Handle @pytest.mark.parametrize without call (rare)
+    if isinstance(decorator, ast.Attribute):
+        if decorator.attr == "parametrize":
+            return True
+    return False
+
+
+def verify_test_reference(
+    test_path: str, project_root: Path, introspection_cache: dict[str, TestIntrospectionResult]
+) -> tuple[bool, str | None]:
+    """Verify that a test reference (path::function) exists.
+
+    Supports formats:
+    - tests/test_foo.py (file only - just check existence)
+    - tests/test_foo.py::test_bar (function)
+    - tests/test_foo.py::TestClass::test_method (class method)
+
+    Args:
+        test_path: Test reference from ledger
+        project_root: Root directory of the project
+        introspection_cache: Cache of introspected test files
+
+    Returns:
+        Tuple of (exists, error_message)
+    """
+    # Parse the test path
+    parts = test_path.split("::")
+
+    file_path_str = parts[0]
+    # Normalize path separators (handle Windows vs Linux)
+    file_path_str = file_path_str.replace("\\", "/")
+    file_path = project_root / file_path_str
+
+    # Check file exists
+    if not file_path.exists():
+        return False, f"Test file not found: {file_path_str}"
+
+    # If only file path, return True
+    if len(parts) == 1:
+        return True, None
+
+    # Get or create introspection result
+    cache_key = str(file_path)
+    if cache_key not in introspection_cache:
+        introspection_cache[cache_key] = introspect_test_file(file_path)
+
+    introspection = introspection_cache[cache_key]
+
+    # Handle parse errors
+    if introspection.errors:
+        # File has syntax errors - report as warning but don't fail
+        return True, f"Warning: {introspection.errors[0]}"
+
+    # Handle different reference formats
+    if len(parts) == 2:
+        # tests/test_foo.py::test_bar OR tests/test_foo.py::TestClass
+        name = parts[1]
+        if name in introspection.functions:
+            return True, None
+        if name in introspection.classes:
+            return True, None
+        # Check if it's a parametrized test (may have [param] suffix)
+        base_name = name.split("[")[0]
+        if base_name in introspection.functions:
+            return True, None
+        return False, f"Test function/class not found: {name} in {file_path_str}"
+
+    elif len(parts) == 3:
+        # tests/test_foo.py::TestClass::test_method
+        class_name = parts[1]
+        method_name = parts[2]
+        if class_name in introspection.classes:
+            if method_name in introspection.classes[class_name]:
+                return True, None
+            # Check for parametrized test
+            base_method = method_name.split("[")[0]
+            if base_method in introspection.classes[class_name]:
+                return True, None
+            return False, f"Method not found: {class_name}::{method_name} in {file_path_str}"
+        return False, f"Test class not found: {class_name} in {file_path_str}"
+
+    return False, f"Invalid test reference format: {test_path}"
+
+
+# =============================================================================
+# Skip Detection (ADR-010 Layer 3)
+# =============================================================================
+
+
+@dataclass
+class SkipInfo:
+    """Information about a skipped test."""
+
+    test_path: str
+    skip_type: str  # "unconditional", "conditional", "xfail"
+    reason: str | None = None
+
+
+def detect_skips_in_file(file_path: Path) -> list[SkipInfo]:
+    """Detect skipped tests in a file using AST.
+
+    Args:
+        file_path: Path to the test file
+
+    Returns:
+        List of SkipInfo for skipped tests
+    """
+    skips = []
+
+    if not file_path.exists():
+        return skips
+
+    try:
+        source = file_path.read_text(encoding="utf-8")
+        tree = ast.parse(source, filename=str(file_path))
+    except (SyntaxError, UnicodeDecodeError):
+        return skips
+
+    file_str = str(file_path)
+
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if not node.name.startswith("test_"):
+                continue
+
+            for decorator in node.decorator_list:
+                skip_info = _check_skip_decorator(decorator, file_str, node.name)
+                if skip_info:
+                    skips.append(skip_info)
+
+    return skips
+
+
+def _check_skip_decorator(decorator: ast.expr, file_path: str, func_name: str) -> SkipInfo | None:
+    """Check if a decorator is a skip-related decorator.
+
+    Args:
+        decorator: AST decorator node
+        file_path: Path to the file
+        func_name: Name of the function
+
+    Returns:
+        SkipInfo if this is a skip decorator, None otherwise
+    """
+    test_path = f"{file_path}::{func_name}"
+
+    # Handle @pytest.skip
+    if isinstance(decorator, ast.Call):
+        func = decorator.func
+        # @pytest.skip(reason="...")
+        if isinstance(func, ast.Attribute) and func.attr == "skip":
+            reason = _extract_reason(decorator)
+            return SkipInfo(test_path, "unconditional", reason)
+        # @pytest.mark.skip(reason="...")
+        if isinstance(func, ast.Attribute) and func.attr == "skip":
+            if isinstance(func.value, ast.Attribute) and func.value.attr == "mark":
+                reason = _extract_reason(decorator)
+                return SkipInfo(test_path, "unconditional", reason)
+        # @pytest.mark.skipif(condition, reason="...")
+        if isinstance(func, ast.Attribute) and func.attr == "skipif":
+            reason = _extract_reason(decorator)
+            return SkipInfo(test_path, "conditional", reason)
+        # @pytest.mark.xfail(reason="...")
+        if isinstance(func, ast.Attribute) and func.attr == "xfail":
+            reason = _extract_reason(decorator)
+            return SkipInfo(test_path, "xfail", reason)
+
+    # Handle @pytest.mark.skip (without call)
+    if isinstance(decorator, ast.Attribute):
+        if decorator.attr == "skip":
+            return SkipInfo(test_path, "unconditional", None)
+        if decorator.attr == "xfail":
+            return SkipInfo(test_path, "xfail", None)
+
+    return None
+
+
+def _extract_reason(call: ast.Call) -> str | None:
+    """Extract reason from a decorator call."""
+    for keyword in call.keywords:
+        if keyword.arg == "reason" and isinstance(keyword.value, ast.Constant):
+            return str(keyword.value.value)
+    return None
+
+
+# =============================================================================
+# Orphan Detection (ADR-010 Layer 3)
+# =============================================================================
+
+
+def find_orphan_requirement_markers(
+    project_root: Path, ledger_requirements: set[str]
+) -> list[tuple[str, str]]:
+    """Find tests with @pytest.mark.requirement pointing to non-existent requirements.
+
+    This is the inverse of ledger→test validation. It checks if tests reference
+    requirements that don't exist in the ledger.
+
+    Args:
+        project_root: Root directory of the project
+        ledger_requirements: Set of requirement IDs from ledger
+
+    Returns:
+        List of (test_path, orphan_requirement_id) tuples
+    """
+    orphans = []
+    tests_dir = project_root / "tests"
+
+    if not tests_dir.exists():
+        return orphans
+
+    for test_file in tests_dir.rglob("test_*.py"):
+        try:
+            source = test_file.read_text(encoding="utf-8")
+            tree = ast.parse(source, filename=str(test_file))
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+
+        relative_path = str(test_file.relative_to(project_root))
+
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                for decorator in node.decorator_list:
+                    req_ids = _extract_requirement_marker(decorator)
+                    for req_id in req_ids:
+                        if req_id not in ledger_requirements:
+                            test_path = f"{relative_path}::{node.name}"
+                            orphans.append((test_path, req_id))
+
+    return orphans
+
+
+def _extract_requirement_marker(decorator: ast.expr) -> list[str]:
+    """Extract requirement IDs from @pytest.mark.requirement decorator.
+
+    Args:
+        decorator: AST decorator node
+
+    Returns:
+        List of requirement IDs (empty if not a requirement marker)
+    """
+    req_ids = []
+
+    if isinstance(decorator, ast.Call):
+        func = decorator.func
+        # @pytest.mark.requirement("REQ-XXX-NNN")
+        if isinstance(func, ast.Attribute) and func.attr == "requirement":
+            for arg in decorator.args:
+                if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                    req_ids.append(arg.value)
+
+    return req_ids
 
 
 # =============================================================================
@@ -191,11 +654,18 @@ class ReconciliationResult:
     with_tests: int = 0
     without_tests: int = 0
     missing_test_files: list[str] = field(default_factory=list)
+    missing_test_functions: list[str] = field(default_factory=list)  # ADR-010
     orphaned_tests: list[str] = field(default_factory=list)
+    orphan_markers: list[tuple[str, str]] = field(default_factory=list)  # ADR-010
     errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)  # ADR-010
     coverage_by_priority: dict[str, float] = field(default_factory=dict)
     coverage_by_domain: dict[str, float] = field(default_factory=dict)
     ratchet_violations: list[str] = field(default_factory=list)
+    schema_errors: list[str] = field(default_factory=list)  # ADR-010
+    schema_warnings: list[str] = field(default_factory=list)  # ADR-010
+    skipped_tests: list[SkipInfo] = field(default_factory=list)  # ADR-010
+    syntax_errors: list[str] = field(default_factory=list)  # ADR-010
 
     @property
     def coverage(self) -> float:
@@ -211,14 +681,20 @@ class ReconciliationResult:
         Checks:
         1. No errors
         2. No missing test files
-        3. Overall coverage >= 90%
-        4. Priority-specific thresholds met (if coverage_by_priority is populated)
-        5. No ratchet violations
+        3. No missing test functions (ADR-010)
+        4. No schema errors (ADR-010)
+        5. Overall coverage >= 90%
+        6. Priority-specific thresholds met (if coverage_by_priority is populated)
+        7. No ratchet violations
         """
         # Basic checks
         if len(self.errors) > 0:
             return False
         if len(self.missing_test_files) > 0:
+            return False
+        if len(self.missing_test_functions) > 0:
+            return False
+        if len(self.schema_errors) > 0:
             return False
         if self.coverage < 90.0:
             return False
@@ -233,6 +709,25 @@ class ReconciliationResult:
                     return False
 
         return True
+
+    @property
+    def has_warnings(self) -> bool:
+        """Check if there are any warnings (exit code 2 in strict mode).
+
+        Warnings include:
+        - Unconditionally skipped tests
+        - Orphan test markers (tests referencing deleted requirements)
+        - Schema warnings
+        """
+        if self.schema_warnings:
+            return True
+        if self.orphan_markers:
+            return True
+        # Count unconditional skips
+        unconditional_skips = [s for s in self.skipped_tests if s.skip_type == "unconditional"]
+        if unconditional_skips:
+            return True
+        return False
 
 
 def load_ledger(ledger_path: Path) -> dict[str, Any]:
@@ -271,16 +766,25 @@ def parse_test_path(test_path: str) -> tuple[str, str | None]:
 
 
 def reconcile(
-    ledger_path: Path, project_root: Path, verbose: bool = False
+    ledger_path: Path,
+    project_root: Path,
+    verbose: bool = False,
+    check_skips: bool = False,
+    check_orphans: bool = False,
+    introspect_functions: bool = True,
 ) -> ReconciliationResult:
     """Run bidirectional reconciliation.
 
     Checks:
-    1. All requirements have mapped tests
-    2. All mapped test files exist
-    3. Coverage meets threshold (90%)
-    4. Priority-specific thresholds met
-    5. Domain-specific coverage tracked
+    1. Ledger schema validation (ADR-010)
+    2. All requirements have mapped tests
+    3. All mapped test files exist
+    4. Test function/method existence via AST introspection (ADR-010)
+    5. Coverage meets threshold (90%)
+    6. Priority-specific thresholds met
+    7. Domain-specific coverage tracked
+    8. Skip detection (ADR-010, optional)
+    9. Orphan marker detection (ADR-010, optional)
     """
     result = ReconciliationResult()
 
@@ -294,6 +798,17 @@ def reconcile(
         result.errors.append(f"YAML parsing error: {e}")
         return result
 
+    # Schema validation (ADR-010 Layer 1)
+    if verbose:
+        print("Running schema validation...")
+    schema_result = validate_ledger_schema(ledger)
+    result.schema_errors = schema_result.errors
+    result.schema_warnings = schema_result.warnings
+    if verbose and schema_result.errors:
+        print(f"  Schema errors: {len(schema_result.errors)}")
+    if verbose and schema_result.warnings:
+        print(f"  Schema warnings: {len(schema_result.warnings)}")
+
     # Find existing test files
     existing_test_files = find_test_files(project_root)
     if verbose:
@@ -305,6 +820,9 @@ def reconcile(
 
     # Track referenced test files
     referenced_test_files = set()
+
+    # Cache for AST introspection (ADR-010)
+    introspection_cache: dict[str, TestIntrospectionResult] = {}
 
     # Track coverage by priority and domain
     priority_counts: dict[str, dict[str, int]] = {
@@ -358,15 +876,29 @@ def reconcile(
             priority_counts[effective_priority]["covered"] += 1
         domain_counts[domain]["covered"] += 1
 
-        # Verify test files exist
+        # Verify test files and functions exist
         for test_path in tests:
-            file_path, _ = parse_test_path(test_path)
+            file_path, test_name = parse_test_path(test_path)
+            # Normalize path separators
+            file_path = file_path.replace("\\", "/")
             referenced_test_files.add(file_path)
 
             if file_path not in existing_test_files:
                 result.missing_test_files.append(f"{req_id}: {file_path}")
                 if verbose:
                     print(f"  {req_id}: Missing test file {file_path}")
+            elif introspect_functions and "::" in test_path:
+                # AST introspection for function/method existence (ADR-010)
+                exists, error = verify_test_reference(
+                    test_path, project_root, introspection_cache
+                )
+                if not exists:
+                    result.missing_test_functions.append(f"{req_id}: {test_path}")
+                    if verbose:
+                        print(f"  {req_id}: {error}")
+                elif error and error.startswith("Warning:"):
+                    # Syntax errors are reported as warnings
+                    result.syntax_errors.append(error)
 
     # Calculate coverage by priority
     for priority, counts in priority_counts.items():
@@ -391,14 +923,50 @@ def reconcile(
     orphaned = existing_test_files - referenced_test_files
     result.orphaned_tests = list(sorted(orphaned))
 
+    # Skip detection (ADR-010 Layer 3, optional)
+    if check_skips:
+        if verbose:
+            print("Running skip detection...")
+        for test_file in existing_test_files:
+            full_path = project_root / test_file
+            skips = detect_skips_in_file(full_path)
+            result.skipped_tests.extend(skips)
+        if verbose:
+            print(f"  Found {len(result.skipped_tests)} skipped tests")
+
+    # Orphan marker detection (ADR-010 Layer 3, optional)
+    if check_orphans:
+        if verbose:
+            print("Running orphan marker detection...")
+        ledger_req_ids = set(requirements.keys())
+        result.orphan_markers = find_orphan_requirement_markers(
+            project_root, ledger_req_ids
+        )
+        if verbose:
+            print(f"  Found {len(result.orphan_markers)} orphan markers")
+
     return result
 
 
 def print_report(result: ReconciliationResult, verbose: bool = False) -> None:
     """Print reconciliation report."""
     print("\n" + "=" * 60)
-    print("SPEC/LEDGER RECONCILIATION REPORT")
+    print("SPEC/LEDGER RECONCILIATION REPORT (ADR-010)")
     print("=" * 60)
+
+    # Schema Validation (ADR-010)
+    if result.schema_errors or result.schema_warnings:
+        print("\nSchema Validation:")
+        if result.schema_errors:
+            print(f"  Errors:   {len(result.schema_errors)}")
+            status = "FAIL"
+        else:
+            status = "PASS"
+        if result.schema_warnings:
+            print(f"  Warnings: {len(result.schema_warnings)}")
+        print(f"  Status:   {status}")
+    elif verbose:
+        print("\nSchema Validation: PASS")
 
     print(f"\nRequirements:")
     print(f"  Total:            {result.total_requirements}")
@@ -424,6 +992,22 @@ def print_report(result: ReconciliationResult, verbose: bool = False) -> None:
             coverage = result.coverage_by_domain[domain]
             print(f"  {domain:10} {coverage:5.1f}%")
 
+    # Schema errors (ADR-010)
+    if result.schema_errors:
+        print(f"\nSchema Errors ({len(result.schema_errors)}):")
+        for error in result.schema_errors[:10]:
+            print(f"  - {error}")
+        if len(result.schema_errors) > 10:
+            print(f"  ... and {len(result.schema_errors) - 10} more")
+
+    # Schema warnings (ADR-010)
+    if verbose and result.schema_warnings:
+        print(f"\nSchema Warnings ({len(result.schema_warnings)}):")
+        for warning in result.schema_warnings[:10]:
+            print(f"  - {warning}")
+        if len(result.schema_warnings) > 10:
+            print(f"  ... and {len(result.schema_warnings) - 10} more")
+
     if result.missing_test_files:
         print(f"\nMissing Test Files ({len(result.missing_test_files)}):")
         for item in result.missing_test_files[:10]:
@@ -431,12 +1015,55 @@ def print_report(result: ReconciliationResult, verbose: bool = False) -> None:
         if len(result.missing_test_files) > 10:
             print(f"  ... and {len(result.missing_test_files) - 10} more")
 
+    # Missing test functions (ADR-010)
+    if result.missing_test_functions:
+        print(f"\nMissing Test Functions ({len(result.missing_test_functions)}):")
+        for item in result.missing_test_functions[:10]:
+            print(f"  - {item}")
+        if len(result.missing_test_functions) > 10:
+            print(f"  ... and {len(result.missing_test_functions) - 10} more")
+
+    # Syntax errors (ADR-010)
+    if result.syntax_errors:
+        print(f"\nSyntax Errors in Test Files ({len(result.syntax_errors)}):")
+        for error in result.syntax_errors[:5]:
+            print(f"  - {error}")
+        if len(result.syntax_errors) > 5:
+            print(f"  ... and {len(result.syntax_errors) - 5} more")
+
     if verbose and result.orphaned_tests:
         print(f"\nOrphaned Test Files ({len(result.orphaned_tests)}):")
         for item in result.orphaned_tests[:10]:
             print(f"  - {item}")
         if len(result.orphaned_tests) > 10:
             print(f"  ... and {len(result.orphaned_tests) - 10} more")
+
+    # Orphan markers (ADR-010)
+    if result.orphan_markers:
+        print(f"\nOrphan Requirement Markers ({len(result.orphan_markers)}):")
+        for test_path, req_id in result.orphan_markers[:10]:
+            print(f"  - {test_path} references non-existent {req_id}")
+        if len(result.orphan_markers) > 10:
+            print(f"  ... and {len(result.orphan_markers) - 10} more")
+
+    # Skipped tests (ADR-010)
+    if result.skipped_tests:
+        # Group by skip type
+        unconditional = [s for s in result.skipped_tests if s.skip_type == "unconditional"]
+        conditional = [s for s in result.skipped_tests if s.skip_type == "conditional"]
+        xfail = [s for s in result.skipped_tests if s.skip_type == "xfail"]
+
+        print(f"\nSkipped Tests ({len(result.skipped_tests)}):")
+        if unconditional:
+            print(f"  Unconditional (@skip) [WARNING]: {len(unconditional)}")
+            if verbose:
+                for skip in unconditional[:5]:
+                    reason = f" - {skip.reason}" if skip.reason else ""
+                    print(f"    - {skip.test_path}{reason}")
+        if conditional:
+            print(f"  Conditional (@skipif) [INFO]: {len(conditional)}")
+        if xfail:
+            print(f"  Expected fail (@xfail) [INFO]: {len(xfail)}")
 
     if result.ratchet_violations:
         print(f"\nRatchet Violations ({len(result.ratchet_violations)}):")
@@ -450,13 +1077,20 @@ def print_report(result: ReconciliationResult, verbose: bool = False) -> None:
 
     print("\n" + "-" * 60)
     if result.passed:
-        print("Reconciliation PASSED!")
+        if result.has_warnings:
+            print("Reconciliation PASSED with WARNINGS!")
+        else:
+            print("Reconciliation PASSED!")
     else:
         print("Reconciliation FAILED!")
+        if result.schema_errors:
+            print(f"  - {len(result.schema_errors)} schema errors")
         if result.coverage < 90.0:
             print(f"  - Coverage {result.coverage:.1f}% below threshold (90%)")
         if result.missing_test_files:
             print(f"  - {len(result.missing_test_files)} missing test files")
+        if result.missing_test_functions:
+            print(f"  - {len(result.missing_test_functions)} missing test functions")
         if result.ratchet_violations:
             print(f"  - {len(result.ratchet_violations)} ratchet violations")
         # Check priority thresholds
@@ -470,14 +1104,25 @@ def print_report(result: ReconciliationResult, verbose: bool = False) -> None:
 
 
 def main() -> int:
-    """Main entry point."""
+    """Main entry point.
+
+    Exit codes (ADR-010):
+        0: All validations passed
+        1: Reconciliation failures (missing files, schema errors, etc.)
+        2: Configuration/parsing error OR warnings in strict mode
+    """
     parser = argparse.ArgumentParser(
-        description="Spec/Ledger reconciliation validation"
+        description="Spec/Ledger reconciliation validation (ADR-009, ADR-010)"
     )
     parser.add_argument(
         "--warn",
         action="store_true",
         help="Warning mode: always exit 0, print warnings only",
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Strict mode: treat warnings as failures (exit 2)",
     )
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Verbose output"
@@ -494,6 +1139,26 @@ def main() -> int:
         default=Path("."),
         help="Project root directory",
     )
+    parser.add_argument(
+        "--check-skips",
+        action="store_true",
+        help="Enable skip detection (ADR-010 Layer 3)",
+    )
+    parser.add_argument(
+        "--check-orphans",
+        action="store_true",
+        help="Enable orphan marker detection (ADR-010 Layer 3)",
+    )
+    parser.add_argument(
+        "--no-introspection",
+        action="store_true",
+        help="Disable AST test function introspection",
+    )
+    parser.add_argument(
+        "--update-baseline",
+        action="store_true",
+        help="Update the baseline file with current coverage",
+    )
 
     args = parser.parse_args()
 
@@ -508,7 +1173,14 @@ def main() -> int:
 
     # Run reconciliation
     try:
-        result = reconcile(ledger_path, project_root, args.verbose)
+        result = reconcile(
+            ledger_path,
+            project_root,
+            verbose=args.verbose,
+            check_skips=args.check_skips,
+            check_orphans=args.check_orphans,
+            introspect_functions=not args.no_introspection,
+        )
     except Exception as e:
         print(f"ERROR: {e}", file=sys.stderr)
         return 2
@@ -516,10 +1188,32 @@ def main() -> int:
     # Print report
     print_report(result, args.verbose)
 
-    # Determine exit code
+    # Handle baseline update
+    if args.update_baseline:
+        baseline_path = project_root / ".spec-baseline.json"
+        baseline = BaselineSchema(
+            version="1.0",
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            coverage={
+                "overall": result.coverage,
+                "by_priority": result.coverage_by_priority,
+                "by_domain": result.coverage_by_domain,
+            },
+        )
+        save_baseline(baseline, baseline_path)
+        print(f"Baseline updated: {baseline_path}")
+
+    # Determine exit code (ADR-010)
     if args.warn:
         return 0
-    return 0 if result.passed else 1
+
+    if not result.passed:
+        return 1
+
+    if args.strict and result.has_warnings:
+        return 2
+
+    return 0
 
 
 if __name__ == "__main__":
