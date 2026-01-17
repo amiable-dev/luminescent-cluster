@@ -461,6 +461,44 @@ class TestDocFreshnessLinkChecker:
         assert "https://example.com" in targets
         assert "#anchor" in targets
 
+    def test_skip_links_in_code_blocks(self):
+        """Should skip links inside code blocks."""
+        from spec.validation.doc_freshness import extract_links_from_markdown
+
+        content = """
+# Test
+
+[Real Link](./real.md)
+
+```
+[Link in code block](./fake.md)
+```
+
+More text.
+"""
+
+        links = extract_links_from_markdown(content)
+
+        assert len(links) == 1
+        assert links[0][2] == "./real.md"
+
+    def test_skip_links_in_inline_code(self):
+        """Should skip links inside inline code backticks."""
+        from spec.validation.doc_freshness import extract_links_from_markdown
+
+        content = """
+# Test
+
+Example: `[link](404.md)` is broken.
+
+[Real Link](./real.md)
+"""
+
+        links = extract_links_from_markdown(content)
+
+        assert len(links) == 1
+        assert links[0][2] == "./real.md"
+
     def test_check_all_links(self):
         """Should check all links in documentation."""
         from spec.validation.doc_freshness import check_all_links

@@ -158,14 +158,25 @@ def extract_links_from_markdown(content: str) -> list[tuple[int, str, str]]:
         ref_target = match.group(2).strip()
         ref_definitions[ref_id] = ref_target
 
+    # Track code block state
+    in_code_block = False
+
     # Find inline links
     for line_num, line in enumerate(lines, 1):
-        # Skip code blocks
+        # Toggle code block state on ``` lines
         if line.strip().startswith("```"):
+            in_code_block = not in_code_block
             continue
 
+        # Skip content inside code blocks
+        if in_code_block:
+            continue
+
+        # Remove inline code before checking for links (code in backticks)
+        line_without_code = re.sub(r'`[^`]+`', '', line)
+
         # Inline links: [text](target)
-        for match in MARKDOWN_LINK_PATTERN.finditer(line):
+        for match in MARKDOWN_LINK_PATTERN.finditer(line_without_code):
             link_text = match.group(1)
             target = match.group(2)
             links.append((line_num, link_text, target))

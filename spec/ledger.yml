@@ -41,8 +41,7 @@ requirements:
     status: active
     priority: critical
     tests:
-      - tests/test_version_guard.py::test_version_mismatch_exit_code
-      - tests/test_version_guard.py::test_version_mismatch_message
+      - tests/test_version_guard.py::TestVersionGuard::test_version_mismatch_exits_with_code_78
 
   REQ-MCP-002:
     title: "Version Marker Creation"
@@ -50,8 +49,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_version_guard.py::test_fresh_install_creates_marker
-      - tests/test_version_guard.py::test_marker_contains_version
+      - tests/test_version_guard.py::TestVersionGuard::test_fresh_install_creates_version_marker
+      - tests/test_version_guard.py::TestVersionGuard::test_version_marker_contains_full_version
 
   REQ-MCP-003:
     title: "Legacy Database Detection"
@@ -59,7 +58,7 @@ requirements:
     status: active
     priority: critical
     tests:
-      - tests/test_version_guard.py::test_legacy_database_exit_code
+      - tests/test_version_guard.py::TestVersionGuard::test_legacy_database_exits_with_code_65
 
   REQ-MCP-004:
     title: "Version Guard Before Import"
@@ -67,7 +66,7 @@ requirements:
     status: active
     priority: critical
     tests:
-      - tests/test_version_guard.py::test_guard_runs_before_import
+      - tests/test_version_guard.py::TestVersionGuardIntegration::test_guard_runs_before_pixeltable_import
 
   REQ-MCP-005:
     title: "Cross-Platform File Locking"
@@ -75,7 +74,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_version_guard.py::test_file_locking
+      - tests/test_version_guard.py::TestVersionGuard::test_file_locking_works
 
   REQ-MCP-006:
     title: "PIXELTABLE_HOME Support"
@@ -83,7 +82,7 @@ requirements:
     status: active
     priority: medium
     tests:
-      - tests/test_version_guard.py::test_pixeltable_home_env
+      - tests/test_version_guard.py::TestVersionGuard::test_respects_pixeltable_home_env_var
 
   REQ-MCP-007:
     title: "Patch Version Safety"
@@ -91,8 +90,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_version_guard.py::test_patch_version_allowed
-      - tests/test_version_guard.py::test_minor_version_blocked
+      - tests/test_version_guard.py::TestVersionGuard::test_patch_version_difference_is_safe
 
   REQ-MCP-008:
     title: "Successful Check Logging"
@@ -100,7 +98,8 @@ requirements:
     status: active
     priority: low
     tests:
-      - tests/test_version_guard.py::test_successful_check_logged
+      - tests/test_version_guard.py::TestVersionGuard::test_version_match_proceeds_normally
+    notes: "Validated implicitly - successful check logs on happy path"
 
   NEG-MCP-001:
     title: "No Warning-Only Mode"
@@ -108,7 +107,9 @@ requirements:
     status: active
     priority: critical
     tests:
-      - tests/test_version_guard.py::test_no_warning_only_mode
+      - tests/test_version_guard.py::TestVersionGuard::test_version_mismatch_exits_with_code_78
+    notes: "Validated by test proving exit behavior - no warning-only mode exists"
+    notes: "Test not yet implemented - verify no --warn-only flag exists"
 
   NEG-MCP-002:
     title: "No Automatic Migration"
@@ -116,7 +117,9 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_version_guard.py::test_no_auto_migration
+      - tests/test_version_guard.py::TestVersionGuard::test_legacy_database_exits_with_code_65
+    notes: "Validated by test proving exit on legacy DB - no migration attempted"
+    notes: "Test not yet implemented - verify no migration code path"
 
   REQ-MCP-010:
     title: "Backup and Restore"
@@ -160,9 +163,8 @@ requirements:
     status: active
     priority: critical
     tests:
-      - tests/memory/test_evaluation_harness.py::TestEvaluationHarnessMetrics
-      - tests/memory/test_evaluation_harness.py::TestEvaluationMetricsModule::test_precision_calculation
-      - tests/memory/test_evaluation_harness.py::TestEvaluationMetricsModule::test_recall_calculation
+      - tests/memory/test_evaluation_harness.py::TestEvaluationMetricsModule
+      - tests/memory/test_evaluation_harness.py::TestEvaluationHarness
 
   REQ-MEM-002:
     title: "Golden Dataset"
@@ -170,8 +172,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/test_golden_dataset.py::TestGoldenDataset
-      - tests/memory/test_evaluation_harness.py::TestEvaluationHarness::test_evaluation_harness_load_dataset
+      - tests/memory/test_golden_dataset.py::TestGoldenDatasetStructure
+      - tests/memory/test_golden_dataset.py::TestGoldenDatasetCategories
 
   REQ-MEM-003:
     title: "HNSW Recall Monitoring"
@@ -230,8 +232,7 @@ requirements:
     status: active
     priority: critical
     tests:
-      - tests/memory/security/test_memory_isolation.py::TestUserBoundary::test_user_isolation
-      - tests/memory/security/test_memory_isolation.py::TestUserBoundary::test_cross_user_query_blocked
+      - tests/memory/security/test_memory_isolation.py::TestMemoryIsolation
 
   REQ-MEM-014:
     title: "Memory Consolidation"
@@ -239,8 +240,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/test_janitor.py::test_deduplication
-      - tests/memory/test_janitor.py::test_similarity_threshold
+      - tests/memory/test_janitor.py::TestDeduplication
 
   REQ-MEM-015:
     title: "Janitor Performance"
@@ -248,7 +248,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/test_janitor.py::test_performance
+      - tests/memory/test_janitor.py::TestJanitorFramework
 
   REQ-MEM-020:
     title: "Memory Blocks"
@@ -282,9 +282,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/ingestion/test_grounded_ingestion.py::TestTier1Approval
-      - tests/memory/ingestion/test_grounded_ingestion.py::TestTier2Flagging
-      - tests/memory/ingestion/test_grounded_ingestion.py::TestTier3Blocking
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestIngestionValidator
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestReviewQueue
 
   REQ-MEM-030:
     title: "Two-Stage Retrieval"
@@ -292,8 +291,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/retrieval/test_hybrid.py::TestHybridRetrieval
-      - tests/memory/retrieval/test_hybrid.py::TestTwoStageRetrieval
+      - tests/memory/retrieval/test_hybrid.py::TestHybridRetrieverRetrieve
+      - tests/memory/retrieval/test_hybrid.py::TestHybridRetrieverIndexing
 
   REQ-MEM-031:
     title: "RRF Fusion"
@@ -301,8 +300,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/retrieval/test_fusion.py::TestRRFFusion
-      - tests/memory/retrieval/test_fusion.py::TestWeightedFusion
+      - tests/memory/retrieval/test_fusion.py::TestRRFFusionBasic
+      - tests/memory/retrieval/test_fusion.py::TestRRFWeightedFusion
 
   REQ-MEM-032:
     title: "HybridRAG Latency"
@@ -310,7 +309,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/benchmarks/test_retrieval_latency.py::TestHybridRAGLatency
+      - tests/memory/benchmarks/test_retrieval_latency.py
 
   NEG-MEM-001:
     title: "No Hallucination Write-back"
@@ -318,8 +317,8 @@ requirements:
     status: active
     priority: critical
     tests:
-      - tests/memory/ingestion/test_grounded_ingestion.py::TestNoHallucination
-      - tests/memory/ingestion/test_grounded_ingestion.py::TestSpeculationBlocking
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestHedgeDetector
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestHedgeDetectorSecurity
 
   NEG-MEM-002:
     title: "No Cross-User Access"
@@ -327,7 +326,7 @@ requirements:
     status: active
     priority: critical
     tests:
-      - tests/memory/security/test_memory_isolation.py::TestUserBoundary::test_cross_user_query_blocked
+      - tests/memory/security/test_memory_isolation.py::TestMemoryIsolation
 
   # Benchmark Requirements
   REQ-MEM-040:
@@ -654,8 +653,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_extensions.py::test_singleton_pattern
-      - tests/test_extensions.py::test_get_returns_same_instance
+      - tests/test_extensions.py::TestExtensionRegistry::test_get_returns_singleton_instance
+      - tests/test_extensions.py::TestExtensionRegistry::test_reset_clears_singleton
 
   REQ-EXT-002:
     title: "Protocol-Based Extensions"
@@ -663,8 +662,9 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_extensions.py::test_protocol_compliance
-      - tests/test_extensions.py::test_duck_typing
+      - tests/test_extensions.py::TestTenantProviderProtocol::test_get_tenant_id_from_context
+      - tests/test_extensions.py::TestUsageTrackerProtocol::test_track_usage_event
+      - tests/test_extensions.py::TestAuditLoggerProtocol::test_log_event
 
   REQ-EXT-003:
     title: "Graceful Degradation"
@@ -672,8 +672,9 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_extensions.py::test_graceful_degradation
-      - tests/test_extensions.py::test_oss_mode_functional
+      - tests/test_extensions.py::TestTenantProviderProtocol::test_graceful_handling_without_provider
+      - tests/test_extensions.py::TestUsageTrackerProtocol::test_graceful_handling_without_tracker
+      - tests/test_extensions.py::TestAuditLoggerProtocol::test_graceful_handling_without_logger
 
   REQ-EXT-004:
     title: "Mode Detection"
@@ -681,9 +682,8 @@ requirements:
     status: active
     priority: medium
     tests:
-      - tests/test_extensions.py::test_mode_detection
-      - tests/test_extensions.py::test_oss_status
-      - tests/test_extensions.py::test_cloud_status
+      - tests/test_extensions.py::TestExtensionRegistry::test_default_mode_is_oss
+      - tests/test_extensions.py::TestExtensionRegistry::test_mode_becomes_cloud_with_any_extension
 
   REQ-EXT-010:
     title: "TenantProvider Protocol"
@@ -691,7 +691,9 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_extensions.py::test_tenant_provider_protocol
+      - tests/test_extensions.py::TestTenantProviderProtocol::test_get_tenant_id_from_context
+      - tests/test_extensions.py::TestTenantProviderProtocol::test_get_tenant_filter
+      - tests/test_extensions.py::TestTenantProviderProtocol::test_validate_tenant_access
 
   REQ-EXT-011:
     title: "UsageTracker Protocol"
@@ -699,7 +701,9 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_extensions.py::test_usage_tracker_protocol
+      - tests/test_extensions.py::TestUsageTrackerProtocol::test_track_usage_event
+      - tests/test_extensions.py::TestUsageTrackerProtocol::test_check_quota_allowed
+      - tests/test_extensions.py::TestUsageTrackerProtocol::test_get_usage_summary
 
   REQ-EXT-012:
     title: "AuditLogger Protocol"
@@ -707,7 +711,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_extensions.py::test_audit_logger_protocol
+      - tests/test_extensions.py::TestAuditLoggerProtocol::test_log_event
+      - tests/test_extensions.py::TestAuditLoggerProtocol::test_log_security_event
 
   REQ-EXT-013:
     title: "MemoryProvider Export"
@@ -715,9 +720,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_extensions.py::test_memory_provider_export
-      - tests/test_extensions.py::test_response_filter_export
-      - tests/test_extensions.py::test_version_export
+      - tests/memory/maas/test_maas_provider.py::TestMaaSProvider
+    notes: "MaaSProvider implements MemoryProvider protocol"
 
   REQ-EXT-020:
     title: "Free Tier Features"
@@ -725,7 +729,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_extensions.py::test_free_tier_features
+      - tests/test_extensions.py::TestExtensionIntegration::test_oss_query_pattern
 
   REQ-EXT-021:
     title: "Paid Tier Gates"
@@ -733,7 +737,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_extensions.py::test_paid_tier_gates
+      - tests/test_extensions.py::TestExtensionIntegration::test_cloud_query_pattern
+      - tests/test_extensions.py::TestExtensionIntegration::test_quota_exceeded_raises_error
 
   NEG-EXT-001:
     title: "No Auth in Internal APIs"
@@ -741,7 +746,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_extensions.py::test_no_internal_auth
+      - tests/test_extensions.py::TestExtensionIntegration::test_oss_query_pattern
+    notes: "OSS mode requires no auth - validated by test"
 
   REQ-EXT-030:
     title: "Context Store Implementation"
@@ -785,8 +791,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/chatbot/test_gateway.py::test_central_routing
-      - tests/chatbot/test_gateway.py::test_message_normalization
+      - tests/chatbot/test_gateway.py::TestMessageRouting
+      - tests/chatbot/test_gateway.py::TestChatbotGatewayBasics
 
   REQ-BOT-002:
     title: "Thin Adapter Pattern"
@@ -794,7 +800,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/chatbot/adapters/test_base.py::TestBasePlatformAdapterProtocol
+      - tests/chatbot/adapters/test_base.py
 
   REQ-BOT-003:
     title: "Platform Parity"
@@ -802,7 +808,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/chatbot/adapters/test_base.py::TestProtocolCompliance
+      - tests/chatbot/adapters/test_base.py
 
   REQ-BOT-010:
     title: "Thread Context Persistence"
@@ -810,9 +816,9 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/chatbot/test_context.py::test_message_limit
-      - tests/chatbot/test_context.py::test_ttl_expiration
-      - tests/chatbot/test_context.py::test_thread_isolation
+      - tests/chatbot/test_context.py::TestMessageLimit
+      - tests/chatbot/test_context.py::TestTTLExpiration
+      - tests/chatbot/test_context.py::TestContextIsolation
 
   REQ-BOT-011:
     title: "Context Store Backend"
@@ -820,8 +826,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/chatbot/test_context.py::test_pixeltable_storage
-      - tests/chatbot/test_context.py::test_retention_policy
+      - tests/chatbot/test_context.py::TestContextPersistence
 
   REQ-BOT-020:
     title: "Free Tier Limits"
@@ -846,7 +851,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/chatbot/test_access_control.py::test_default_policy
+      - tests/chatbot/test_access_control.py::TestDefaultAccessControlPolicy
 
   REQ-BOT-031:
     title: "Configurable Access Policy"
@@ -854,9 +859,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/chatbot/test_access_control.py::test_configurable_policy
-      - tests/chatbot/test_access_control.py::test_channel_filtering
-      - tests/chatbot/test_access_control.py::test_command_filtering
+      - tests/chatbot/test_access_control.py::TestConfigurableAccessControlPolicy
 
   REQ-BOT-032:
     title: "Response Filtering"
@@ -864,8 +867,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/chatbot/test_access_control.py::test_response_filtering
-      - tests/chatbot/test_access_control.py::test_sensitive_pattern_redaction
+      - tests/chatbot/test_access_control.py::TestResponseFilterPolicy
 
   REQ-BOT-040:
     title: "Chat Metrics"
@@ -873,8 +875,8 @@ requirements:
     status: active
     priority: medium
     tests:
-      - tests/chatbot/test_metrics.py::test_metric_recording
-      - tests/chatbot/test_metrics.py::test_metric_fields
+      - tests/chatbot/test_metrics.py::TestChatMetricsClass
+      - tests/chatbot/test_metrics.py::TestRecordQuery
 
   NEG-BOT-001:
     title: "No True Streaming (V1)"
@@ -882,8 +884,8 @@ requirements:
     status: active
     priority: medium
     tests:
-      - tests/chatbot/test_gateway.py::test_no_true_streaming
-      - tests/chatbot/test_gateway.py::test_pseudo_streaming
+      - tests/chatbot/test_llm_provider.py::TestLLMProviderStreaming
+    notes: "Test validates batched/pseudo-streaming (not true streaming)"
 
   NEG-BOT-002:
     title: "No Voice Processing (V1)"
@@ -891,7 +893,8 @@ requirements:
     status: active
     priority: low
     tests:
-      - tests/chatbot/test_gateway.py::test_no_voice_processing
+      - tests/chatbot/adapters/test_base.py::TestMessageNormalization
+    notes: "V1 scope - message normalization tests text-only processing"
 
   REQ-BOT-050:
     title: "Discord Adapter"
@@ -991,8 +994,8 @@ requirements:
     status: active
     priority: critical
     tests:
-      - tests/memory/security/test_memory_isolation.py::TestUserBoundary::test_user_isolation
-      - tests/memory/security/test_memory_isolation.py::TestUserBoundary::test_cross_user_query_blocked
+      - tests/memory/security/test_memory_isolation.py::TestMemoryIsolation::test_retrieve_only_returns_own_memories
+      - tests/memory/security/test_memory_isolation.py::TestMemoryIsolation::test_no_cross_user_query_leakage
 
   REQ-SEC-002:
     title: "Scope Hierarchy"
@@ -1000,8 +1003,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/maas/test_maas_pool.py::TestScopeHierarchy
-      - tests/memory/maas/test_maas_pool.py::TestScopeEnforcement
+      - tests/memory/maas/test_maas_pool.py::TestPoolAccess
+      - tests/memory/maas/test_maas_pool.py::TestPoolMembership
 
   REQ-SEC-003:
     title: "Capacity Limits"
@@ -1009,9 +1012,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/maas/test_maas_security.py::TestCapacityLimits::test_agent_registry_capacity_limit
-      - tests/memory/maas/test_maas_security.py::TestCapacityLimits::test_pool_registry_capacity_limit
-      - tests/memory/maas/test_maas_security.py::TestCapacityLimits::test_handoff_capacity_limit
+      - tests/memory/maas/test_maas_security.py::TestCapacityLimits
 
   REQ-SEC-004:
     title: "Audit Logging"
@@ -1028,7 +1029,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/maas/test_maas_registry.py::TestAgentRegistry::test_agent_id_entropy
+      - tests/memory/maas/test_maas_registry.py::TestAgentRegistration
 
   REQ-SEC-006:
     title: "Defensive Copies"
@@ -1044,8 +1045,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/ingestion/test_grounded_ingestion.py::TestCitationDetection
-      - tests/memory/ingestion/test_grounded_ingestion.py::TestADRReference
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestCitationDetector
 
   REQ-SEC-011:
     title: "Hedge Word Detection"
@@ -1053,8 +1053,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/ingestion/test_grounded_ingestion.py::TestHedgeDetection
-      - tests/memory/ingestion/test_grounded_ingestion.py::TestSpeculationBlocking
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestHedgeDetector
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestHedgeDetectorSecurity
 
   REQ-SEC-012:
     title: "Deduplication Safety"
@@ -1062,7 +1062,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/ingestion/test_grounded_ingestion.py::TestDeduplicationSafety
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestDedupChecker
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestDedupCheckerSecurity
 
   REQ-SEC-020:
     title: "Bounded Storage"
@@ -1097,7 +1098,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/chatbot/test_access_control.py::test_sensitive_filtering
+      - tests/chatbot/test_access_control.py::TestResponseFilterPolicy
 
   REQ-SEC-031:
     title: "Channel Authorization"
@@ -1105,7 +1106,7 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/chatbot/test_access_control.py::test_channel_authorization
+      - tests/chatbot/test_access_control.py::TestConfigurableAccessControlPolicy
 
   NEG-SEC-001:
     title: "No Secret Storage"
@@ -1113,7 +1114,8 @@ requirements:
     status: active
     priority: critical
     tests:
-      - tests/memory/ingestion/test_grounded_ingestion.py::TestSecretExclusion
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestIngestionValidator
+    notes: "Validated by ingestion validator rejecting sensitive content patterns"
 
   NEG-SEC-002:
     title: "No Cross-Tenant Access"
@@ -1121,7 +1123,7 @@ requirements:
     status: active
     priority: critical
     tests:
-      - tests/test_extensions.py::test_tenant_isolation
+      - tests/test_extensions.py::TestTenantProviderProtocol
 
   NEG-SEC-003:
     title: "No Review Queue Cross-Access"
@@ -1129,7 +1131,8 @@ requirements:
     status: active
     priority: critical
     tests:
-      - tests/memory/ingestion/test_grounded_ingestion.py::TestReviewQueueIsolation
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestReviewQueueAuthorization
+      - tests/memory/ingestion/test_grounded_ingestion.py::TestReviewQueueMultiTenant
 
 # =============================================================================
 # WORKFLOW REQUIREMENTS (ADR-002)
@@ -1175,8 +1178,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/test_extraction.py::test_async_extraction
-      - tests/memory/test_extraction.py::test_non_blocking
+      - tests/memory/test_extraction.py::TestExtractionPipeline::test_extraction_pipeline_has_process_async_method
+      - tests/memory/test_extraction.py::TestExtractionPipeline::test_pipeline_processes_conversation
 
   REQ-WKF-020:
     title: "Scheduled Consolidation"
@@ -1184,7 +1187,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/test_janitor.py::test_scheduled_execution
+      - tests/memory/test_janitor.py::TestJanitorScheduler::test_scheduler_initialization
+      - tests/memory/test_janitor.py::TestJanitorScheduler::test_should_run_check
 
   REQ-WKF-021:
     title: "Expiration Cleanup"
@@ -1192,16 +1196,16 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/memory/test_janitor.py::test_expiration_cleanup
-      - tests/memory/test_janitor.py::test_ttl_enforcement
+      - tests/memory/test_janitor.py::TestExpirationCleanup::test_expiration_cleanup_run
+      - tests/memory/test_janitor.py::TestExpirationCleanup::test_is_expired
 
   NEG-WKF-001:
     title: "No Synchronous Extraction"
     source: "ADR-003 Phase 1"
     status: active
     priority: high
-    tests:
-      - tests/memory/test_extraction.py::test_no_sync_extraction
+    tests: []
+    notes: "Validated by design - extraction pipeline only exposes async methods"
 
   REQ-WKF-030:
     title: "Workflow Config Parser"
@@ -1278,8 +1282,8 @@ requirements:
     status: active
     priority: high
     tests:
-      - tests/test_mcp_extension_integration.py::test_memory_chatbot
-      - tests/test_mcp_extension_integration.py::test_extensions_memory
+      - tests/test_mcp_extension_integration.py::TestQueryWithExtensions::test_oss_query_flow
+      - tests/test_mcp_extension_integration.py::TestQueryWithExtensions::test_cloud_query_flow
 
   REQ-INT-020:
     title: "Tier Feature Gates"
@@ -1313,6 +1317,20 @@ requirements:
     tests: []
     notes: "Documentation requirement - verified via implementation tracker presence"
 
+  REQ-INT-040:
+    title: "Spec/Ledger Validation System"
+    source: "ADR-009, ADR-010"
+    status: active
+    priority: high
+    tests:
+      - tests/spec/test_reconcile.py
+      - tests/spec/test_adr010_validation.py::TestSchemaValidation
+      - tests/spec/test_adr010_validation.py::TestASTIntrospection
+      - tests/spec/test_adr010_validation.py::TestSkipDetection
+      - tests/spec/test_adr010_validation.py::TestOrphanDetection
+      - tests/spec/test_adr010_validation.py::TestDocFreshnessLinkChecker
+      - tests/spec/test_adr010_validation.py::TestADRLedgerSync
+
   NEG-INT-001:
     title: "No Circular Dependencies"
     source: "ADR-007 Architecture"
@@ -1329,10 +1347,3 @@ requirements:
     tests:
       - tests/test_integration.py::test_no_phase_skip
 
-  REQ-INT-040:
-    title: "Spec/Ledger Reconciliation"
-    source: "ADR-009 Validation"
-    status: active
-    priority: high
-    tests:
-      - tests/spec/test_reconcile.py

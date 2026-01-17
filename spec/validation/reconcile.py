@@ -257,7 +257,8 @@ def introspect_test_file(file_path: Path) -> TestIntrospectionResult:
         return result
 
     for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
+        # Handle both sync and async test functions
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_"):
             # Top-level test function
             result.functions.add(node.name)
             # Check for parametrize decorator
@@ -269,7 +270,8 @@ def introspect_test_file(file_path: Path) -> TestIntrospectionResult:
             # Test class
             methods = set()
             for item in node.body:
-                if isinstance(item, ast.FunctionDef) and item.name.startswith("test_"):
+                # Handle both sync and async test methods
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and item.name.startswith("test_"):
                     methods.add(item.name)
                     # Check for parametrize decorator
                     for decorator in item.decorator_list:
