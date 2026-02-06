@@ -14,9 +14,9 @@ from datetime import datetime, timezone
 
 import pytest
 
-from src.memory.maas.registry import AgentRegistry
-from src.memory.maas.scope import PermissionModel, SharedScope
-from src.memory.maas.types import AgentCapability, AgentIdentity, AgentType
+from luminescent_cluster.memory.maas.registry import AgentRegistry
+from luminescent_cluster.memory.maas.scope import PermissionModel, SharedScope
+from luminescent_cluster.memory.maas.types import AgentCapability, AgentIdentity, AgentType
 
 
 class TestSharedMemoryPoolCreation:
@@ -24,23 +24,23 @@ class TestSharedMemoryPoolCreation:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
 
     def test_create_pool(self):
         """Verify pool can be created."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -55,7 +55,7 @@ class TestSharedMemoryPoolCreation:
 
     def test_create_pool_with_custom_id(self):
         """Verify pool can be created with custom ID."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -70,7 +70,7 @@ class TestSharedMemoryPoolCreation:
 
     def test_create_pool_with_metadata(self):
         """Verify pool can be created with metadata."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -86,7 +86,7 @@ class TestSharedMemoryPoolCreation:
 
     def test_duplicate_pool_raises(self):
         """Verify duplicate pool creation raises error."""
-        from src.memory.maas.pool import DuplicatePoolError, PoolRegistry
+        from luminescent_cluster.memory.maas.pool import DuplicatePoolError, PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -111,8 +111,8 @@ class TestPoolMembership:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -126,15 +126,15 @@ class TestPoolMembership:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
 
     def test_join_pool(self):
         """Verify agent can join a pool."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -150,7 +150,7 @@ class TestPoolMembership:
 
     def test_join_pool_as_owner_gets_admin(self):
         """Verify pool owner automatically has ADMIN permission."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -170,7 +170,7 @@ class TestPoolMembership:
 
     def test_join_nonexistent_pool(self):
         """Verify joining nonexistent pool returns False."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
         result = registry.join_pool("nonexistent-pool", self.agent_id, PermissionModel.READ)
@@ -179,7 +179,7 @@ class TestPoolMembership:
 
     def test_join_pool_nonexistent_agent(self):
         """Verify joining pool with nonexistent agent returns False."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -196,7 +196,7 @@ class TestPoolMembership:
 
     def test_leave_pool(self):
         """Verify agent can leave a pool."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -213,7 +213,7 @@ class TestPoolMembership:
 
     def test_leave_pool_not_member(self):
         """Verify leaving pool when not a member returns False."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -229,7 +229,7 @@ class TestPoolMembership:
 
     def test_get_pool_members(self):
         """Verify pool members can be retrieved."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -256,7 +256,7 @@ class TestPoolMembership:
 
     def test_get_agent_pools(self):
         """Verify agent's pools can be retrieved."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -284,8 +284,8 @@ class TestPoolAccess:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -298,15 +298,15 @@ class TestPoolAccess:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
 
     def test_check_access_read(self):
         """Verify read access checking."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -322,7 +322,7 @@ class TestPoolAccess:
 
     def test_check_access_write_includes_read(self):
         """Verify write permission includes read."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -339,7 +339,7 @@ class TestPoolAccess:
 
     def test_check_access_admin_includes_all(self):
         """Verify admin permission includes all."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -356,7 +356,7 @@ class TestPoolAccess:
 
     def test_check_access_non_member(self):
         """Verify non-members have no access."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -374,23 +374,23 @@ class TestPoolLifecycle:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
 
     def test_archive_pool(self):
         """Verify pool can be archived."""
-        from src.memory.maas.pool import PoolRegistry, PoolStatus
+        from luminescent_cluster.memory.maas.pool import PoolRegistry, PoolStatus
 
         registry = PoolRegistry.get()
 
@@ -408,7 +408,7 @@ class TestPoolLifecycle:
 
     def test_archived_pool_not_in_active(self):
         """Verify archived pool is excluded from active pools."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -424,7 +424,7 @@ class TestPoolLifecycle:
 
     def test_delete_pool(self):
         """Verify pool can be deleted."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -445,8 +445,8 @@ class TestPoolMemorySharing:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -460,15 +460,15 @@ class TestPoolMemorySharing:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
 
     def test_share_memory_to_pool(self):
         """Verify memory can be shared to a pool."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -491,7 +491,7 @@ class TestPoolMemorySharing:
 
     def test_share_memory_requires_write_permission(self):
         """Verify sharing memory requires write permission."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -513,7 +513,7 @@ class TestPoolMemorySharing:
 
     def test_get_shared_memories(self):
         """Verify shared memories can be retrieved."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -535,7 +535,7 @@ class TestPoolMemorySharing:
 
     def test_query_pool_memories(self):
         """Verify pool memories can be queried by scope."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
 
@@ -571,23 +571,23 @@ class TestPoolThreadSafety:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
 
     def test_concurrent_pool_creation(self):
         """Verify concurrent pool creation is thread-safe."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         registry = PoolRegistry.get()
         created_ids = []
@@ -610,7 +610,7 @@ class TestPoolThreadSafety:
 
     def test_concurrent_membership(self):
         """Verify concurrent membership operations are thread-safe."""
-        from src.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
 
         agent_registry = AgentRegistry.get()
         pool_registry = PoolRegistry.get()

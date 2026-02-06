@@ -17,7 +17,7 @@ from typing import Optional
 from unittest.mock import MagicMock, patch
 import pytest
 
-from src.extensions import (
+from luminescent_cluster.extensions import (
     ExtensionRegistry,
     TenantProvider,
     UsageTracker,

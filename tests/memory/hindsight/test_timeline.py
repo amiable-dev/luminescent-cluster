@@ -19,7 +19,7 @@ class TestTimelineCreation:
 
     def test_timeline_creation(self):
         """Timeline should be instantiated with a user_id scope."""
-        from src.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
 
         timeline = Timeline(user_id="user-123")
 
@@ -28,7 +28,7 @@ class TestTimelineCreation:
 
     def test_timeline_with_entity_filter(self):
         """Timeline can be scoped to specific entities."""
-        from src.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
 
         timeline = Timeline(user_id="user-123", entity_filter=["auth-service"])
 
@@ -40,8 +40,8 @@ class TestTimelineEventStorage:
 
     def test_add_event(self):
         """Timeline should accept TemporalEvent."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
         event = TemporalEvent(
@@ -58,8 +58,8 @@ class TestTimelineEventStorage:
 
     def test_add_multiple_events(self):
         """Timeline should store multiple events in order."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -77,8 +77,8 @@ class TestTimelineEventStorage:
 
     def test_get_event_by_id(self):
         """Timeline should retrieve event by ID."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
         event = TemporalEvent(
@@ -97,7 +97,7 @@ class TestTimelineEventStorage:
 
     def test_get_nonexistent_event_returns_none(self):
         """Timeline should return None for missing event."""
-        from src.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
 
         timeline = Timeline(user_id="user-123")
 
@@ -107,8 +107,8 @@ class TestTimelineEventStorage:
 
     def test_remove_event(self):
         """Timeline should allow removing events."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
         event = TemporalEvent(
@@ -132,8 +132,8 @@ class TestTimelineTimeQueries:
 
     def test_query_by_time_range(self):
         """Timeline should return events within a time range."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType, TimeRange
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType, TimeRange
 
         timeline = Timeline(user_id="user-123")
 
@@ -158,8 +158,8 @@ class TestTimelineTimeQueries:
 
     def test_query_last_n_days(self):
         """Timeline should support 'last N days' queries."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType, TimeRange
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType, TimeRange
 
         timeline = Timeline(user_id="user-123")
         now = datetime.now(timezone.utc)
@@ -184,8 +184,8 @@ class TestTimelineTimeQueries:
 
     def test_query_events_sorted_chronologically(self):
         """Events should be returned in chronological order."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType, TimeRange
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType, TimeRange
 
         timeline = Timeline(user_id="user-123")
 
@@ -224,8 +224,8 @@ class TestTimelineEntityQueries:
 
     def test_query_by_entity(self):
         """Timeline should filter by entity_id."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -247,8 +247,8 @@ class TestTimelineEntityQueries:
 
     def test_query_by_multiple_entities(self):
         """Timeline should filter by multiple entities."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -274,8 +274,8 @@ class TestTimelineNetworkQueries:
 
     def test_query_by_network(self):
         """Timeline should filter by network type."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -298,8 +298,8 @@ class TestTimelineNetworkQueries:
 
     def test_query_bank_network_actions(self):
         """Should be able to query agent actions (BANK network)."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -326,8 +326,8 @@ class TestTimelineStateReconstruction:
 
     def test_get_entity_state_at_time(self):
         """Timeline should reconstruct entity state at a given time."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -375,8 +375,8 @@ class TestTimelineStateReconstruction:
 
     def test_get_entity_state_before_first_event(self):
         """Should return None if querying before any events."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -402,8 +402,8 @@ class TestTimelineCombinedQueries:
 
     def test_combined_time_and_entity_query(self):
         """Should filter by both time range and entity."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType, TimeRange
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType, TimeRange
 
         timeline = Timeline(user_id="user-123")
 
@@ -432,8 +432,8 @@ class TestTimelineCombinedQueries:
 
     def test_combined_all_filters(self):
         """Should filter by time, entity, and network."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType, TimeRange
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType, TimeRange
 
         timeline = Timeline(user_id="user-123")
 
@@ -479,8 +479,8 @@ class TestTimelineSerialization:
 
     def test_timeline_to_dict(self):
         """Timeline should serialize to dictionary."""
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
         event = TemporalEvent(
@@ -499,7 +499,7 @@ class TestTimelineSerialization:
 
     def test_timeline_from_dict(self):
         """Timeline should deserialize from dictionary."""
-        from src.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
 
         data = {
             "user_id": "user-123",

@@ -27,7 +27,7 @@ class TestUserMemoryTableSetup:
         GitHub Issue: #83
         ADR Reference: ADR-003 Phase 1a (Storage)
         """
-        from src.memory.storage.tables import setup_user_memory_table
+        from luminescent_cluster.memory.storage.tables import setup_user_memory_table
 
         assert callable(setup_user_memory_table)
 
@@ -41,7 +41,7 @@ class TestUserMemoryTableSchema:
         GitHub Issue: #83
         ADR Reference: ADR-003 Phase 1a (Storage)
         """
-        from src.memory.storage.tables import USER_MEMORY_TABLE
+        from luminescent_cluster.memory.storage.tables import USER_MEMORY_TABLE
 
         assert USER_MEMORY_TABLE == "user_memory"
 
@@ -51,7 +51,7 @@ class TestUserMemoryTableSchema:
         GitHub Issue: #83
         ADR Reference: ADR-003 lines 881-900
         """
-        from src.memory.storage.tables import USER_MEMORY_SCHEMA
+        from luminescent_cluster.memory.storage.tables import USER_MEMORY_SCHEMA
 
         expected_columns = {
             "user_id",
@@ -79,7 +79,7 @@ class TestConversationMemoryTableSetup:
         GitHub Issue: #84
         ADR Reference: ADR-003 Phase 1a (Hot Memory)
         """
-        from src.memory.storage.tables import setup_conversation_memory_table
+        from luminescent_cluster.memory.storage.tables import setup_conversation_memory_table
 
         assert callable(setup_conversation_memory_table)
 
@@ -93,7 +93,7 @@ class TestConversationMemoryTableSchema:
         GitHub Issue: #84
         ADR Reference: ADR-003 Phase 1a (Hot Memory)
         """
-        from src.memory.storage.tables import CONVERSATION_MEMORY_TABLE
+        from luminescent_cluster.memory.storage.tables import CONVERSATION_MEMORY_TABLE
 
         assert CONVERSATION_MEMORY_TABLE == "conversation_memory"
 
@@ -103,7 +103,7 @@ class TestConversationMemoryTableSchema:
         GitHub Issue: #84
         ADR Reference: ADR-003 Phase 1a (Hot Memory)
         """
-        from src.memory.storage.tables import CONVERSATION_MEMORY_SCHEMA
+        from luminescent_cluster.memory.storage.tables import CONVERSATION_MEMORY_SCHEMA
 
         expected_columns = {
             "conversation_id",
@@ -121,14 +121,14 @@ class TestStorageModuleExports:
     """TDD: Tests for storage module exports."""
 
     def test_storage_module_exists(self):
-        """src.memory.storage module should exist.
+        """luminescent_cluster.memory.storage module should exist.
 
         GitHub Issue: #83
         ADR Reference: ADR-003 Phase 1a (Storage)
         """
-        import src.memory.storage
+        import luminescent_cluster.memory.storage
 
-        assert src.memory.storage is not None
+        assert luminescent_cluster.memory.storage is not None
 
     def test_storage_exports_table_names(self):
         """storage module should export table name constants.
@@ -136,7 +136,7 @@ class TestStorageModuleExports:
         GitHub Issue: #83
         ADR Reference: ADR-003 Phase 1a (Storage)
         """
-        from src.memory.storage import USER_MEMORY_TABLE, CONVERSATION_MEMORY_TABLE
+        from luminescent_cluster.memory.storage import USER_MEMORY_TABLE, CONVERSATION_MEMORY_TABLE
 
         assert USER_MEMORY_TABLE is not None
         assert CONVERSATION_MEMORY_TABLE is not None
@@ -147,7 +147,7 @@ class TestStorageModuleExports:
         GitHub Issue: #83
         ADR Reference: ADR-003 Phase 1a (Storage)
         """
-        from src.memory.storage import USER_MEMORY_SCHEMA, CONVERSATION_MEMORY_SCHEMA
+        from luminescent_cluster.memory.storage import USER_MEMORY_SCHEMA, CONVERSATION_MEMORY_SCHEMA
 
         assert USER_MEMORY_SCHEMA is not None
         assert CONVERSATION_MEMORY_SCHEMA is not None
@@ -158,7 +158,7 @@ class TestStorageModuleExports:
         GitHub Issue: #83
         ADR Reference: ADR-003 Phase 1a (Storage)
         """
-        from src.memory.storage import (
+        from luminescent_cluster.memory.storage import (
             setup_user_memory_table,
             setup_conversation_memory_table,
         )

@@ -35,7 +35,7 @@ from typing import Optional, List, Dict, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 # Import the adapter - this will fail until implemented (RED phase)
-from src.chatbot.adapters.slack_adapter import (
+from luminescent_cluster.chatbot.adapters.slack_adapter import (
     SlackAdapter,
     SlackConfig,
     SlackMessage,
@@ -43,7 +43,7 @@ from src.chatbot.adapters.slack_adapter import (
     SlackAppHomeView,
 )
 
-from src.chatbot.adapters.base import (
+from luminescent_cluster.chatbot.adapters.base import (
     BasePlatformAdapter,
     ConnectionState,
     ChatMessage,

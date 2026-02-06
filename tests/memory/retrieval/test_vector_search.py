@@ -17,8 +17,8 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from src.memory.retrieval.vector_search import VectorIndex, VectorSearch
-from src.memory.schemas import Memory, MemoryType
+from luminescent_cluster.memory.retrieval.vector_search import VectorIndex, VectorSearch
+from luminescent_cluster.memory.schemas import Memory, MemoryType
 
 
 class MockSentenceTransformer:
@@ -61,7 +61,7 @@ def mock_transformer() -> MagicMock:
 def vector_search(mock_transformer: MockSentenceTransformer) -> VectorSearch:
     """Create a VectorSearch instance with mocked model."""
     with patch(
-        "src.memory.retrieval.vector_search.VectorSearch._load_model"
+        "luminescent_cluster.memory.retrieval.vector_search.VectorSearch._load_model"
     ) as mock_load:
         mock_load.return_value = mock_transformer
         search = VectorSearch(lazy_load=True)

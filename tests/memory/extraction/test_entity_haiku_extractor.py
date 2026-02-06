@@ -15,7 +15,7 @@ ADR Reference: ADR-003 Memory Architecture, Phase 3 (Entity Extraction)
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from src.memory.extraction.entities import Entity, EntityExtractor, EntityType
+from luminescent_cluster.memory.extraction.entities import Entity, EntityExtractor, EntityType
 
 
 class TestHaikuEntityExtractorExists:
@@ -27,7 +27,7 @@ class TestHaikuEntityExtractorExists:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import HaikuEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import HaikuEntityExtractor
 
         assert HaikuEntityExtractor is not None
 
@@ -37,7 +37,7 @@ class TestHaikuEntityExtractorExists:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import HaikuEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import HaikuEntityExtractor
 
         extractor = HaikuEntityExtractor()
         assert isinstance(extractor, EntityExtractor)
@@ -48,7 +48,7 @@ class TestHaikuEntityExtractorExists:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import HaikuEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import HaikuEntityExtractor
 
         extractor = HaikuEntityExtractor()
         assert hasattr(extractor, "extract")
@@ -64,7 +64,7 @@ class TestHaikuEntityExtractorConstructor:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import HaikuEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import HaikuEntityExtractor
 
         extractor = HaikuEntityExtractor(model="claude-3-haiku-20240307")
         assert extractor.model == "claude-3-haiku-20240307"
@@ -75,7 +75,7 @@ class TestHaikuEntityExtractorConstructor:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import HaikuEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import HaikuEntityExtractor
 
         extractor = HaikuEntityExtractor(temperature=0.0)
         assert extractor.temperature == 0.0
@@ -86,7 +86,7 @@ class TestHaikuEntityExtractorConstructor:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import HaikuEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import HaikuEntityExtractor
 
         extractor = HaikuEntityExtractor(max_tokens=1024)
         assert extractor.max_tokens == 1024
@@ -97,7 +97,7 @@ class TestHaikuEntityExtractorConstructor:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import HaikuEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import HaikuEntityExtractor
 
         extractor = HaikuEntityExtractor(api_key="test-key")
         # Should not raise
@@ -112,7 +112,7 @@ class TestHaikuEntityExtractorPrompts:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities.prompts import ENTITY_EXTRACTION_SYSTEM_PROMPT
+        from luminescent_cluster.memory.extraction.entities.prompts import ENTITY_EXTRACTION_SYSTEM_PROMPT
 
         assert ENTITY_EXTRACTION_SYSTEM_PROMPT is not None
         assert len(ENTITY_EXTRACTION_SYSTEM_PROMPT) > 0
@@ -123,7 +123,7 @@ class TestHaikuEntityExtractorPrompts:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities.prompts import ENTITY_EXTRACTION_USER_TEMPLATE
+        from luminescent_cluster.memory.extraction.entities.prompts import ENTITY_EXTRACTION_USER_TEMPLATE
 
         assert ENTITY_EXTRACTION_USER_TEMPLATE is not None
         assert "{content}" in ENTITY_EXTRACTION_USER_TEMPLATE
@@ -134,7 +134,7 @@ class TestHaikuEntityExtractorPrompts:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities.prompts import ENTITY_EXTRACTION_SYSTEM_PROMPT
+        from luminescent_cluster.memory.extraction.entities.prompts import ENTITY_EXTRACTION_SYSTEM_PROMPT
 
         assert "SERVICE" in ENTITY_EXTRACTION_SYSTEM_PROMPT
         assert "DEPENDENCY" in ENTITY_EXTRACTION_SYSTEM_PROMPT
@@ -154,7 +154,7 @@ class TestHaikuEntityExtractorExtraction:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import HaikuEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import HaikuEntityExtractor
 
         # Mock the API response
         mock_response = [
@@ -189,7 +189,7 @@ class TestHaikuEntityExtractorExtraction:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import HaikuEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import HaikuEntityExtractor
 
         mock_response = [
             {
@@ -217,7 +217,7 @@ class TestHaikuEntityExtractorExtraction:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import HaikuEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import HaikuEntityExtractor
 
         extractor = HaikuEntityExtractor()
 
@@ -234,7 +234,7 @@ class TestHaikuEntityExtractorExtraction:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import HaikuEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import HaikuEntityExtractor
 
         extractor = HaikuEntityExtractor()
 
@@ -251,7 +251,7 @@ class TestHaikuEntityExtractorExtraction:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import HaikuEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import HaikuEntityExtractor
 
         mock_response = [
             {
@@ -284,7 +284,7 @@ class TestHaikuEntityExtractorModuleExport:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import HaikuEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import HaikuEntityExtractor
 
         assert HaikuEntityExtractor is not None
 
@@ -294,6 +294,6 @@ class TestHaikuEntityExtractorModuleExport:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import prompts
+        from luminescent_cluster.memory.extraction.entities import prompts
 
         assert prompts is not None

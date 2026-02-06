@@ -18,11 +18,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pytest
 
-from src.memory.maas.handoff import HandoffContext, HandoffManager
-from src.memory.maas.pool import PoolRegistry
-from src.memory.maas.registry import AgentRegistry
-from src.memory.maas.scope import PermissionModel, SharedScope
-from src.memory.maas.types import AgentCapability, AgentType
+from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
+from luminescent_cluster.memory.maas.pool import PoolRegistry
+from luminescent_cluster.memory.maas.registry import AgentRegistry
+from luminescent_cluster.memory.maas.scope import PermissionModel, SharedScope
+from luminescent_cluster.memory.maas.types import AgentCapability, AgentType
 
 
 class TestSyncLatencyBenchmark:

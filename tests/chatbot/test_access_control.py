@@ -24,7 +24,7 @@ Version: 1.0.0
 import pytest
 from typing import Optional, List
 
-from src.extensions.protocols import ChatbotAccessController
+from luminescent_cluster.extensions.protocols import ChatbotAccessController
 
 
 # =============================================================================
@@ -38,7 +38,7 @@ class TestDefaultAccessControlPolicy:
     @pytest.fixture
     def policy(self):
         """Create default access control policy."""
-        from src.chatbot.access_control import DefaultAccessControlPolicy
+        from luminescent_cluster.chatbot.access_control import DefaultAccessControlPolicy
 
         return DefaultAccessControlPolicy()
 
@@ -137,7 +137,7 @@ class TestConfigurableAccessControlPolicy:
     @pytest.fixture
     def policy_with_allowlist(self):
         """Create policy with channel allowlist."""
-        from src.chatbot.access_control import ConfigurableAccessControlPolicy
+        from luminescent_cluster.chatbot.access_control import ConfigurableAccessControlPolicy
 
         return ConfigurableAccessControlPolicy(
             allowed_channels=["channel-1", "channel-2", "channel-3"],
@@ -148,7 +148,7 @@ class TestConfigurableAccessControlPolicy:
     @pytest.fixture
     def policy_with_blocklist(self):
         """Create policy with channel blocklist."""
-        from src.chatbot.access_control import ConfigurableAccessControlPolicy
+        from luminescent_cluster.chatbot.access_control import ConfigurableAccessControlPolicy
 
         return ConfigurableAccessControlPolicy(
             allowed_channels=None,  # Allow all except blocked
@@ -159,7 +159,7 @@ class TestConfigurableAccessControlPolicy:
     @pytest.fixture
     def policy_with_command_restrictions(self):
         """Create policy with command restrictions."""
-        from src.chatbot.access_control import ConfigurableAccessControlPolicy
+        from luminescent_cluster.chatbot.access_control import ConfigurableAccessControlPolicy
 
         return ConfigurableAccessControlPolicy(
             allowed_channels=None,
@@ -249,7 +249,7 @@ class TestResponseFilterPolicy:
     @pytest.fixture
     def filter_policy(self):
         """Create response filter policy."""
-        from src.chatbot.access_control import ResponseFilterPolicy
+        from luminescent_cluster.chatbot.access_control import ResponseFilterPolicy
 
         return ResponseFilterPolicy(
             sensitive_patterns=[

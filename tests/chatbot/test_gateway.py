@@ -34,7 +34,7 @@ from typing import Optional, Dict, Any, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
 # Import the gateway - this will fail until implemented (RED phase)
-from src.chatbot.gateway import (
+from luminescent_cluster.chatbot.gateway import (
     ChatbotGateway,
     GatewayConfig,
     InvocationPolicy,
@@ -43,9 +43,9 @@ from src.chatbot.gateway import (
     GatewayResponse,
 )
 
-from src.chatbot.adapters.base import ChatMessage, MessageAuthor
-from src.chatbot.context import ThreadContextManager
-from src.chatbot.rate_limiter import TokenBucketRateLimiter, RateLimitConfig
+from luminescent_cluster.chatbot.adapters.base import ChatMessage, MessageAuthor
+from luminescent_cluster.chatbot.context import ThreadContextManager
+from luminescent_cluster.chatbot.rate_limiter import TokenBucketRateLimiter, RateLimitConfig
 
 
 class TestGatewayConfig:

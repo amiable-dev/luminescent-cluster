@@ -27,7 +27,7 @@ class TestMemoryMetricsConstants:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.metrics import METRIC_PREFIX
+        from luminescent_cluster.memory.observability.metrics import METRIC_PREFIX
 
         assert METRIC_PREFIX is not None
 
@@ -37,7 +37,7 @@ class TestMemoryMetricsConstants:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.metrics import METRIC_PREFIX
+        from luminescent_cluster.memory.observability.metrics import METRIC_PREFIX
 
         assert METRIC_PREFIX == "memory"
 
@@ -51,7 +51,7 @@ class TestMemoryMetrics:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.metrics import MemoryMetrics
+        from luminescent_cluster.memory.observability.metrics import MemoryMetrics
 
         assert MemoryMetrics is not None
 
@@ -61,7 +61,7 @@ class TestMemoryMetrics:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.metrics import MemoryMetrics
+        from luminescent_cluster.memory.observability.metrics import MemoryMetrics
 
         metrics = MemoryMetrics()
         assert hasattr(metrics, "record_store")
@@ -73,7 +73,7 @@ class TestMemoryMetrics:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.metrics import MemoryMetrics
+        from luminescent_cluster.memory.observability.metrics import MemoryMetrics
 
         metrics = MemoryMetrics()
         assert hasattr(metrics, "record_retrieve")
@@ -85,7 +85,7 @@ class TestMemoryMetrics:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.metrics import MemoryMetrics
+        from luminescent_cluster.memory.observability.metrics import MemoryMetrics
 
         metrics = MemoryMetrics()
         assert hasattr(metrics, "record_latency")
@@ -97,7 +97,7 @@ class TestMemoryMetrics:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.metrics import MemoryMetrics
+        from luminescent_cluster.memory.observability.metrics import MemoryMetrics
 
         metrics = MemoryMetrics()
         assert hasattr(metrics, "increment_counter")
@@ -109,7 +109,7 @@ class TestMemoryMetrics:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.metrics import MemoryMetrics
+        from luminescent_cluster.memory.observability.metrics import MemoryMetrics
 
         metrics = MemoryMetrics()
         assert hasattr(metrics, "get_stats")
@@ -121,7 +121,7 @@ class TestMemoryMetrics:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.metrics import MemoryMetrics
+        from luminescent_cluster.memory.observability.metrics import MemoryMetrics
 
         metrics = MemoryMetrics()
         stats = metrics.get_stats()
@@ -137,7 +137,7 @@ class TestTracingConstants:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.tracing import TRACER_NAME
+        from luminescent_cluster.memory.observability.tracing import TRACER_NAME
 
         assert TRACER_NAME is not None
 
@@ -147,7 +147,7 @@ class TestTracingConstants:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.tracing import TRACER_NAME
+        from luminescent_cluster.memory.observability.tracing import TRACER_NAME
 
         assert TRACER_NAME == "luminescent.memory"
 
@@ -161,7 +161,7 @@ class TestMemoryTracer:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.tracing import MemoryTracer
+        from luminescent_cluster.memory.observability.tracing import MemoryTracer
 
         assert MemoryTracer is not None
 
@@ -171,7 +171,7 @@ class TestMemoryTracer:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.tracing import MemoryTracer
+        from luminescent_cluster.memory.observability.tracing import MemoryTracer
 
         tracer = MemoryTracer()
         assert hasattr(tracer, "start_span")
@@ -183,7 +183,7 @@ class TestMemoryTracer:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.tracing import MemoryTracer
+        from luminescent_cluster.memory.observability.tracing import MemoryTracer
 
         tracer = MemoryTracer()
         assert hasattr(tracer, "trace_operation")
@@ -194,7 +194,7 @@ class TestMemoryTracer:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.tracing import MemoryTracer
+        from luminescent_cluster.memory.observability.tracing import MemoryTracer
 
         tracer = MemoryTracer()
         assert hasattr(tracer, "add_event")
@@ -206,7 +206,7 @@ class TestMemoryTracer:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.tracing import MemoryTracer
+        from luminescent_cluster.memory.observability.tracing import MemoryTracer
 
         tracer = MemoryTracer()
         assert hasattr(tracer, "set_attribute")
@@ -222,7 +222,7 @@ class TestSpanNames:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.tracing import SpanNames
+        from luminescent_cluster.memory.observability.tracing import SpanNames
 
         assert SpanNames is not None
 
@@ -232,7 +232,7 @@ class TestSpanNames:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.tracing import SpanNames
+        from luminescent_cluster.memory.observability.tracing import SpanNames
 
         assert hasattr(SpanNames, "STORE")
         assert SpanNames.STORE == "memory.store"
@@ -243,7 +243,7 @@ class TestSpanNames:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.tracing import SpanNames
+        from luminescent_cluster.memory.observability.tracing import SpanNames
 
         assert hasattr(SpanNames, "RETRIEVE")
         assert SpanNames.RETRIEVE == "memory.retrieve"
@@ -254,7 +254,7 @@ class TestSpanNames:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.tracing import SpanNames
+        from luminescent_cluster.memory.observability.tracing import SpanNames
 
         assert hasattr(SpanNames, "SEARCH")
         assert SpanNames.SEARCH == "memory.search"
@@ -265,7 +265,7 @@ class TestSpanNames:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.tracing import SpanNames
+        from luminescent_cluster.memory.observability.tracing import SpanNames
 
         assert hasattr(SpanNames, "DELETE")
         assert SpanNames.DELETE == "memory.delete"
@@ -280,7 +280,7 @@ class TestTraceOperationContextManager:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.tracing import MemoryTracer
+        from luminescent_cluster.memory.observability.tracing import MemoryTracer
 
         tracer = MemoryTracer()
         with tracer.trace_operation("memory.test") as span:
@@ -295,7 +295,7 @@ class TestTraceOperationContextManager:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability.tracing import MemoryTracer
+        from luminescent_cluster.memory.observability.tracing import MemoryTracer
 
         tracer = MemoryTracer()
         with pytest.raises(ValueError):
@@ -307,14 +307,14 @@ class TestObservabilityModuleExports:
     """TDD: Tests for observability module exports."""
 
     def test_observability_module_exists(self):
-        """src.memory.observability module should exist.
+        """luminescent_cluster.memory.observability module should exist.
 
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        import src.memory.observability
+        import luminescent_cluster.memory.observability
 
-        assert src.memory.observability is not None
+        assert luminescent_cluster.memory.observability is not None
 
     def test_observability_exports_memory_metrics(self):
         """observability module should export MemoryMetrics.
@@ -322,7 +322,7 @@ class TestObservabilityModuleExports:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability import MemoryMetrics
+        from luminescent_cluster.memory.observability import MemoryMetrics
 
         assert MemoryMetrics is not None
 
@@ -332,7 +332,7 @@ class TestObservabilityModuleExports:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability import MemoryTracer
+        from luminescent_cluster.memory.observability import MemoryTracer
 
         assert MemoryTracer is not None
 
@@ -342,6 +342,6 @@ class TestObservabilityModuleExports:
         GitHub Issue: #82
         ADR Reference: ADR-003 (Observability)
         """
-        from src.memory.observability import SpanNames
+        from luminescent_cluster.memory.observability import SpanNames
 
         assert SpanNames is not None

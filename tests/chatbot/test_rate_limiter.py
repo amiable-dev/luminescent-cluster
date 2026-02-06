@@ -32,7 +32,7 @@ import time
 from datetime import datetime, timedelta
 
 # Import the rate limiter - this will fail until implemented (RED phase)
-from src.chatbot.rate_limiter import (
+from luminescent_cluster.chatbot.rate_limiter import (
     TokenBucketRateLimiter,
     RateLimitConfig,
     RateLimitResult,

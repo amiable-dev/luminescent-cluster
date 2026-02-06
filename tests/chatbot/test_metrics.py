@@ -30,7 +30,7 @@ from datetime import datetime
 from typing import Optional
 from unittest.mock import AsyncMock, MagicMock
 
-from src.chatbot.metrics import ChatMetrics, QueryMetric
+from luminescent_cluster.chatbot.metrics import ChatMetrics, QueryMetric
 
 
 class TestChatMetricsClass:

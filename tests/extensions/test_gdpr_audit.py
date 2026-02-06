@@ -30,13 +30,13 @@ class TestAuditLoggerGDPRMethods:
 
     def test_audit_logger_has_log_gdpr_deletion_method(self):
         """AuditLogger protocol defines log_gdpr_deletion method."""
-        from src.extensions.protocols import AuditLogger
+        from luminescent_cluster.extensions.protocols import AuditLogger
 
         assert hasattr(AuditLogger, "log_gdpr_deletion")
 
     def test_audit_logger_has_log_gdpr_export_method(self):
         """AuditLogger protocol defines log_gdpr_export method."""
-        from src.extensions.protocols import AuditLogger
+        from luminescent_cluster.extensions.protocols import AuditLogger
 
         assert hasattr(AuditLogger, "log_gdpr_export")
 
@@ -46,7 +46,7 @@ class TestAuditLoggerVersionBump:
 
     def test_audit_logger_version_is_1_1_0(self):
         """AuditLogger version is bumped to 1.1.0 after GDPR methods added."""
-        from src.extensions.protocols import AUDIT_LOGGER_VERSION
+        from luminescent_cluster.extensions.protocols import AUDIT_LOGGER_VERSION
 
         assert AUDIT_LOGGER_VERSION == "1.1.0"
 
@@ -56,7 +56,7 @@ class TestGDPRDeletionMethod:
 
     def test_log_gdpr_deletion_signature(self):
         """log_gdpr_deletion accepts required parameters."""
-        from src.extensions.protocols import AuditLogger
+        from luminescent_cluster.extensions.protocols import AuditLogger
         from typing import Dict, Any
 
         # Create a mock implementation
@@ -118,7 +118,7 @@ class TestGDPRExportMethod:
 
     def test_log_gdpr_export_signature(self):
         """log_gdpr_export accepts required parameters."""
-        from src.extensions.protocols import AuditLogger
+        from luminescent_cluster.extensions.protocols import AuditLogger
         from typing import Dict, Any
 
         # Create a mock implementation
@@ -181,7 +181,7 @@ class TestGDPRMethodsWithRegistry:
     @pytest.fixture(autouse=True)
     def reset_registry(self):
         """Reset the singleton before each test."""
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         ExtensionRegistry.reset()
         yield
@@ -189,7 +189,7 @@ class TestGDPRMethodsWithRegistry:
 
     def test_can_call_gdpr_deletion_via_registry(self):
         """Can call log_gdpr_deletion via registered audit logger."""
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         registry = ExtensionRegistry.get()
         mock_logger = MagicMock()
@@ -206,7 +206,7 @@ class TestGDPRMethodsWithRegistry:
 
     def test_can_call_gdpr_export_via_registry(self):
         """Can call log_gdpr_export via registered audit logger."""
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         registry = ExtensionRegistry.get()
         mock_logger = MagicMock()

@@ -31,7 +31,7 @@ from typing import Optional, Protocol, runtime_checkable
 from unittest.mock import AsyncMock, MagicMock, patch
 import json
 
-from src.chatbot.context import (
+from luminescent_cluster.chatbot.context import (
     ThreadContextManager,
     ContextConfig,
     ThreadContext,

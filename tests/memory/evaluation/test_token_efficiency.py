@@ -15,7 +15,7 @@ ADR Reference: ADR-003 Memory Architecture, Phase 2 (Context Engineering)
 
 import pytest
 
-from src.memory.blocks.schemas import BlockType, MemoryBlock
+from luminescent_cluster.memory.blocks.schemas import BlockType, MemoryBlock
 
 
 class TestTokenEfficiencyMetricExists:
@@ -23,20 +23,20 @@ class TestTokenEfficiencyMetricExists:
 
     def test_token_efficiency_metric_exists(self):
         """TokenEfficiencyMetric class should be defined."""
-        from src.memory.evaluation.token_efficiency import TokenEfficiencyMetric
+        from luminescent_cluster.memory.evaluation.token_efficiency import TokenEfficiencyMetric
 
         assert TokenEfficiencyMetric is not None
 
     def test_token_efficiency_metric_instantiable(self):
         """TokenEfficiencyMetric should be instantiable with baseline_tokens."""
-        from src.memory.evaluation.token_efficiency import TokenEfficiencyMetric
+        from luminescent_cluster.memory.evaluation.token_efficiency import TokenEfficiencyMetric
 
         metric = TokenEfficiencyMetric(baseline_tokens=5000)
         assert metric.baseline == 5000
 
     def test_default_baseline(self):
         """TokenEfficiencyMetric should default to 5000 baseline tokens."""
-        from src.memory.evaluation.token_efficiency import TokenEfficiencyMetric
+        from luminescent_cluster.memory.evaluation.token_efficiency import TokenEfficiencyMetric
 
         metric = TokenEfficiencyMetric()
         assert metric.baseline == 5000
@@ -48,7 +48,7 @@ class TestCalculateEfficiency:
     @pytest.fixture
     def metric(self):
         """Create a TokenEfficiencyMetric for tests."""
-        from src.memory.evaluation.token_efficiency import TokenEfficiencyMetric
+        from luminescent_cluster.memory.evaluation.token_efficiency import TokenEfficiencyMetric
 
         return TokenEfficiencyMetric(baseline_tokens=5000)
 
@@ -154,7 +154,7 @@ class TestEfficiencyBreakdown:
     @pytest.fixture
     def metric(self):
         """Create a TokenEfficiencyMetric for tests."""
-        from src.memory.evaluation.token_efficiency import TokenEfficiencyMetric
+        from luminescent_cluster.memory.evaluation.token_efficiency import TokenEfficiencyMetric
 
         return TokenEfficiencyMetric(baseline_tokens=5000)
 

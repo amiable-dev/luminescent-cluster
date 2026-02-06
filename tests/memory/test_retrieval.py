@@ -17,7 +17,7 @@ import pytest
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
-from src.memory.schemas import Memory, MemoryType
+from luminescent_cluster.memory.schemas import Memory, MemoryType
 
 
 class TestMemoryRanker:
@@ -26,7 +26,7 @@ class TestMemoryRanker:
     @pytest.fixture
     def ranker(self):
         """Create ranker for testing."""
-        from src.memory.retrieval.ranker import MemoryRanker
+        from luminescent_cluster.memory.retrieval.ranker import MemoryRanker
         return MemoryRanker()
 
     @pytest.fixture
@@ -80,7 +80,7 @@ class TestMemoryRanker:
 
     def test_custom_weights(self):
         """Ranker should accept custom weights."""
-        from src.memory.retrieval.ranker import MemoryRanker
+        from luminescent_cluster.memory.retrieval.ranker import MemoryRanker
         ranker = MemoryRanker(
             similarity_weight=0.5,
             recency_weight=0.3,
@@ -194,7 +194,7 @@ class TestQueryRewriter:
     @pytest.fixture
     def rewriter(self):
         """Create query rewriter for testing."""
-        from src.memory.retrieval.query_rewriter import QueryRewriter
+        from luminescent_cluster.memory.retrieval.query_rewriter import QueryRewriter
         return QueryRewriter()
 
     def test_rewriter_initialization(self, rewriter):
@@ -256,8 +256,8 @@ class TestScopedRetriever:
     @pytest.fixture
     def retriever(self):
         """Create scoped retriever for testing."""
-        from src.memory.retrieval.scoped import ScopedRetriever
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.retrieval.scoped import ScopedRetriever
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
         provider = LocalMemoryProvider()
         return ScopedRetriever(provider)
 
@@ -320,7 +320,7 @@ class TestScopedRetriever:
 
     def test_scope_hierarchy(self, retriever):
         """Should define scope hierarchy: user > project > global."""
-        from src.memory.retrieval.scoped import MemoryScope
+        from luminescent_cluster.memory.retrieval.scoped import MemoryScope
         assert MemoryScope.USER.value < MemoryScope.PROJECT.value
         assert MemoryScope.PROJECT.value < MemoryScope.GLOBAL.value
 
@@ -404,7 +404,7 @@ class TestMemoryDecayIntegration:
     @pytest.fixture
     def ranker(self):
         """Create ranker with decay enabled."""
-        from src.memory.retrieval.ranker import MemoryRanker
+        from luminescent_cluster.memory.retrieval.ranker import MemoryRanker
         return MemoryRanker(decay_enabled=True)
 
     def test_decay_affects_ranking(self, ranker):
@@ -442,7 +442,7 @@ class TestMemoryDecayIntegration:
 
     def test_decay_half_life_configurable(self):
         """Decay half-life should be configurable."""
-        from src.memory.retrieval.ranker import MemoryRanker
+        from luminescent_cluster.memory.retrieval.ranker import MemoryRanker
 
         ranker = MemoryRanker(decay_half_life_days=15)
         assert ranker.decay_half_life_days == 15
@@ -483,7 +483,7 @@ class TestMemoryDecayIntegration:
 
     def test_zero_half_life_does_not_crash(self):
         """Zero half-life should not cause ZeroDivisionError."""
-        from src.memory.retrieval.ranker import MemoryRanker
+        from luminescent_cluster.memory.retrieval.ranker import MemoryRanker
 
         now = datetime.now(timezone.utc)
         ranker = MemoryRanker(decay_half_life_days=0)

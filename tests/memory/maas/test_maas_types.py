@@ -17,7 +17,7 @@ class TestAgentType:
 
     def test_agent_types_exist(self):
         """Verify all required agent types are defined."""
-        from src.memory.maas.types import AgentType
+        from luminescent_cluster.memory.maas.types import AgentType
 
         assert hasattr(AgentType, "CLAUDE_CODE")
         assert hasattr(AgentType, "GPT_AGENT")
@@ -26,7 +26,7 @@ class TestAgentType:
 
     def test_agent_type_values(self):
         """Verify agent type string values."""
-        from src.memory.maas.types import AgentType
+        from luminescent_cluster.memory.maas.types import AgentType
 
         assert AgentType.CLAUDE_CODE.value == "claude_code"
         assert AgentType.GPT_AGENT.value == "gpt_agent"
@@ -35,7 +35,7 @@ class TestAgentType:
 
     def test_agent_type_is_str_enum(self):
         """Verify AgentType is string-compatible."""
-        from src.memory.maas.types import AgentType
+        from luminescent_cluster.memory.maas.types import AgentType
 
         # Should be usable as a string
         assert str(AgentType.CLAUDE_CODE) == "claude_code"
@@ -46,7 +46,7 @@ class TestAgentCapability:
 
     def test_memory_capabilities_exist(self):
         """Verify memory-related capabilities."""
-        from src.memory.maas.types import AgentCapability
+        from luminescent_cluster.memory.maas.types import AgentCapability
 
         assert hasattr(AgentCapability, "MEMORY_READ")
         assert hasattr(AgentCapability, "MEMORY_WRITE")
@@ -54,7 +54,7 @@ class TestAgentCapability:
 
     def test_kb_capabilities_exist(self):
         """Verify knowledge base capabilities."""
-        from src.memory.maas.types import AgentCapability
+        from luminescent_cluster.memory.maas.types import AgentCapability
 
         assert hasattr(AgentCapability, "KB_SEARCH")
         assert hasattr(AgentCapability, "DECISION_READ")
@@ -62,14 +62,14 @@ class TestAgentCapability:
 
     def test_handoff_capabilities_exist(self):
         """Verify handoff-related capabilities."""
-        from src.memory.maas.types import AgentCapability
+        from luminescent_cluster.memory.maas.types import AgentCapability
 
         assert hasattr(AgentCapability, "HANDOFF_INITIATE")
         assert hasattr(AgentCapability, "HANDOFF_RECEIVE")
 
     def test_capability_values(self):
         """Verify capability string values."""
-        from src.memory.maas.types import AgentCapability
+        from luminescent_cluster.memory.maas.types import AgentCapability
 
         assert AgentCapability.MEMORY_READ.value == "memory_read"
         assert AgentCapability.MEMORY_WRITE.value == "memory_write"
@@ -81,7 +81,7 @@ class TestSharedScope:
 
     def test_scope_hierarchy_exists(self):
         """Verify all scope levels are defined."""
-        from src.memory.maas.scope import SharedScope
+        from luminescent_cluster.memory.maas.scope import SharedScope
 
         assert hasattr(SharedScope, "AGENT_PRIVATE")
         assert hasattr(SharedScope, "USER")
@@ -91,7 +91,7 @@ class TestSharedScope:
 
     def test_scope_values(self):
         """Verify scope string values."""
-        from src.memory.maas.scope import SharedScope
+        from luminescent_cluster.memory.maas.scope import SharedScope
 
         assert SharedScope.AGENT_PRIVATE.value == "agent_private"
         assert SharedScope.USER.value == "user"
@@ -101,7 +101,7 @@ class TestSharedScope:
 
     def test_scope_ordering(self):
         """Verify scope hierarchy ordering."""
-        from src.memory.maas.scope import SharedScope
+        from luminescent_cluster.memory.maas.scope import SharedScope
 
         # Ordering: AGENT_PRIVATE < USER < PROJECT < TEAM < GLOBAL
         assert SharedScope.AGENT_PRIVATE.level < SharedScope.USER.level
@@ -111,7 +111,7 @@ class TestSharedScope:
 
     def test_scope_comparison(self):
         """Verify scopes can be compared."""
-        from src.memory.maas.scope import SharedScope
+        from luminescent_cluster.memory.maas.scope import SharedScope
 
         assert SharedScope.USER.can_access(SharedScope.USER)
         assert SharedScope.PROJECT.can_access(SharedScope.USER)
@@ -123,7 +123,7 @@ class TestAgentIdentity:
 
     def test_agent_identity_creation(self):
         """Verify AgentIdentity can be created with required fields."""
-        from src.memory.maas.types import AgentCapability, AgentIdentity, AgentType
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentIdentity, AgentType
 
         identity = AgentIdentity(
             id="agent-001",
@@ -139,7 +139,7 @@ class TestAgentIdentity:
 
     def test_agent_identity_defaults(self):
         """Verify AgentIdentity defaults are set correctly."""
-        from src.memory.maas.types import AgentIdentity, AgentType
+        from luminescent_cluster.memory.maas.types import AgentIdentity, AgentType
 
         identity = AgentIdentity(
             id="agent-002",
@@ -154,7 +154,7 @@ class TestAgentIdentity:
 
     def test_agent_identity_with_metadata(self):
         """Verify AgentIdentity can store arbitrary metadata."""
-        from src.memory.maas.types import AgentIdentity, AgentType
+        from luminescent_cluster.memory.maas.types import AgentIdentity, AgentType
 
         identity = AgentIdentity(
             id="agent-003",
@@ -168,7 +168,7 @@ class TestAgentIdentity:
 
     def test_agent_identity_with_session(self):
         """Verify AgentIdentity can track session."""
-        from src.memory.maas.types import AgentIdentity, AgentType
+        from luminescent_cluster.memory.maas.types import AgentIdentity, AgentType
 
         session_id = str(uuid.uuid4())
         identity = AgentIdentity(
@@ -182,7 +182,7 @@ class TestAgentIdentity:
 
     def test_agent_identity_has_capability(self):
         """Verify capability checking method."""
-        from src.memory.maas.types import AgentCapability, AgentIdentity, AgentType
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentIdentity, AgentType
 
         identity = AgentIdentity(
             id="agent-005",
@@ -197,7 +197,7 @@ class TestAgentIdentity:
 
     def test_agent_identity_to_dict(self):
         """Verify serialization to dict."""
-        from src.memory.maas.types import AgentCapability, AgentIdentity, AgentType
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentIdentity, AgentType
 
         identity = AgentIdentity(
             id="agent-006",
@@ -215,7 +215,7 @@ class TestAgentIdentity:
 
     def test_agent_identity_from_dict(self):
         """Verify deserialization from dict."""
-        from src.memory.maas.types import AgentCapability, AgentIdentity, AgentType
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentIdentity, AgentType
 
         data = {
             "id": "agent-007",
@@ -240,7 +240,7 @@ class TestDefaultCapabilities:
 
     def test_claude_code_defaults(self):
         """Verify Claude Code agents get appropriate defaults."""
-        from src.memory.maas.types import AgentCapability, AgentType, get_default_capabilities
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentType, get_default_capabilities
 
         caps = get_default_capabilities(AgentType.CLAUDE_CODE)
 
@@ -252,7 +252,7 @@ class TestDefaultCapabilities:
 
     def test_gpt_agent_defaults(self):
         """Verify GPT agents get appropriate defaults."""
-        from src.memory.maas.types import AgentCapability, AgentType, get_default_capabilities
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentType, get_default_capabilities
 
         caps = get_default_capabilities(AgentType.GPT_AGENT)
 
@@ -264,7 +264,7 @@ class TestDefaultCapabilities:
 
     def test_custom_pipeline_defaults(self):
         """Verify custom pipelines get restricted defaults."""
-        from src.memory.maas.types import AgentCapability, AgentType, get_default_capabilities
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentType, get_default_capabilities
 
         caps = get_default_capabilities(AgentType.CUSTOM_PIPELINE)
 
@@ -276,7 +276,7 @@ class TestDefaultCapabilities:
 
     def test_human_defaults(self):
         """Verify human agents get full capabilities."""
-        from src.memory.maas.types import AgentCapability, AgentType, get_default_capabilities
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentType, get_default_capabilities
 
         caps = get_default_capabilities(AgentType.HUMAN)
 
@@ -292,7 +292,7 @@ class TestPermissionScope:
 
     def test_permission_model_exists(self):
         """Verify PermissionModel enum exists."""
-        from src.memory.maas.scope import PermissionModel
+        from luminescent_cluster.memory.maas.scope import PermissionModel
 
         assert hasattr(PermissionModel, "READ")
         assert hasattr(PermissionModel, "WRITE")
@@ -300,7 +300,7 @@ class TestPermissionScope:
 
     def test_permission_hierarchy(self):
         """Verify permission hierarchy."""
-        from src.memory.maas.scope import PermissionModel
+        from luminescent_cluster.memory.maas.scope import PermissionModel
 
         # ADMIN includes WRITE includes READ
         assert PermissionModel.ADMIN.includes(PermissionModel.WRITE)
@@ -314,8 +314,8 @@ class TestAgentScope:
 
     def test_agent_scope_creation(self):
         """Verify AgentScope can be created."""
-        from src.memory.maas.scope import AgentScope, SharedScope
-        from src.memory.maas.types import AgentIdentity, AgentType
+        from luminescent_cluster.memory.maas.scope import AgentScope, SharedScope
+        from luminescent_cluster.memory.maas.types import AgentIdentity, AgentType
 
         identity = AgentIdentity(
             id="agent-001",
@@ -335,8 +335,8 @@ class TestAgentScope:
 
     def test_agent_scope_can_read_from(self):
         """Verify scope-based read access checking."""
-        from src.memory.maas.scope import AgentScope, SharedScope
-        from src.memory.maas.types import AgentCapability, AgentIdentity, AgentType
+        from luminescent_cluster.memory.maas.scope import AgentScope, SharedScope
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentIdentity, AgentType
 
         reader = AgentIdentity(
             id="reader-001",
@@ -360,8 +360,8 @@ class TestAgentScope:
 
     def test_agent_scope_to_dict(self):
         """Verify AgentScope serialization."""
-        from src.memory.maas.scope import AgentScope, SharedScope
-        from src.memory.maas.types import AgentIdentity, AgentType
+        from luminescent_cluster.memory.maas.scope import AgentScope, SharedScope
+        from luminescent_cluster.memory.maas.types import AgentIdentity, AgentType
 
         identity = AgentIdentity(
             id="agent-001",

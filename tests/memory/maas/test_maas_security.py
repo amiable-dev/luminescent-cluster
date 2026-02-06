@@ -16,8 +16,8 @@ import time
 
 import pytest
 
-from src.memory.maas.registry import AgentRegistry
-from src.memory.maas.types import AgentType
+from luminescent_cluster.memory.maas.registry import AgentRegistry
+from luminescent_cluster.memory.maas.types import AgentType
 
 
 class TestMEXTRAValidator:
@@ -25,7 +25,7 @@ class TestMEXTRAValidator:
 
     def test_detect_injection_pattern(self):
         """Verify injection patterns are detected."""
-        from src.memory.maas.security import MEXTRAValidator
+        from luminescent_cluster.memory.maas.security import MEXTRAValidator
 
         validator = MEXTRAValidator()
 
@@ -40,7 +40,7 @@ class TestMEXTRAValidator:
 
     def test_detect_prompt_injection(self):
         """Verify prompt injection patterns are detected."""
-        from src.memory.maas.security import MEXTRAValidator
+        from luminescent_cluster.memory.maas.security import MEXTRAValidator
 
         validator = MEXTRAValidator()
 
@@ -54,7 +54,7 @@ class TestMEXTRAValidator:
 
     def test_sanitize_input(self):
         """Verify input is properly sanitized."""
-        from src.memory.maas.security import MEXTRAValidator
+        from luminescent_cluster.memory.maas.security import MEXTRAValidator
 
         validator = MEXTRAValidator()
 
@@ -66,7 +66,7 @@ class TestMEXTRAValidator:
 
     def test_validate_memory_content(self):
         """Verify memory content validation."""
-        from src.memory.maas.security import MEXTRAValidator
+        from luminescent_cluster.memory.maas.security import MEXTRAValidator
 
         validator = MEXTRAValidator()
 
@@ -85,7 +85,7 @@ class TestMemoryPoisoningDefense:
 
     def test_output_filtering(self):
         """Verify output filtering works."""
-        from src.memory.maas.security import MemoryPoisoningDefense
+        from luminescent_cluster.memory.maas.security import MemoryPoisoningDefense
 
         defense = MemoryPoisoningDefense()
 
@@ -104,7 +104,7 @@ class TestMemoryPoisoningDefense:
 
     def test_max_results_limit(self):
         """Verify max results limit is enforced."""
-        from src.memory.maas.security import MemoryPoisoningDefense
+        from luminescent_cluster.memory.maas.security import MemoryPoisoningDefense
 
         defense = MemoryPoisoningDefense(max_results=5)
 
@@ -116,7 +116,7 @@ class TestMemoryPoisoningDefense:
 
     def test_query_anomaly_detection(self):
         """Verify anomalous queries are detected."""
-        from src.memory.maas.security import MemoryPoisoningDefense
+        from luminescent_cluster.memory.maas.security import MemoryPoisoningDefense
 
         defense = MemoryPoisoningDefense()
 
@@ -136,19 +136,19 @@ class TestRateLimiting:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def test_rate_limiter_allows_normal_usage(self):
         """Verify rate limiter allows normal usage."""
-        from src.memory.maas.security import AgentRateLimiter
+        from luminescent_cluster.memory.maas.security import AgentRateLimiter
 
         limiter = AgentRateLimiter(requests_per_minute=60)
 
@@ -161,7 +161,7 @@ class TestRateLimiting:
 
     def test_rate_limiter_blocks_excessive_usage(self):
         """Verify rate limiter blocks excessive usage."""
-        from src.memory.maas.security import AgentRateLimiter
+        from luminescent_cluster.memory.maas.security import AgentRateLimiter
 
         limiter = AgentRateLimiter(requests_per_minute=5)
 
@@ -178,7 +178,7 @@ class TestRateLimiting:
 
     def test_rate_limiter_resets(self):
         """Verify rate limiter resets after window."""
-        from src.memory.maas.security import AgentRateLimiter
+        from luminescent_cluster.memory.maas.security import AgentRateLimiter
 
         # Use a very short window for testing
         limiter = AgentRateLimiter(requests_per_minute=60, window_seconds=0.1)
@@ -202,7 +202,7 @@ class TestAuditLogging:
 
     def test_log_agent_operation(self):
         """Verify agent operations are logged."""
-        from src.memory.maas.security import MaaSAuditLogger
+        from luminescent_cluster.memory.maas.security import MaaSAuditLogger
 
         logger = MaaSAuditLogger()
 
@@ -222,7 +222,7 @@ class TestAuditLogging:
 
     def test_log_cross_agent_access(self):
         """Verify cross-agent access is logged."""
-        from src.memory.maas.security import MaaSAuditLogger
+        from luminescent_cluster.memory.maas.security import MaaSAuditLogger
 
         logger = MaaSAuditLogger()
 
@@ -238,7 +238,7 @@ class TestAuditLogging:
 
     def test_log_permission_denied(self):
         """Verify permission denied events are logged."""
-        from src.memory.maas.security import MaaSAuditLogger
+        from luminescent_cluster.memory.maas.security import MaaSAuditLogger
 
         logger = MaaSAuditLogger()
 
@@ -259,9 +259,9 @@ class TestCapacityLimits:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -269,9 +269,9 @@ class TestCapacityLimits:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -279,8 +279,8 @@ class TestCapacityLimits:
 
     def test_agent_registry_capacity_limit(self):
         """Verify agent registry enforces capacity limit."""
-        from src.memory.maas.registry import AgentRegistry, RegistryCapacityError
-        from src.memory.maas.types import AgentType
+        from luminescent_cluster.memory.maas.registry import AgentRegistry, RegistryCapacityError
+        from luminescent_cluster.memory.maas.types import AgentType
 
         # Create registry with low limit for testing
         AgentRegistry.reset()
@@ -304,8 +304,8 @@ class TestCapacityLimits:
 
     def test_pool_registry_capacity_limit(self):
         """Verify pool registry enforces capacity limit."""
-        from src.memory.maas.pool import PoolCapacityError, PoolRegistry
-        from src.memory.maas.scope import SharedScope
+        from luminescent_cluster.memory.maas.pool import PoolCapacityError, PoolRegistry
+        from luminescent_cluster.memory.maas.scope import SharedScope
 
         # Create registry with low limit for testing
         PoolRegistry.reset()
@@ -331,13 +331,13 @@ class TestCapacityLimits:
 
     def test_handoff_capacity_limit(self):
         """Verify handoff manager enforces capacity limit."""
-        from src.memory.maas.handoff import (
+        from luminescent_cluster.memory.maas.handoff import (
             HandoffCapacityError,
             HandoffContext,
             HandoffManager,
         )
-        from src.memory.maas.registry import AgentRegistry
-        from src.memory.maas.types import AgentCapability, AgentType
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentType
 
         # Setup
         AgentRegistry.reset()
@@ -389,9 +389,9 @@ class TestAuditLoggerIntegration:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -399,9 +399,9 @@ class TestAuditLoggerIntegration:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -409,9 +409,9 @@ class TestAuditLoggerIntegration:
 
     def test_agent_registry_logs_registration(self):
         """Verify agent registration is logged."""
-        from src.memory.maas.registry import AgentRegistry
-        from src.memory.maas.security import MaaSAuditLogger
-        from src.memory.maas.types import AgentType
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.security import MaaSAuditLogger
+        from luminescent_cluster.memory.maas.types import AgentType
 
         logger = MaaSAuditLogger()
         AgentRegistry.set_audit_logger(logger)
@@ -430,10 +430,10 @@ class TestAuditLoggerIntegration:
 
     def test_handoff_logs_cross_agent_access(self):
         """Verify handoff acceptance logs cross-agent access."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
-        from src.memory.maas.registry import AgentRegistry
-        from src.memory.maas.security import MaaSAuditLogger
-        from src.memory.maas.types import AgentCapability, AgentType
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.security import MaaSAuditLogger
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentType
 
         logger = MaaSAuditLogger()
         AgentRegistry.set_audit_logger(logger)
@@ -471,10 +471,10 @@ class TestAuditLoggerIntegration:
 
     def test_permission_denied_logged(self):
         """Verify permission denied events are logged."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
-        from src.memory.maas.registry import AgentRegistry
-        from src.memory.maas.security import MaaSAuditLogger
-        from src.memory.maas.types import AgentCapability, AgentType
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.security import MaaSAuditLogger
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentType
 
         logger = MaaSAuditLogger()
         HandoffManager.set_audit_logger(logger)
@@ -523,9 +523,9 @@ class TestDefensiveCopies:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -533,9 +533,9 @@ class TestDefensiveCopies:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -543,8 +543,8 @@ class TestDefensiveCopies:
 
     def test_get_agent_returns_defensive_copy(self):
         """Verify modifying returned agent doesn't affect internal state."""
-        from src.memory.maas.registry import AgentRegistry
-        from src.memory.maas.types import AgentCapability, AgentType
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentType
 
         registry = AgentRegistry.get()
         agent_id = registry.register_agent(
@@ -563,8 +563,8 @@ class TestDefensiveCopies:
 
     def test_get_pool_returns_defensive_copy(self):
         """Verify modifying returned pool doesn't affect internal state."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.scope import SharedScope
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.scope import SharedScope
 
         registry = PoolRegistry.get()
         pool_id = registry.create_pool(
@@ -586,9 +586,9 @@ class TestDefensiveCopies:
 
     def test_get_handoff_returns_defensive_copy(self):
         """Verify modifying returned handoff doesn't affect internal state."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
-        from src.memory.maas.registry import AgentRegistry
-        from src.memory.maas.types import AgentCapability, AgentType
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentType
 
         registry = AgentRegistry.get()
         manager = HandoffManager.get()
@@ -626,8 +626,8 @@ class TestDefensiveCopies:
 
     def test_get_session_returns_defensive_copy(self):
         """Verify modifying returned session metadata doesn't affect internal state."""
-        from src.memory.maas.registry import AgentRegistry
-        from src.memory.maas.types import AgentType
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.types import AgentType
 
         registry = AgentRegistry.get()
         agent_id = registry.register_agent(
@@ -652,9 +652,9 @@ class TestSecurityIntegration:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -662,9 +662,9 @@ class TestSecurityIntegration:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -672,10 +672,10 @@ class TestSecurityIntegration:
 
     def test_secure_handoff_flow(self):
         """Verify secure handoff flow with validation."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
-        from src.memory.maas.registry import AgentRegistry
-        from src.memory.maas.security import MEXTRAValidator
-        from src.memory.maas.types import AgentCapability, AgentType
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.security import MEXTRAValidator
+        from luminescent_cluster.memory.maas.types import AgentCapability, AgentType
 
         validator = MEXTRAValidator()
         agent_registry = AgentRegistry.get()

@@ -17,7 +17,7 @@ import pytest
 from unittest.mock import MagicMock
 from typing import Optional, Dict, Any, List
 
-from src.extensions import ExtensionRegistry
+from luminescent_cluster.extensions import ExtensionRegistry
 
 
 # ============================================================================

@@ -27,7 +27,7 @@ class TestWorkflowConfig:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import WorkflowConfig
+        from luminescent_cluster.workflows.config import WorkflowConfig
 
         assert WorkflowConfig is not None
 
@@ -36,7 +36,7 @@ class TestWorkflowConfig:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import WorkflowConfig
+        from luminescent_cluster.workflows.config import WorkflowConfig
 
         config = WorkflowConfig()
         assert hasattr(config, "include_patterns")
@@ -47,7 +47,7 @@ class TestWorkflowConfig:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import WorkflowConfig
+        from luminescent_cluster.workflows.config import WorkflowConfig
 
         config = WorkflowConfig()
         assert hasattr(config, "exclude_patterns")
@@ -58,7 +58,7 @@ class TestWorkflowConfig:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import WorkflowConfig
+        from luminescent_cluster.workflows.config import WorkflowConfig
 
         config = WorkflowConfig()
         assert hasattr(config, "max_file_size_kb")
@@ -69,7 +69,7 @@ class TestWorkflowConfig:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import WorkflowConfig
+        from luminescent_cluster.workflows.config import WorkflowConfig
 
         config = WorkflowConfig()
         assert hasattr(config, "skip_binary")
@@ -80,7 +80,7 @@ class TestWorkflowConfig:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.config import WorkflowConfig
+        from luminescent_cluster.workflows.config import WorkflowConfig
 
         config = WorkflowConfig()
         assert hasattr(config, "secrets_patterns")
@@ -98,7 +98,7 @@ class TestLoadConfig:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import load_config
+        from luminescent_cluster.workflows.config import load_config
 
         assert callable(load_config)
 
@@ -107,7 +107,7 @@ class TestLoadConfig:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import load_config, WorkflowConfig
+        from luminescent_cluster.workflows.config import load_config, WorkflowConfig
 
         # Write config file
         config_file = temp_project_dir / ".agent" / "config.yaml"
@@ -122,7 +122,7 @@ class TestLoadConfig:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import load_config, WorkflowConfig
+        from luminescent_cluster.workflows.config import load_config, WorkflowConfig
 
         result = load_config(temp_project_dir)
 
@@ -136,7 +136,7 @@ class TestLoadConfig:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import load_config
+        from luminescent_cluster.workflows.config import load_config
 
         config_file = temp_project_dir / ".agent" / "config.yaml"
         config_file.write_text(sample_config_yaml)
@@ -151,7 +151,7 @@ class TestLoadConfig:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import load_config
+        from luminescent_cluster.workflows.config import load_config
 
         config_file = temp_project_dir / ".agent" / "config.yaml"
         config_file.write_text(sample_config_yaml)
@@ -166,7 +166,7 @@ class TestLoadConfig:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import load_config
+        from luminescent_cluster.workflows.config import load_config
 
         config_file = temp_project_dir / ".agent" / "config.yaml"
         config_file.write_text(sample_config_yaml)
@@ -184,7 +184,7 @@ class TestShouldIngestFile:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import should_ingest_file
+        from luminescent_cluster.workflows.config import should_ingest_file
 
         assert callable(should_ingest_file)
 
@@ -193,7 +193,7 @@ class TestShouldIngestFile:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import load_config, should_ingest_file
+        from luminescent_cluster.workflows.config import load_config, should_ingest_file
 
         config_file = temp_project_dir / ".agent" / "config.yaml"
         config_file.write_text(sample_config_yaml)
@@ -208,7 +208,7 @@ class TestShouldIngestFile:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import load_config, should_ingest_file
+        from luminescent_cluster.workflows.config import load_config, should_ingest_file
 
         config_file = temp_project_dir / ".agent" / "config.yaml"
         config_file.write_text(sample_config_yaml)
@@ -223,7 +223,7 @@ class TestShouldIngestFile:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import load_config, should_ingest_file
+        from luminescent_cluster.workflows.config import load_config, should_ingest_file
 
         config_file = temp_project_dir / ".agent" / "config.yaml"
         config_file.write_text(sample_config_yaml)
@@ -238,7 +238,7 @@ class TestShouldIngestFile:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.config import load_config, should_ingest_file
+        from luminescent_cluster.workflows.config import load_config, should_ingest_file
 
         config_file = temp_project_dir / ".agent" / "config.yaml"
         config_file.write_text(sample_config_yaml)
@@ -253,7 +253,7 @@ class TestShouldIngestFile:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.config import load_config, should_ingest_file
+        from luminescent_cluster.workflows.config import load_config, should_ingest_file
 
         config_file = temp_project_dir / ".agent" / "config.yaml"
         config_file.write_text(sample_config_yaml)
@@ -268,7 +268,7 @@ class TestShouldIngestFile:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.config import load_config, should_ingest_file
+        from luminescent_cluster.workflows.config import load_config, should_ingest_file
 
         config_file = temp_project_dir / ".agent" / "config.yaml"
         config_file.write_text(sample_config_yaml)
@@ -283,7 +283,7 @@ class TestShouldIngestFile:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.config import load_config, should_ingest_file
+        from luminescent_cluster.workflows.config import load_config, should_ingest_file
 
         config_file = temp_project_dir / ".agent" / "config.yaml"
         config_file.write_text(sample_config_yaml)
@@ -302,7 +302,7 @@ class TestIsSecretFile:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.config import is_secret_file
+        from luminescent_cluster.workflows.config import is_secret_file
 
         assert callable(is_secret_file)
 
@@ -311,7 +311,7 @@ class TestIsSecretFile:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.config import is_secret_file
+        from luminescent_cluster.workflows.config import is_secret_file
 
         assert is_secret_file(".env") is True
         assert is_secret_file("config/.env") is True
@@ -322,7 +322,7 @@ class TestIsSecretFile:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.config import is_secret_file
+        from luminescent_cluster.workflows.config import is_secret_file
 
         assert is_secret_file("server.key") is True
         assert is_secret_file("certs/private.key") is True
@@ -332,7 +332,7 @@ class TestIsSecretFile:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.config import is_secret_file
+        from luminescent_cluster.workflows.config import is_secret_file
 
         assert is_secret_file("cert.pem") is True
         assert is_secret_file("certs/ca.pem") is True
@@ -342,7 +342,7 @@ class TestIsSecretFile:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.config import is_secret_file
+        from luminescent_cluster.workflows.config import is_secret_file
 
         assert is_secret_file("passwords.txt") is True
         assert is_secret_file("config/db_password.yaml") is True
@@ -352,7 +352,7 @@ class TestIsSecretFile:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.config import is_secret_file
+        from luminescent_cluster.workflows.config import is_secret_file
 
         assert is_secret_file("api_token.txt") is True
         assert is_secret_file("tokens.json") is True
@@ -362,7 +362,7 @@ class TestIsSecretFile:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.config import is_secret_file
+        from luminescent_cluster.workflows.config import is_secret_file
 
         assert is_secret_file("credentials.json") is True
         assert is_secret_file("gcloud_credentials.json") is True
@@ -372,7 +372,7 @@ class TestIsSecretFile:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.config import is_secret_file
+        from luminescent_cluster.workflows.config import is_secret_file
 
         assert is_secret_file("docs/readme.md") is False
         assert is_secret_file("docs/adrs/ADR-001.md") is False
@@ -382,7 +382,7 @@ class TestIsSecretFile:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.config import is_secret_file
+        from luminescent_cluster.workflows.config import is_secret_file
 
         assert is_secret_file("src/main.py") is False
         assert is_secret_file("tests/test_config.py") is False

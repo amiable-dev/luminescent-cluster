@@ -33,7 +33,7 @@ class TestCreateMemoryTool:
         GitHub Issue: #86
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import create_memory
+        from luminescent_cluster.memory.mcp.tools import create_memory
 
         assert callable(create_memory)
 
@@ -44,7 +44,7 @@ class TestCreateMemoryTool:
         GitHub Issue: #86
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import create_memory
+        from luminescent_cluster.memory.mcp.tools import create_memory
 
         result = await create_memory(
             user_id="user-123",
@@ -63,7 +63,7 @@ class TestCreateMemoryTool:
         GitHub Issue: #86
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import create_memory
+        from luminescent_cluster.memory.mcp.tools import create_memory
 
         # Valid types should work (bypass validation for CRUD testing)
         result = await create_memory(
@@ -82,7 +82,7 @@ class TestCreateMemoryTool:
         GitHub Issue: #86
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import create_memory
+        from luminescent_cluster.memory.mcp.tools import create_memory
 
         result = await create_memory(
             user_id="user-123",
@@ -106,7 +106,7 @@ class TestGetMemoriesTool:
         GitHub Issue: #87
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import get_memories
+        from luminescent_cluster.memory.mcp.tools import get_memories
 
         assert callable(get_memories)
 
@@ -117,7 +117,7 @@ class TestGetMemoriesTool:
         GitHub Issue: #87
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import get_memories
+        from luminescent_cluster.memory.mcp.tools import get_memories
 
         result = await get_memories(
             query="tabs or spaces",
@@ -135,7 +135,7 @@ class TestGetMemoriesTool:
         GitHub Issue: #87
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import create_memory, get_memories
+        from luminescent_cluster.memory.mcp.tools import create_memory, get_memories
 
         # Create multiple memories
         for i in range(10):
@@ -161,7 +161,7 @@ class TestGetMemoriesTool:
         GitHub Issue: #87
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import get_memories
+        from luminescent_cluster.memory.mcp.tools import get_memories
 
         result = await get_memories(
             query="test",
@@ -180,7 +180,7 @@ class TestSearchMemoriesTool:
         GitHub Issue: #88
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import search_memories
+        from luminescent_cluster.memory.mcp.tools import search_memories
 
         assert callable(search_memories)
 
@@ -191,7 +191,7 @@ class TestSearchMemoriesTool:
         GitHub Issue: #88
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import search_memories
+        from luminescent_cluster.memory.mcp.tools import search_memories
 
         result = await search_memories(
             user_id="user-123",
@@ -207,7 +207,7 @@ class TestSearchMemoriesTool:
         GitHub Issue: #88
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import create_memory, search_memories
+        from luminescent_cluster.memory.mcp.tools import create_memory, search_memories
 
         # Create different types
         await create_memory(
@@ -238,7 +238,7 @@ class TestSearchMemoriesTool:
         GitHub Issue: #88
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import search_memories
+        from luminescent_cluster.memory.mcp.tools import search_memories
 
         result = await search_memories(
             user_id="user-123",
@@ -257,7 +257,7 @@ class TestDeleteMemoryTool:
         GitHub Issue: #89
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import delete_memory
+        from luminescent_cluster.memory.mcp.tools import delete_memory
 
         assert callable(delete_memory)
 
@@ -268,7 +268,7 @@ class TestDeleteMemoryTool:
         GitHub Issue: #89
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import create_memory, delete_memory
+        from luminescent_cluster.memory.mcp.tools import create_memory, delete_memory
 
         # Create a memory first (bypass validation for CRUD testing)
         create_result = await create_memory(
@@ -291,7 +291,7 @@ class TestDeleteMemoryTool:
         GitHub Issue: #89
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import create_memory, delete_memory
+        from luminescent_cluster.memory.mcp.tools import create_memory, delete_memory
 
         create_result = await create_memory(
             user_id="user-123",
@@ -311,7 +311,7 @@ class TestDeleteMemoryTool:
         GitHub Issue: #89
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import delete_memory
+        from luminescent_cluster.memory.mcp.tools import delete_memory
 
         result = await delete_memory(memory_id="nonexistent-id")
         assert result["success"] is False
@@ -326,7 +326,7 @@ class TestGetMemoryByIdTool:
         GitHub Issue: #87
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import get_memory_by_id
+        from luminescent_cluster.memory.mcp.tools import get_memory_by_id
 
         assert callable(get_memory_by_id)
 
@@ -337,7 +337,7 @@ class TestGetMemoryByIdTool:
         GitHub Issue: #87
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import create_memory, get_memory_by_id
+        from luminescent_cluster.memory.mcp.tools import create_memory, get_memory_by_id
 
         create_result = await create_memory(
             user_id="user-123",
@@ -359,7 +359,7 @@ class TestGetMemoryByIdTool:
         GitHub Issue: #87
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp.tools import get_memory_by_id
+        from luminescent_cluster.memory.mcp.tools import get_memory_by_id
 
         result = await get_memory_by_id(memory_id="nonexistent-id")
         assert result.get("error") is not None or result.get("memory") is None
@@ -369,14 +369,14 @@ class TestMCPModuleExports:
     """TDD: Tests for MCP module exports."""
 
     def test_mcp_module_exists(self):
-        """src.memory.mcp module should exist.
+        """luminescent_cluster.memory.mcp module should exist.
 
         GitHub Issue: #86
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        import src.memory.mcp
+        import luminescent_cluster.memory.mcp
 
-        assert src.memory.mcp is not None
+        assert luminescent_cluster.memory.mcp is not None
 
     def test_mcp_exports_all_tools(self):
         """mcp module should export all CRUD tools.
@@ -384,7 +384,7 @@ class TestMCPModuleExports:
         GitHub Issue: #86-89
         ADR Reference: ADR-003 Phase 1a (MCP Tools)
         """
-        from src.memory.mcp import (
+        from luminescent_cluster.memory.mcp import (
             create_memory,
             delete_memory,
             get_memories,
@@ -416,7 +416,7 @@ class TestUpdateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import update_memory
+        from luminescent_cluster.memory.mcp.tools import update_memory
 
         assert callable(update_memory)
 
@@ -427,7 +427,7 @@ class TestUpdateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import create_memory, update_memory
+        from luminescent_cluster.memory.mcp.tools import create_memory, update_memory
 
         # Create a memory first (bypass validation for CRUD testing)
         create_result = await create_memory(
@@ -454,7 +454,7 @@ class TestUpdateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import create_memory, get_memory_by_id, update_memory
+        from luminescent_cluster.memory.mcp.tools import create_memory, get_memory_by_id, update_memory
 
         # Create a memory first (bypass validation for CRUD testing)
         create_result = await create_memory(
@@ -483,7 +483,7 @@ class TestUpdateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import create_memory, get_memory_by_id, update_memory
+        from luminescent_cluster.memory.mcp.tools import create_memory, get_memory_by_id, update_memory
 
         create_result = await create_memory(
             user_id="user-update-test",
@@ -510,7 +510,7 @@ class TestUpdateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import update_memory
+        from luminescent_cluster.memory.mcp.tools import update_memory
 
         result = await update_memory(
             memory_id="nonexistent-id",
@@ -538,7 +538,7 @@ class TestInvalidateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import invalidate_memory
+        from luminescent_cluster.memory.mcp.tools import invalidate_memory
 
         assert callable(invalidate_memory)
 
@@ -549,7 +549,7 @@ class TestInvalidateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import create_memory, invalidate_memory
+        from luminescent_cluster.memory.mcp.tools import create_memory, invalidate_memory
 
         create_result = await create_memory(
             user_id="user-invalidate-test",
@@ -574,7 +574,7 @@ class TestInvalidateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import create_memory, get_memory_by_id, invalidate_memory
+        from luminescent_cluster.memory.mcp.tools import create_memory, get_memory_by_id, invalidate_memory
 
         create_result = await create_memory(
             user_id="user-invalidate-test",
@@ -605,7 +605,7 @@ class TestInvalidateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import create_memory, invalidate_memory
+        from luminescent_cluster.memory.mcp.tools import create_memory, invalidate_memory
 
         create_result = await create_memory(
             user_id="user-invalidate-test",
@@ -635,7 +635,7 @@ class TestInvalidateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import invalidate_memory
+        from luminescent_cluster.memory.mcp.tools import invalidate_memory
 
         result = await invalidate_memory(
             memory_id="nonexistent-id",
@@ -651,7 +651,7 @@ class TestInvalidateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import create_memory, get_memories, invalidate_memory
+        from luminescent_cluster.memory.mcp.tools import create_memory, get_memories, invalidate_memory
 
         # Create and invalidate a memory (bypass validation for CRUD testing)
         create_result = await create_memory(
@@ -701,7 +701,7 @@ class TestGetMemoryProvenanceTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import get_memory_provenance
+        from luminescent_cluster.memory.mcp.tools import get_memory_provenance
 
         assert callable(get_memory_provenance)
 
@@ -712,7 +712,7 @@ class TestGetMemoryProvenanceTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import create_memory, get_memory_provenance
+        from luminescent_cluster.memory.mcp.tools import create_memory, get_memory_provenance
 
         create_result = await create_memory(
             user_id="user-provenance-test",
@@ -734,7 +734,7 @@ class TestGetMemoryProvenanceTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import create_memory, get_memory_provenance
+        from luminescent_cluster.memory.mcp.tools import create_memory, get_memory_provenance
 
         create_result = await create_memory(
             user_id="user-provenance-test",
@@ -760,7 +760,7 @@ class TestGetMemoryProvenanceTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import create_memory, get_memory_provenance
+        from luminescent_cluster.memory.mcp.tools import create_memory, get_memory_provenance
 
         create_result = await create_memory(
             user_id="user-provenance-test",
@@ -786,7 +786,7 @@ class TestGetMemoryProvenanceTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import create_memory, get_memory_provenance
+        from luminescent_cluster.memory.mcp.tools import create_memory, get_memory_provenance
 
         create_result = await create_memory(
             user_id="user-provenance-test",
@@ -808,7 +808,7 @@ class TestGetMemoryProvenanceTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import (
+        from luminescent_cluster.memory.mcp.tools import (
             create_memory,
             get_memory_provenance,
             update_memory,
@@ -846,7 +846,7 @@ class TestGetMemoryProvenanceTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp.tools import get_memory_provenance
+        from luminescent_cluster.memory.mcp.tools import get_memory_provenance
 
         result = await get_memory_provenance(memory_id="nonexistent-id")
 
@@ -870,7 +870,7 @@ class TestMCPServerIntegration:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from src.memory.mcp import (
+        from luminescent_cluster.memory.mcp import (
             create_memory,
             delete_memory,
             get_memories,

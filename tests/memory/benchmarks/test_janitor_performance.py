@@ -18,8 +18,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from src.memory.providers.local import LocalMemoryProvider
-from src.memory.schemas import Memory, MemoryType
+from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+from luminescent_cluster.memory.schemas import Memory, MemoryType
 
 
 class TestJanitorPerformance:
@@ -73,7 +73,7 @@ class TestJanitorPerformance:
         GitHub Issue: #106
         ADR Reference: ADR-003 Phase 1d
         """
-        from src.memory.janitor.runner import JanitorRunner
+        from luminescent_cluster.memory.janitor.runner import JanitorRunner
 
         janitor = JanitorRunner(large_provider)
 
@@ -99,7 +99,7 @@ class TestJanitorPerformance:
 
         GitHub Issue: #106
         """
-        from src.memory.janitor.deduplication import Deduplicator
+        from luminescent_cluster.memory.janitor.deduplication import Deduplicator
 
         dedup = Deduplicator(similarity_threshold=0.85)
 
@@ -123,7 +123,7 @@ class TestJanitorPerformance:
 
         GitHub Issue: #106
         """
-        from src.memory.janitor.contradiction import ContradictionHandler
+        from luminescent_cluster.memory.janitor.contradiction import ContradictionHandler
 
         handler = ContradictionHandler()
 
@@ -147,7 +147,7 @@ class TestJanitorPerformance:
 
         GitHub Issue: #106
         """
-        from src.memory.janitor.expiration import ExpirationCleaner
+        from luminescent_cluster.memory.janitor.expiration import ExpirationCleaner
 
         cleaner = ExpirationCleaner()
 
@@ -171,7 +171,7 @@ class TestJanitorPerformance:
 
         GitHub Issue: #106
         """
-        from src.memory.janitor.runner import JanitorRunner
+        from luminescent_cluster.memory.janitor.runner import JanitorRunner
 
         janitor = JanitorRunner(large_provider)
 

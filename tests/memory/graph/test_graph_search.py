@@ -14,9 +14,9 @@ ADR Reference: ADR-003 Memory Architecture, Phase 4 (Knowledge Graph)
 
 import pytest
 
-from src.memory.extraction.entities import EntityType
-from src.memory.graph.types import GraphEdge, GraphNode, RelationshipType
-from src.memory.graph.graph_store import KnowledgeGraph
+from luminescent_cluster.memory.extraction.entities import EntityType
+from luminescent_cluster.memory.graph.types import GraphEdge, GraphNode, RelationshipType
+from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
 
 class TestGraphSearchExists:
@@ -28,7 +28,7 @@ class TestGraphSearchExists:
         GitHub Issue: #125
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_search import GraphSearch
+        from luminescent_cluster.memory.graph.graph_search import GraphSearch
 
         assert GraphSearch is not None
 
@@ -42,7 +42,7 @@ class TestGraphSearchConstruction:
         GitHub Issue: #125
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_search import GraphSearch
+        from luminescent_cluster.memory.graph.graph_search import GraphSearch
 
         search = GraphSearch()
         assert search is not None
@@ -53,7 +53,7 @@ class TestGraphSearchConstruction:
         GitHub Issue: #125
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_search import GraphSearch
+        from luminescent_cluster.memory.graph.graph_search import GraphSearch
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
@@ -72,7 +72,7 @@ class TestGraphSearchInterface:
         GitHub Issue: #125
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_search import GraphSearch
+        from luminescent_cluster.memory.graph.graph_search import GraphSearch
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
@@ -97,7 +97,7 @@ class TestGraphSearchInterface:
         GitHub Issue: #125
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_search import GraphSearch
+        from luminescent_cluster.memory.graph.graph_search import GraphSearch
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
@@ -119,7 +119,7 @@ class TestGraphSearchInterface:
         GitHub Issue: #125
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_search import GraphSearch
+        from luminescent_cluster.memory.graph.graph_search import GraphSearch
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
@@ -135,7 +135,7 @@ class TestGraphSearchInterface:
         GitHub Issue: #125
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_search import GraphSearch
+        from luminescent_cluster.memory.graph.graph_search import GraphSearch
 
         search = GraphSearch()
 
@@ -153,7 +153,7 @@ class TestGraphSearchTraversal:
         GitHub Issue: #125
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_search import GraphSearch
+        from luminescent_cluster.memory.graph.graph_search import GraphSearch
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
@@ -183,7 +183,7 @@ class TestGraphSearchTraversal:
         GitHub Issue: #125
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_search import GraphSearch
+        from luminescent_cluster.memory.graph.graph_search import GraphSearch
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
@@ -221,7 +221,7 @@ class TestGraphSearchTraversal:
         GitHub Issue: #125
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_search import GraphSearch
+        from luminescent_cluster.memory.graph.graph_search import GraphSearch
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
@@ -245,7 +245,7 @@ class TestGraphSearchScoring:
         GitHub Issue: #125
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_search import GraphSearch
+        from luminescent_cluster.memory.graph.graph_search import GraphSearch
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
@@ -278,7 +278,7 @@ class TestGraphSearchFuzzyMatching:
         GitHub Issue: #125
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_search import GraphSearch
+        from luminescent_cluster.memory.graph.graph_search import GraphSearch
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
@@ -298,7 +298,7 @@ class TestGraphSearchFuzzyMatching:
         GitHub Issue: #125
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_search import GraphSearch
+        from luminescent_cluster.memory.graph.graph_search import GraphSearch
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
@@ -323,6 +323,6 @@ class TestModuleExports:
         GitHub Issue: #125
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph import GraphSearch
+        from luminescent_cluster.memory.graph import GraphSearch
 
         assert GraphSearch is not None

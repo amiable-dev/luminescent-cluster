@@ -21,8 +21,8 @@ from typing import List
 
 import pytest
 
-from src.memory.providers.local import LocalMemoryProvider
-from src.memory.schemas import Memory, MemoryType
+from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+from luminescent_cluster.memory.schemas import Memory, MemoryType
 
 
 class TestRetrievalLatency:
@@ -59,13 +59,13 @@ class TestRetrievalLatency:
     @pytest.fixture
     def ranker(self):
         """Create ranker for benchmarking."""
-        from src.memory.retrieval.ranker import MemoryRanker
+        from luminescent_cluster.memory.retrieval.ranker import MemoryRanker
         return MemoryRanker()
 
     @pytest.fixture
     async def scoped_retriever(self, populated_provider):
         """Create scoped retriever for benchmarking."""
-        from src.memory.retrieval.scoped import ScopedRetriever
+        from luminescent_cluster.memory.retrieval.scoped import ScopedRetriever
         return ScopedRetriever(populated_provider)
 
     async def _measure_latency(self, operation, iterations: int = 50) -> List[float]:

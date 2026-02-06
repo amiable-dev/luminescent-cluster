@@ -27,7 +27,7 @@ class TestRelationshipTypeExists:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import RelationshipType
+        from luminescent_cluster.memory.graph.types import RelationshipType
 
         assert RelationshipType is not None
 
@@ -39,7 +39,7 @@ class TestRelationshipTypeExists:
         """
         from enum import Enum
 
-        from src.memory.graph.types import RelationshipType
+        from luminescent_cluster.memory.graph.types import RelationshipType
 
         assert issubclass(RelationshipType, str)
         assert issubclass(RelationshipType, Enum)
@@ -54,7 +54,7 @@ class TestRelationshipTypeValues:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import RelationshipType
+        from luminescent_cluster.memory.graph.types import RelationshipType
 
         assert RelationshipType.DEPENDS_ON == "depends_on"
 
@@ -64,7 +64,7 @@ class TestRelationshipTypeValues:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import RelationshipType
+        from luminescent_cluster.memory.graph.types import RelationshipType
 
         assert RelationshipType.USES == "uses"
 
@@ -74,7 +74,7 @@ class TestRelationshipTypeValues:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import RelationshipType
+        from luminescent_cluster.memory.graph.types import RelationshipType
 
         assert RelationshipType.IMPLEMENTS == "implements"
 
@@ -84,7 +84,7 @@ class TestRelationshipTypeValues:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import RelationshipType
+        from luminescent_cluster.memory.graph.types import RelationshipType
 
         assert RelationshipType.CALLS == "calls"
 
@@ -94,7 +94,7 @@ class TestRelationshipTypeValues:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import RelationshipType
+        from luminescent_cluster.memory.graph.types import RelationshipType
 
         assert RelationshipType.CONFIGURES == "configures"
 
@@ -104,7 +104,7 @@ class TestRelationshipTypeValues:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import RelationshipType
+        from luminescent_cluster.memory.graph.types import RelationshipType
 
         assert RelationshipType.HAD_INCIDENT == "had_incident"
 
@@ -114,7 +114,7 @@ class TestRelationshipTypeValues:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import RelationshipType
+        from luminescent_cluster.memory.graph.types import RelationshipType
 
         assert RelationshipType.OWNED_BY == "owned_by"
 
@@ -124,7 +124,7 @@ class TestRelationshipTypeValues:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import RelationshipType
+        from luminescent_cluster.memory.graph.types import RelationshipType
 
         assert len(RelationshipType) == 7
 
@@ -138,7 +138,7 @@ class TestGraphNodeExists:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import GraphNode
+        from luminescent_cluster.memory.graph.types import GraphNode
 
         assert GraphNode is not None
 
@@ -150,7 +150,7 @@ class TestGraphNodeExists:
         """
         from dataclasses import is_dataclass
 
-        from src.memory.graph.types import GraphNode
+        from luminescent_cluster.memory.graph.types import GraphNode
 
         assert is_dataclass(GraphNode)
 
@@ -164,7 +164,7 @@ class TestGraphNodeFields:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import GraphNode
+        from luminescent_cluster.memory.graph.types import GraphNode
 
         field_names = [f.name for f in fields(GraphNode)]
         assert "id" in field_names
@@ -175,7 +175,7 @@ class TestGraphNodeFields:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import GraphNode
+        from luminescent_cluster.memory.graph.types import GraphNode
 
         field_names = [f.name for f in fields(GraphNode)]
         assert "entity_type" in field_names
@@ -186,7 +186,7 @@ class TestGraphNodeFields:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import GraphNode
+        from luminescent_cluster.memory.graph.types import GraphNode
 
         field_names = [f.name for f in fields(GraphNode)]
         assert "name" in field_names
@@ -197,7 +197,7 @@ class TestGraphNodeFields:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import GraphNode
+        from luminescent_cluster.memory.graph.types import GraphNode
 
         field_names = [f.name for f in fields(GraphNode)]
         assert "memory_ids" in field_names
@@ -208,7 +208,7 @@ class TestGraphNodeFields:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import GraphNode
+        from luminescent_cluster.memory.graph.types import GraphNode
 
         field_names = [f.name for f in fields(GraphNode)]
         assert "metadata" in field_names
@@ -223,8 +223,8 @@ class TestGraphNodeConstruction:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.extraction.entities import EntityType
-        from src.memory.graph.types import GraphNode
+        from luminescent_cluster.memory.extraction.entities import EntityType
+        from luminescent_cluster.memory.graph.types import GraphNode
 
         node = GraphNode(
             id="node-1",
@@ -242,8 +242,8 @@ class TestGraphNodeConstruction:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.extraction.entities import EntityType
-        from src.memory.graph.types import GraphNode
+        from luminescent_cluster.memory.extraction.entities import EntityType
+        from luminescent_cluster.memory.graph.types import GraphNode
 
         node = GraphNode(
             id="node-1",
@@ -259,8 +259,8 @@ class TestGraphNodeConstruction:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.extraction.entities import EntityType
-        from src.memory.graph.types import GraphNode
+        from luminescent_cluster.memory.extraction.entities import EntityType
+        from luminescent_cluster.memory.graph.types import GraphNode
 
         node = GraphNode(
             id="node-1",
@@ -276,8 +276,8 @@ class TestGraphNodeConstruction:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.extraction.entities import EntityType
-        from src.memory.graph.types import GraphNode
+        from luminescent_cluster.memory.extraction.entities import EntityType
+        from luminescent_cluster.memory.graph.types import GraphNode
 
         node = GraphNode(
             id="node-1",
@@ -303,7 +303,7 @@ class TestGraphEdgeExists:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import GraphEdge
+        from luminescent_cluster.memory.graph.types import GraphEdge
 
         assert GraphEdge is not None
 
@@ -315,7 +315,7 @@ class TestGraphEdgeExists:
         """
         from dataclasses import is_dataclass
 
-        from src.memory.graph.types import GraphEdge
+        from luminescent_cluster.memory.graph.types import GraphEdge
 
         assert is_dataclass(GraphEdge)
 
@@ -329,7 +329,7 @@ class TestGraphEdgeFields:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import GraphEdge
+        from luminescent_cluster.memory.graph.types import GraphEdge
 
         field_names = [f.name for f in fields(GraphEdge)]
         assert "source_id" in field_names
@@ -340,7 +340,7 @@ class TestGraphEdgeFields:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import GraphEdge
+        from luminescent_cluster.memory.graph.types import GraphEdge
 
         field_names = [f.name for f in fields(GraphEdge)]
         assert "target_id" in field_names
@@ -351,7 +351,7 @@ class TestGraphEdgeFields:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import GraphEdge
+        from luminescent_cluster.memory.graph.types import GraphEdge
 
         field_names = [f.name for f in fields(GraphEdge)]
         assert "relationship" in field_names
@@ -362,7 +362,7 @@ class TestGraphEdgeFields:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import GraphEdge
+        from luminescent_cluster.memory.graph.types import GraphEdge
 
         field_names = [f.name for f in fields(GraphEdge)]
         assert "confidence" in field_names
@@ -373,7 +373,7 @@ class TestGraphEdgeFields:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import GraphEdge
+        from luminescent_cluster.memory.graph.types import GraphEdge
 
         field_names = [f.name for f in fields(GraphEdge)]
         assert "memory_id" in field_names
@@ -388,7 +388,7 @@ class TestGraphEdgeConstruction:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import GraphEdge, RelationshipType
+        from luminescent_cluster.memory.graph.types import GraphEdge, RelationshipType
 
         edge = GraphEdge(
             source_id="node-1",
@@ -410,7 +410,7 @@ class TestGraphEdgeConstruction:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.types import GraphEdge, RelationshipType
+        from luminescent_cluster.memory.graph.types import GraphEdge, RelationshipType
 
         edge = GraphEdge(
             source_id="node-1",
@@ -431,7 +431,7 @@ class TestModuleExports:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph import RelationshipType
+        from luminescent_cluster.memory.graph import RelationshipType
 
         assert RelationshipType is not None
 
@@ -441,7 +441,7 @@ class TestModuleExports:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph import GraphNode
+        from luminescent_cluster.memory.graph import GraphNode
 
         assert GraphNode is not None
 
@@ -451,6 +451,6 @@ class TestModuleExports:
         GitHub Issue: #122
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph import GraphEdge
+        from luminescent_cluster.memory.graph import GraphEdge
 
         assert GraphEdge is not None

@@ -14,11 +14,11 @@ ADR Reference: ADR-003 Memory Architecture, Phase 4 (Knowledge Graph)
 
 import pytest
 
-from src.memory.extraction.entities import EntityType
-from src.memory.graph.types import GraphEdge, GraphNode, RelationshipType
-from src.memory.graph.graph_store import KnowledgeGraph
-from src.memory.graph.graph_search import GraphSearch
-from src.memory.schemas import Memory, MemoryType
+from luminescent_cluster.memory.extraction.entities import EntityType
+from luminescent_cluster.memory.graph.types import GraphEdge, GraphNode, RelationshipType
+from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
+from luminescent_cluster.memory.graph.graph_search import GraphSearch
+from luminescent_cluster.memory.schemas import Memory, MemoryType
 
 
 class TestHybridRetrieverGraphSupport:
@@ -30,7 +30,7 @@ class TestHybridRetrieverGraphSupport:
         GitHub Issue: #126
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.retrieval.hybrid import HybridRetriever
+        from luminescent_cluster.memory.retrieval.hybrid import HybridRetriever
 
         graph_search = GraphSearch()
         retriever = HybridRetriever(graph=graph_search)
@@ -43,7 +43,7 @@ class TestHybridRetrieverGraphSupport:
         GitHub Issue: #126
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.retrieval.hybrid import HybridRetriever
+        from luminescent_cluster.memory.retrieval.hybrid import HybridRetriever
 
         retriever = HybridRetriever()
 
@@ -55,7 +55,7 @@ class TestHybridRetrieverGraphSupport:
         GitHub Issue: #126
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.retrieval.hybrid import HybridRetriever
+        from luminescent_cluster.memory.retrieval.hybrid import HybridRetriever
 
         retriever = HybridRetriever(graph_weight=0.5)
 
@@ -72,7 +72,7 @@ class TestHybridRetrieverGraphIntegration:
         GitHub Issue: #126
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.retrieval.hybrid import HybridRetriever
+        from luminescent_cluster.memory.retrieval.hybrid import HybridRetriever
 
         # Set up graph
         graph_search = GraphSearch()
@@ -114,7 +114,7 @@ class TestHybridRetrieverGraphIntegration:
         GitHub Issue: #126
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.retrieval.hybrid import HybridRetriever
+        from luminescent_cluster.memory.retrieval.hybrid import HybridRetriever
 
         # Set up graph
         graph_search = GraphSearch()
@@ -161,7 +161,7 @@ class TestRetrievalMetricsGraphSupport:
         GitHub Issue: #126
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.retrieval.hybrid import RetrievalMetrics
+        from luminescent_cluster.memory.retrieval.hybrid import RetrievalMetrics
 
         metrics = RetrievalMetrics()
 
@@ -179,7 +179,7 @@ class TestHybridResultGraphSource:
         GitHub Issue: #126
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.retrieval.hybrid import HybridRetriever
+        from luminescent_cluster.memory.retrieval.hybrid import HybridRetriever
 
         # Set up graph with a node
         graph_search = GraphSearch()
@@ -221,7 +221,7 @@ class TestRRFFusionThreeSource:
         GitHub Issue: #126
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.retrieval.fusion import RRFFusion
+        from luminescent_cluster.memory.retrieval.fusion import RRFFusion
 
         fusion = RRFFusion()
         bm25_results = [("mem-1", 0.9), ("mem-2", 0.8)]
@@ -246,7 +246,7 @@ class TestRRFFusionThreeSource:
         GitHub Issue: #126
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.retrieval.fusion import RRFFusion
+        from luminescent_cluster.memory.retrieval.fusion import RRFFusion
 
         fusion = RRFFusion()
         bm25_results = [("mem-1", 0.9)]
@@ -275,7 +275,7 @@ class TestMultiHopQueryBenchmark:
 
         Example query: "What depends on PostgreSQL?"
         """
-        from src.memory.retrieval.hybrid import HybridRetriever
+        from luminescent_cluster.memory.retrieval.hybrid import HybridRetriever
 
         # Set up graph with relationships
         graph_search = GraphSearch()
@@ -340,7 +340,7 @@ class TestMultiHopQueryBenchmark:
 
         Exit Criteria: Latency <1s for graph-augmented queries
         """
-        from src.memory.retrieval.hybrid import HybridRetriever
+        from luminescent_cluster.memory.retrieval.hybrid import HybridRetriever
 
         # Set up graph
         graph_search = GraphSearch()

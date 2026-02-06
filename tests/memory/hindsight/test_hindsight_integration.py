@@ -15,7 +15,7 @@ class TestHindsightModuleExports:
 
     def test_all_types_exported(self):
         """All temporal types should be importable from hindsight module."""
-        from src.memory.hindsight import (
+        from luminescent_cluster.memory.hindsight import (
             NetworkType,
             TimeRange,
             TemporalEvent,
@@ -31,14 +31,14 @@ class TestHindsightModuleExports:
 
     def test_timeline_exported(self):
         """Timeline should be importable from hindsight module."""
-        from src.memory.hindsight import Timeline
+        from luminescent_cluster.memory.hindsight import Timeline
 
         timeline = Timeline(user_id="test")
         assert timeline is not None
 
     def test_search_exported(self):
         """Search classes should be importable from hindsight module."""
-        from src.memory.hindsight import (
+        from luminescent_cluster.memory.hindsight import (
             TemporalSearch,
             ParsedTemporalQuery,
             TemporalSearchResult,
@@ -54,7 +54,7 @@ class TestEndToEndTemporalQuery:
 
     def test_what_changed_last_month(self):
         """E2E: 'What changed last month?' query."""
-        from src.memory.hindsight import (
+        from luminescent_cluster.memory.hindsight import (
             Timeline,
             TemporalSearch,
             TemporalEvent,
@@ -106,7 +106,7 @@ class TestEndToEndTemporalQuery:
 
     def test_entity_status_before_incident(self):
         """E2E: 'What was auth-service status before incident-123?'"""
-        from src.memory.hindsight import (
+        from luminescent_cluster.memory.hindsight import (
             Timeline,
             TemporalSearch,
             TemporalEvent,
@@ -167,7 +167,7 @@ class TestEndToEndTemporalQuery:
 
     def test_decisions_in_quarter(self):
         """E2E: 'Show me decisions made in Q4 2025'"""
-        from src.memory.hindsight import (
+        from luminescent_cluster.memory.hindsight import (
             Timeline,
             TemporalSearch,
             TemporalEvent,
@@ -234,7 +234,7 @@ class TestTimelineStateReconstruction:
 
     def test_reconstruct_entity_state_at_time(self):
         """Should reconstruct entity state at any point in time."""
-        from src.memory.hindsight import Timeline, TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight import Timeline, TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -290,7 +290,7 @@ class TestFourNetworkArchitecture:
 
     def test_world_network_stores_external_facts(self):
         """World network should store external facts."""
-        from src.memory.hindsight import Timeline, TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight import Timeline, TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -309,7 +309,7 @@ class TestFourNetworkArchitecture:
 
     def test_bank_network_stores_agent_actions(self):
         """Bank network should store agent's own actions."""
-        from src.memory.hindsight import Timeline, TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight import Timeline, TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -330,7 +330,7 @@ class TestFourNetworkArchitecture:
 
     def test_opinion_network_stores_judgments(self):
         """Opinion network should store subjective judgments."""
-        from src.memory.hindsight import Timeline, TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight import Timeline, TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -352,7 +352,7 @@ class TestFourNetworkArchitecture:
 
     def test_observation_network_stores_neutral_summaries(self):
         """Observation network should store neutral entity summaries."""
-        from src.memory.hindsight import Timeline, TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight import Timeline, TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -374,7 +374,7 @@ class TestTemporalSearchWithContext:
 
     def test_results_include_relative_time(self):
         """Search results should include relative time context."""
-        from src.memory.hindsight import (
+        from luminescent_cluster.memory.hindsight import (
             Timeline,
             TemporalSearch,
             TemporalEvent,
@@ -406,7 +406,7 @@ class TestTimelineSerialization:
 
     def test_timeline_round_trip(self):
         """Timeline should serialize and deserialize correctly."""
-        from src.memory.hindsight import Timeline, TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight import Timeline, TemporalEvent, NetworkType
 
         # Create and populate timeline
         timeline = Timeline(user_id="user-123")

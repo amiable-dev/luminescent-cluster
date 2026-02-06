@@ -11,7 +11,7 @@ import pytest
 import time
 from datetime import datetime, timezone
 
-from src.memory.observability.graph_metrics import (
+from luminescent_cluster.memory.observability.graph_metrics import (
     GraphMetricsCollector,
     GraphQueryMetrics,
     GraphSizeSnapshot,

@@ -10,8 +10,8 @@ from datetime import datetime, timezone
 
 import pytest
 
-from src.memory.retrieval.bm25 import BM25Index, BM25Search
-from src.memory.schemas import Memory, MemoryType
+from luminescent_cluster.memory.retrieval.bm25 import BM25Index, BM25Search
+from luminescent_cluster.memory.schemas import Memory, MemoryType
 
 
 @pytest.fixture

@@ -18,18 +18,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import numpy as np
 import pytest
 
-from src.memory.evaluation.baseline import BaselineStore, RecallBaseline
-from src.memory.evaluation.brute_force import (
+from luminescent_cluster.memory.evaluation.baseline import BaselineStore, RecallBaseline
+from luminescent_cluster.memory.evaluation.brute_force import (
     BruteForceResult,
     BruteForceSearcher,
     Document,
 )
-from src.memory.evaluation.embedding_version import (
+from luminescent_cluster.memory.evaluation.embedding_version import (
     EmbeddingVersion,
     EmbeddingVersionTracker,
 )
-from src.memory.evaluation.recall_health import RecallHealthMonitor, RecallHealthResult
-from src.memory.maintenance.reindex_trigger import ReindexTrigger
+from luminescent_cluster.memory.evaluation.recall_health import RecallHealthMonitor, RecallHealthResult
+from luminescent_cluster.memory.maintenance.reindex_trigger import ReindexTrigger
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -835,7 +835,7 @@ class TestHarnessIntegration:
 
     def test_configure_and_run_recall_check(self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path) -> None:
         """Test configuring harness and running recall check."""
-        from src.memory.evaluation.harness import EvaluationHarness
+        from luminescent_cluster.memory.evaluation.harness import EvaluationHarness
 
         harness = EvaluationHarness()
 
@@ -866,7 +866,7 @@ class TestHarnessIntegration:
 
     def test_run_recall_check_without_config_raises(self) -> None:
         """Test that running recall check without config raises."""
-        from src.memory.evaluation.harness import EvaluationHarness
+        from luminescent_cluster.memory.evaluation.harness import EvaluationHarness
 
         harness = EvaluationHarness()
 

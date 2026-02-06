@@ -15,7 +15,7 @@ Tests verify:
 import pytest
 from datetime import datetime, timezone
 
-from src.memory.observability.scale_milestones import (
+from luminescent_cluster.memory.observability.scale_milestones import (
     ScaleMilestone,
     MilestoneCheckResult,
     ScaleMilestoneTracker,

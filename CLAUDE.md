@@ -40,16 +40,16 @@ Luminescent Cluster is a context-aware AI development system that provides persi
 
 | Tier | Purpose | Persistence | Location |
 |------|---------|-------------|----------|
-| **Session** | Task context, git state, recent conversation | Per-session | `integrations/session_memory_mcp_server.py` |
-| **Pixeltable** | ADRs, code embeddings, incident history | Permanent | `integrations/pixeltable_mcp_server.py` |
-| **Council** | Multi-LLM consensus, verification | Per-request | `integrations/llm_council_mcp_server.py` |
+| **Session** | Task context, git state, recent conversation | Per-session | `src/luminescent_cluster/servers/session_memory.py` |
+| **Pixeltable** | ADRs, code embeddings, incident history | Permanent | `src/luminescent_cluster/servers/pixeltable.py` |
+| **Council** | Multi-LLM consensus, verification | Per-request | (external: llm-council MCP server) |
 
 ### Extension System (ADR-005)
 
 The system uses **protocol-based interfaces** for extensibility:
 
 ```python
-# src/extensions/protocols.py - Duck-typed extension contracts
+# src/luminescent_cluster/extensions/protocols.py - Duck-typed extension contracts
 class MemoryProvider(Protocol):
     async def store(self, key: str, value: Any) -> None: ...
     async def retrieve(self, key: str) -> Any: ...
@@ -68,7 +68,40 @@ Multi-agent workflows use **memory pools** with ownership semantics:
 - **Shared Pools**: Concurrent access with locking
 - **Provenance Tracking**: Full audit trail for memory mutations
 
-See `src/memory/maas/` for implementation.
+See `src/luminescent_cluster/memory/maas/` for implementation.
+
+## Installation
+
+```bash
+# Core (session memory only - lightweight)
+pip install luminescent-cluster
+
+# With Pixeltable long-term memory
+pip install "luminescent-cluster[pixeltable]"
+
+# Everything
+pip install "luminescent-cluster[all]"
+
+# Development
+pip install -e ".[dev]"
+```
+
+## CLI Usage
+
+```bash
+# Start combined MCP server (default)
+luminescent-cluster
+
+# Start specific server
+luminescent-cluster session
+luminescent-cluster pixeltable
+
+# Run spec validation
+luminescent-cluster validate --verbose
+
+# Show version
+luminescent-cluster --version
+```
 
 ## Session Management
 
@@ -117,11 +150,12 @@ def test_feature():
 
 | Path | Purpose |
 |------|---------|
-| `src/` | Core source code |
-| `src/memory/` | Memory system (extraction, evaluation, MaaS) |
-| `src/extensions/` | Extension protocols and registry |
-| `src/chatbot/` | Chatbot gateway and adapters |
-| `integrations/` | MCP server implementations |
+| `src/luminescent_cluster/` | Core package source code |
+| `src/luminescent_cluster/memory/` | Memory system (extraction, evaluation, MaaS) |
+| `src/luminescent_cluster/extensions/` | Extension protocols and registry |
+| `src/luminescent_cluster/chatbot/` | Chatbot gateway and adapters |
+| `src/luminescent_cluster/integrations/` | PAT integrations (GitHub, GitLab) |
+| `src/luminescent_cluster/servers/` | MCP server implementations |
 | `tests/` | Test suite (pytest, 121 tests) |
 | `spec/` | Requirements ledger and validation |
 | `spec/ledger.yml` | Requirement-to-test mappings (89 requirements) |
@@ -132,22 +166,21 @@ def test_feature():
 
 | File | Purpose |
 |------|---------|
-| `integrations/session_memory_mcp_server.py` | Session memory MCP server |
-| `integrations/pixeltable_mcp_server.py` | Pixeltable knowledge base MCP server |
-| `integrations/llm_council_mcp_server.py` | LLM Council MCP server |
-| `src/version_guard.py` | Python version safety guard (ADR-001) |
+| `src/luminescent_cluster/servers/session_memory.py` | Session memory MCP server |
+| `src/luminescent_cluster/servers/pixeltable.py` | Pixeltable knowledge base MCP server |
+| `src/luminescent_cluster/cli.py` | CLI entry point |
+| `src/luminescent_cluster/version_guard.py` | Python version safety guard (ADR-001) |
 | `spec/validation/reconcile.py` | Requirement traceability validation |
 | `.spec-baseline.json` | Coverage baseline for ratchet mechanism |
 
 ## MCP Servers
 
-This project provides three MCP servers:
+This project provides MCP servers via the CLI:
 
-| Server | Purpose | Key Tools |
-|--------|---------|-----------|
-| **session-memory** | Task context, git integration, user memories | `set_task_context`, `get_recent_commits`, `create_user_memory` |
-| **pixeltable-memory** | Long-term organizational knowledge | `search_organizational_memory`, `get_architectural_decisions`, `ingest_codebase` |
-| **llm-council** | Multi-model consensus and verification | `consult_council`, `verify`, `audit` |
+| Command | Purpose | Key Tools |
+|---------|---------|-----------|
+| `luminescent-cluster session` | Task context, git integration, user memories | `set_task_context`, `get_recent_commits`, `create_user_memory` |
+| `luminescent-cluster pixeltable` | Long-term organizational knowledge | `search_organizational_memory`, `get_architectural_decisions`, `ingest_codebase` |
 
 ### Chatbot Gateway (ADR-006)
 
@@ -189,7 +222,7 @@ Key architectural decisions are documented in `docs/adrs/`:
 
 ### Adding a New Chatbot Adapter
 
-1. Create adapter in `src/chatbot/adapters/`
+1. Create adapter in `src/luminescent_cluster/chatbot/adapters/`
 2. Implement the adapter protocol
 3. Register in gateway router
 4. Add rate limiting configuration
@@ -197,7 +230,7 @@ Key architectural decisions are documented in `docs/adrs/`:
 
 ### Adding a New Memory Provider
 
-1. Implement protocol from `src/extensions/protocols.py`
+1. Implement protocol from `src/luminescent_cluster/extensions/protocols.py`
 2. Register via entry points in `pyproject.toml`
 3. Add tests for store/retrieve operations
 
@@ -210,14 +243,14 @@ Use conventional commits:
 - `refactor:` Code refactoring
 - `test:` Test changes
 
-Always include `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>` when Claude contributes.
+Always include `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>` when Claude contributes.
 
 ## Build & Development Commands
 
 ### Environment Setup
 
 ```bash
-# Verify Python version (CRITICAL - must be 3.11)
+# Verify Python version (CRITICAL - must be 3.11 for existing Pixeltable databases)
 cat .python-version && python --version
 
 # Create virtual environment
@@ -249,7 +282,7 @@ pytest -m "security" -v           # Security tests
 pytest -m "requirement" -v        # Tests linked to requirements
 
 # Run with coverage
-pytest tests/ -v --cov=src --cov=integrations
+pytest tests/ -v --cov=luminescent_cluster
 
 # Run spec reconciliation (requirement traceability)
 python spec/validation/reconcile.py --verbose
@@ -268,6 +301,19 @@ ruff check .
 ruff check --fix .
 ```
 
+### Build & Publish
+
+```bash
+# Build package
+uv build
+
+# Publish to Test PyPI
+uv publish --repository testpypi
+
+# Publish to PyPI
+uv publish
+```
+
 ### Documentation
 
 ```bash
@@ -281,8 +327,11 @@ mkdocs build
 ### MCP Server Development
 
 ```bash
-# Test MCP server directly
-python -m integrations.session_memory_mcp_server
+# Run session memory server directly
+luminescent-cluster session
+
+# Run pixeltable server directly (requires [pixeltable] extra)
+luminescent-cluster pixeltable
 
 # Run MCP server tests
 pytest tests/test_session_memory_mcp_server.py -v

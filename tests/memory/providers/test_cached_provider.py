@@ -18,21 +18,21 @@ class TestLocalMemoryProviderCacheIntegration:
     @pytest.fixture
     def provider_with_cache(self):
         """Create provider with caching enabled."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         return LocalMemoryProvider(use_cache=True, cache_ttl_seconds=60)
 
     @pytest.fixture
     def provider_without_cache(self):
         """Create provider without caching (default)."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         return LocalMemoryProvider(use_cache=False)
 
     @pytest.fixture
     def sample_memory(self):
         """Create a sample memory for testing."""
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         return Memory(
             user_id="user-123",
@@ -43,14 +43,14 @@ class TestLocalMemoryProviderCacheIntegration:
 
     def test_cache_disabled_by_default(self):
         """Cache should be disabled by default."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         provider = LocalMemoryProvider()
         assert provider.use_cache is False
 
     def test_cache_enabled_with_parameter(self):
         """Cache should be enabled with use_cache=True."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         provider = LocalMemoryProvider(use_cache=True)
         assert provider.use_cache is True
@@ -85,7 +85,7 @@ class TestLocalMemoryProviderCacheIntegration:
     @pytest.mark.asyncio
     async def test_cache_invalidated_on_store(self, provider_with_cache, sample_memory):
         """Cache should be invalidated when storing new memory."""
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         # Store initial memory
         await provider_with_cache.store(sample_memory, {})
@@ -185,7 +185,7 @@ class TestLocalMemoryProviderCacheIntegration:
     @pytest.mark.asyncio
     async def test_cache_different_users_isolated(self, provider_with_cache):
         """Cache should be isolated per user."""
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         # Store memories for two users
         memory1 = Memory(
@@ -250,7 +250,7 @@ class TestCacheMetrics:
     @pytest.fixture
     def provider(self):
         """Create provider with caching enabled."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         return LocalMemoryProvider(use_cache=True)
 
@@ -273,7 +273,7 @@ class TestCacheMetrics:
     @pytest.mark.asyncio
     async def test_hit_rate_calculation(self, provider):
         """Hit rate should be calculated correctly."""
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         memory = Memory(
             user_id="user-123",
@@ -302,7 +302,7 @@ class TestCacheConfiguration:
 
     def test_custom_ttl(self):
         """Cache TTL should be configurable."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         provider = LocalMemoryProvider(use_cache=True, cache_ttl_seconds=120)
 
@@ -311,7 +311,7 @@ class TestCacheConfiguration:
 
     def test_custom_max_size(self):
         """Cache max size should be configurable."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         provider = LocalMemoryProvider(use_cache=True, cache_max_size=500)
 

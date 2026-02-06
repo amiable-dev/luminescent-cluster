@@ -21,9 +21,9 @@ from typing import List
 
 import pytest
 
-from src.memory.blocks.schemas import BlockType, MemoryBlock
-from src.memory.evaluation.token_efficiency import TokenEfficiencyMetric
-from src.memory.schemas import Memory, MemoryType
+from luminescent_cluster.memory.blocks.schemas import BlockType, MemoryBlock
+from luminescent_cluster.memory.evaluation.token_efficiency import TokenEfficiencyMetric
+from luminescent_cluster.memory.schemas import Memory, MemoryType
 
 
 @dataclass
@@ -95,7 +95,7 @@ class TestPhase2ExitCriteria:
 
         Every memory retrieved should have provenance metadata attached.
         """
-        from src.memory.retrieval.ranker import MemoryRanker
+        from luminescent_cluster.memory.retrieval.ranker import MemoryRanker
 
         # Create sample memories
         now = datetime.now(timezone.utc)
@@ -139,7 +139,7 @@ class TestPhase2ExitCriteria:
 
         Old memories should receive lower rankings due to decay scoring.
         """
-        from src.memory.retrieval.ranker import MemoryRanker
+        from luminescent_cluster.memory.retrieval.ranker import MemoryRanker
 
         now = datetime.now(timezone.utc)
 
@@ -180,7 +180,7 @@ class TestBlockAssemblerIntegration:
     @pytest.mark.asyncio
     async def test_assemble_respects_token_budget(self):
         """Block assembly should stay within token budget."""
-        from src.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
 
         assembler = BlockAssembler(token_budget=5000)
         blocks = await assembler.assemble(
@@ -196,7 +196,7 @@ class TestBlockAssemblerIntegration:
     @pytest.mark.asyncio
     async def test_assemble_produces_all_block_types(self):
         """Block assembly should produce all five block types."""
-        from src.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
 
         assembler = BlockAssembler()
         blocks = await assembler.assemble(
@@ -219,7 +219,7 @@ class TestHistoryCompressionEfficiency:
 
     def test_compression_reduces_token_count(self):
         """History compression should reduce token count significantly."""
-        from src.memory.blocks.compressor import HistoryCompressor
+        from luminescent_cluster.memory.blocks.compressor import HistoryCompressor
 
         # Create verbose conversation history
         now = datetime.now(timezone.utc)

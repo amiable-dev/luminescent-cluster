@@ -14,8 +14,8 @@ ADR Reference: ADR-003 Memory Architecture, Phase 4 (Knowledge Graph)
 
 import pytest
 
-from src.memory.extraction.entities import EntityType
-from src.memory.graph.types import GraphEdge, GraphNode, RelationshipType
+from luminescent_cluster.memory.extraction.entities import EntityType
+from luminescent_cluster.memory.graph.types import GraphEdge, GraphNode, RelationshipType
 
 
 class TestKnowledgeGraphExists:
@@ -27,7 +27,7 @@ class TestKnowledgeGraphExists:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         assert KnowledgeGraph is not None
 
@@ -37,7 +37,7 @@ class TestKnowledgeGraphExists:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         assert graph.user_id == "user-123"
@@ -52,7 +52,7 @@ class TestKnowledgeGraphNodeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         node = GraphNode(
@@ -71,7 +71,7 @@ class TestKnowledgeGraphNodeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         node = GraphNode(
@@ -95,7 +95,7 @@ class TestKnowledgeGraphNodeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
 
@@ -109,7 +109,7 @@ class TestKnowledgeGraphNodeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         node = GraphNode(
@@ -130,7 +130,7 @@ class TestKnowledgeGraphNodeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
 
@@ -144,7 +144,7 @@ class TestKnowledgeGraphNodeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         assert graph.node_count == 0
@@ -161,7 +161,7 @@ class TestKnowledgeGraphNodeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         graph.add_node(GraphNode(id="n1", entity_type=EntityType.SERVICE, name="n1"))
@@ -183,7 +183,7 @@ class TestKnowledgeGraphEdgeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         graph.add_node(GraphNode(id="auth", entity_type=EntityType.SERVICE, name="auth"))
@@ -205,7 +205,7 @@ class TestKnowledgeGraphEdgeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
 
@@ -226,7 +226,7 @@ class TestKnowledgeGraphEdgeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         edge = GraphEdge(
@@ -252,7 +252,7 @@ class TestKnowledgeGraphEdgeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
 
@@ -266,7 +266,7 @@ class TestKnowledgeGraphEdgeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         edge = GraphEdge(
@@ -288,7 +288,7 @@ class TestKnowledgeGraphEdgeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         assert graph.edge_count == 0
@@ -305,7 +305,7 @@ class TestKnowledgeGraphEdgeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         graph.add_edge(GraphEdge("auth", "pg", RelationshipType.DEPENDS_ON, "m1"))
@@ -324,7 +324,7 @@ class TestKnowledgeGraphEdgeOperations:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         graph.add_edge(GraphEdge("auth", "pg", RelationshipType.DEPENDS_ON, "m1"))
@@ -347,7 +347,7 @@ class TestKnowledgeGraphNeighbors:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         graph.add_node(GraphNode("auth", EntityType.SERVICE, "auth"))
@@ -368,7 +368,7 @@ class TestKnowledgeGraphNeighbors:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         graph.add_node(GraphNode("auth", EntityType.SERVICE, "auth"))
@@ -388,7 +388,7 @@ class TestKnowledgeGraphNeighbors:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         graph.add_node(GraphNode("auth", EntityType.SERVICE, "auth"))
@@ -413,7 +413,7 @@ class TestKnowledgeGraphSerialization:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         graph.add_node(GraphNode("auth", EntityType.SERVICE, "auth"))
@@ -432,7 +432,7 @@ class TestKnowledgeGraphSerialization:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         original = KnowledgeGraph(user_id="user-123")
         original.add_node(GraphNode("auth", EntityType.SERVICE, "auth"))
@@ -452,7 +452,7 @@ class TestKnowledgeGraphSerialization:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         original = KnowledgeGraph(user_id="user-123")
         original.add_node(GraphNode(
@@ -484,7 +484,7 @@ class TestKnowledgeGraphClear:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         graph = KnowledgeGraph(user_id="user-123")
         graph.add_node(GraphNode("auth", EntityType.SERVICE, "auth"))
@@ -505,6 +505,6 @@ class TestModuleExports:
         GitHub Issue: #123
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph import KnowledgeGraph
+        from luminescent_cluster.memory.graph import KnowledgeGraph
 
         assert KnowledgeGraph is not None

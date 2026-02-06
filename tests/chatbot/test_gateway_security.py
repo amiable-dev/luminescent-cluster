@@ -25,7 +25,7 @@ import logging
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from src.chatbot.gateway import (
+from luminescent_cluster.chatbot.gateway import (
     ChatbotGateway,
     GatewayConfig,
     InvocationPolicy,
@@ -33,8 +33,8 @@ from src.chatbot.gateway import (
     GatewayRequest,
     GatewayResponse,
 )
-from src.chatbot.adapters.base import ChatMessage, MessageAuthor
-from src.extensions.registry import ExtensionRegistry
+from luminescent_cluster.chatbot.adapters.base import ChatMessage, MessageAuthor
+from luminescent_cluster.extensions.registry import ExtensionRegistry
 
 
 class TestGatewayFailClosedSecurity:

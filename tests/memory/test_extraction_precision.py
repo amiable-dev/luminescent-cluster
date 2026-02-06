@@ -16,8 +16,8 @@ ADR Reference: ADR-003 Memory Architecture, Phase 1b (Exit Criteria)
 import pytest
 from typing import List, Tuple
 
-from src.memory.extraction.mock_extractor import MockExtractor
-from src.memory.extraction.types import ExtractionResult
+from luminescent_cluster.memory.extraction.mock_extractor import MockExtractor
+from luminescent_cluster.memory.extraction.types import ExtractionResult
 
 
 class TestExtractionPrecision:

@@ -8,10 +8,10 @@ Security tests verifying zero unauthorized cross-agent access.
 
 import pytest
 
-from src.memory.maas.pool import PoolRegistry
-from src.memory.maas.registry import AgentRegistry
-from src.memory.maas.scope import PermissionModel, SharedScope
-from src.memory.maas.types import AgentCapability, AgentType
+from luminescent_cluster.memory.maas.pool import PoolRegistry
+from luminescent_cluster.memory.maas.registry import AgentRegistry
+from luminescent_cluster.memory.maas.scope import PermissionModel, SharedScope
+from luminescent_cluster.memory.maas.types import AgentCapability, AgentType
 
 
 class TestCrossAgentIsolation:
@@ -19,9 +19,9 @@ class TestCrossAgentIsolation:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -29,9 +29,9 @@ class TestCrossAgentIsolation:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -131,7 +131,7 @@ class TestCrossAgentIsolation:
 
     def test_handoff_requires_capabilities(self):
         """Verify handoffs enforce capability requirements."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
 
         agent_registry = AgentRegistry.get()
         handoff_manager = HandoffManager.get()
@@ -193,16 +193,16 @@ class TestScopeHierarchyIsolation:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()

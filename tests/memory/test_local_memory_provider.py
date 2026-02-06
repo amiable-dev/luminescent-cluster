@@ -27,7 +27,7 @@ class TestLocalMemoryProviderExists:
         GitHub Issue: #85
         ADR Reference: ADR-003 Phase 1a (Storage)
         """
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         assert LocalMemoryProvider is not None
 
@@ -37,8 +37,8 @@ class TestLocalMemoryProviderExists:
         GitHub Issue: #85
         ADR Reference: ADR-003 Phase 1a (Storage)
         """
-        from src.extensions.protocols import MemoryProvider
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.extensions.protocols import MemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         provider = LocalMemoryProvider()
         assert isinstance(provider, MemoryProvider)
@@ -50,14 +50,14 @@ class TestLocalMemoryProviderStore:
     @pytest.fixture
     def provider(self):
         """Create a fresh LocalMemoryProvider for each test."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         return LocalMemoryProvider()
 
     @pytest.fixture
     def sample_memory(self):
         """Create a sample memory for testing."""
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         return Memory(
             user_id="user-123",
@@ -95,14 +95,14 @@ class TestLocalMemoryProviderRetrieve:
     @pytest.fixture
     def provider(self):
         """Create a fresh LocalMemoryProvider for each test."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         return LocalMemoryProvider()
 
     @pytest.fixture
     def sample_memory(self):
         """Create a sample memory for testing."""
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         return Memory(
             user_id="user-123",
@@ -166,14 +166,14 @@ class TestLocalMemoryProviderGetById:
     @pytest.fixture
     def provider(self):
         """Create a fresh LocalMemoryProvider for each test."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         return LocalMemoryProvider()
 
     @pytest.fixture
     def sample_memory(self):
         """Create a sample memory for testing."""
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         return Memory(
             user_id="user-123",
@@ -211,14 +211,14 @@ class TestLocalMemoryProviderDelete:
     @pytest.fixture
     def provider(self):
         """Create a fresh LocalMemoryProvider for each test."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         return LocalMemoryProvider()
 
     @pytest.fixture
     def sample_memory(self):
         """Create a sample memory for testing."""
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         return Memory(
             user_id="user-123",
@@ -267,14 +267,14 @@ class TestLocalMemoryProviderSearch:
     @pytest.fixture
     def provider(self):
         """Create a fresh LocalMemoryProvider for each test."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         return LocalMemoryProvider()
 
     @pytest.fixture
     def sample_memory(self):
         """Create a sample memory for testing."""
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         return Memory(
             user_id="user-123",
@@ -300,7 +300,7 @@ class TestLocalMemoryProviderSearch:
         GitHub Issue: #85
         ADR Reference: ADR-003 Phase 1a (Storage)
         """
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         # Store different memory types
         pref = Memory(
@@ -329,14 +329,14 @@ class TestProvidersModuleExports:
     """TDD: Tests for providers module exports."""
 
     def test_providers_module_exists(self):
-        """src.memory.providers module should exist.
+        """luminescent_cluster.memory.providers module should exist.
 
         GitHub Issue: #85
         ADR Reference: ADR-003 Phase 1a (Storage)
         """
-        import src.memory.providers
+        import luminescent_cluster.memory.providers
 
-        assert src.memory.providers is not None
+        assert luminescent_cluster.memory.providers is not None
 
     def test_providers_exports_local_memory_provider(self):
         """providers module should export LocalMemoryProvider.
@@ -344,7 +344,7 @@ class TestProvidersModuleExports:
         GitHub Issue: #85
         ADR Reference: ADR-003 Phase 1a (Storage)
         """
-        from src.memory.providers import LocalMemoryProvider
+        from luminescent_cluster.memory.providers import LocalMemoryProvider
 
         assert LocalMemoryProvider is not None
 
@@ -358,7 +358,7 @@ class TestLocalMemoryProviderHybridRetrieval:
     @pytest.fixture
     def hybrid_provider(self):
         """Create a LocalMemoryProvider with hybrid retrieval enabled."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         # Use fallback reranker (no cross-encoder) for faster tests
         return LocalMemoryProvider(
@@ -370,7 +370,7 @@ class TestLocalMemoryProviderHybridRetrieval:
     @pytest.fixture
     def sample_memories(self):
         """Create sample memories for testing."""
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         return [
             Memory(
@@ -405,7 +405,7 @@ class TestLocalMemoryProviderHybridRetrieval:
 
     def test_simple_provider_is_not_hybrid_enabled(self):
         """Simple provider should report hybrid is disabled."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         provider = LocalMemoryProvider()
         assert provider.is_hybrid_enabled is False
@@ -501,7 +501,7 @@ class TestLocalMemoryProviderHybridRetrieval:
     @pytest.mark.asyncio
     async def test_hybrid_retrieve_with_metrics(self, hybrid_provider, sample_memories):
         """retrieve_with_metrics should return memories with metrics."""
-        from src.memory.retrieval.hybrid import RetrievalMetrics
+        from luminescent_cluster.memory.retrieval.hybrid import RetrievalMetrics
 
         # Store memories
         for memory in sample_memories:
@@ -518,7 +518,7 @@ class TestLocalMemoryProviderHybridRetrieval:
     @pytest.mark.asyncio
     async def test_retrieve_with_scores_requires_hybrid(self):
         """retrieve_with_scores should raise if hybrid not enabled."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         provider = LocalMemoryProvider()  # Simple mode
 
@@ -528,7 +528,7 @@ class TestLocalMemoryProviderHybridRetrieval:
     @pytest.mark.asyncio
     async def test_retrieve_with_metrics_requires_hybrid(self):
         """retrieve_with_metrics should raise if hybrid not enabled."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         provider = LocalMemoryProvider()  # Simple mode
 
@@ -538,7 +538,7 @@ class TestLocalMemoryProviderHybridRetrieval:
     @pytest.mark.asyncio
     async def test_hybrid_filters_invalid_memories(self, hybrid_provider):
         """Hybrid retrieval should filter out invalidated memories."""
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         # Store a valid memory
         valid = Memory(
@@ -574,7 +574,7 @@ class TestLocalMemoryProviderHybridIntegration:
     @pytest.fixture
     def full_hybrid_provider(self):
         """Create provider with all hybrid features enabled."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         return LocalMemoryProvider(
             use_hybrid_retrieval=True,
@@ -585,7 +585,7 @@ class TestLocalMemoryProviderHybridIntegration:
     @pytest.fixture
     def diverse_memories(self):
         """Create diverse memories for semantic testing."""
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         return [
             Memory(
@@ -651,7 +651,7 @@ class TestLocalMemoryProviderHybridIntegration:
     @pytest.mark.asyncio
     async def test_multi_user_isolation(self, full_hybrid_provider):
         """Hybrid retrieval should maintain user isolation."""
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         # Store memories for two users
         user1_memory = Memory(
@@ -696,7 +696,7 @@ class TestLocalMemoryProviderGraphSupport:
     @pytest.fixture
     def graph_provider(self):
         """Create provider with graph enabled."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         return LocalMemoryProvider(
             use_hybrid_retrieval=True,
@@ -708,7 +708,7 @@ class TestLocalMemoryProviderGraphSupport:
     @pytest.fixture
     def sample_memories_with_entities(self):
         """Create memories with extractable entities."""
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         return [
             Memory(
@@ -737,7 +737,7 @@ class TestLocalMemoryProviderGraphSupport:
         GitHub Issue: #126
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         provider = LocalMemoryProvider(
             use_hybrid_retrieval=True,
@@ -751,7 +751,7 @@ class TestLocalMemoryProviderGraphSupport:
         GitHub Issue: #126
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         provider = LocalMemoryProvider(use_hybrid_retrieval=True)
         assert provider.is_graph_enabled is False
@@ -762,7 +762,7 @@ class TestLocalMemoryProviderGraphSupport:
         GitHub Issue: #126
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         # Graph with hybrid disabled should not enable graph
         provider = LocalMemoryProvider(

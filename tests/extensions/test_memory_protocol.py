@@ -27,7 +27,7 @@ class TestMemoryProviderVersionConstant:
         GitHub Issue: #80
         ADR Reference: ADR-007 (Protocol Versioning)
         """
-        from src.extensions.protocols import MEMORY_PROVIDER_VERSION
+        from luminescent_cluster.extensions.protocols import MEMORY_PROVIDER_VERSION
 
         assert MEMORY_PROVIDER_VERSION is not None
 
@@ -39,7 +39,7 @@ class TestMemoryProviderVersionConstant:
         """
         import re
 
-        from src.extensions.protocols import MEMORY_PROVIDER_VERSION
+        from luminescent_cluster.extensions.protocols import MEMORY_PROVIDER_VERSION
 
         semver_pattern = r"^\d+\.\d+\.\d+$"
         assert re.match(semver_pattern, MEMORY_PROVIDER_VERSION), (
@@ -52,7 +52,7 @@ class TestMemoryProviderVersionConstant:
         GitHub Issue: #80
         ADR Reference: ADR-007 (Protocol Versioning)
         """
-        from src.extensions.protocols import MEMORY_PROVIDER_VERSION
+        from luminescent_cluster.extensions.protocols import MEMORY_PROVIDER_VERSION
 
         assert MEMORY_PROVIDER_VERSION == "1.0.0"
 
@@ -66,7 +66,7 @@ class TestMemoryProviderProtocolDefinition:
         GitHub Issue: #80
         ADR Reference: ADR-007 (Extension Patterns)
         """
-        from src.extensions.protocols import MemoryProvider
+        from luminescent_cluster.extensions.protocols import MemoryProvider
 
         # Test runtime checkability by verifying isinstance() works
         # This only succeeds if @runtime_checkable decorator is applied
@@ -86,7 +86,7 @@ class TestMemoryProviderProtocolDefinition:
         GitHub Issue: #80
         ADR Reference: ADR-003 Phase 0 (MemoryProvider Protocol)
         """
-        from src.extensions.protocols import MemoryProvider
+        from luminescent_cluster.extensions.protocols import MemoryProvider
 
         assert hasattr(MemoryProvider, "store")
 
@@ -96,7 +96,7 @@ class TestMemoryProviderProtocolDefinition:
         GitHub Issue: #80
         ADR Reference: ADR-003 Phase 0 (MemoryProvider Protocol)
         """
-        from src.extensions.protocols import MemoryProvider
+        from luminescent_cluster.extensions.protocols import MemoryProvider
 
         assert hasattr(MemoryProvider, "retrieve")
 
@@ -106,7 +106,7 @@ class TestMemoryProviderProtocolDefinition:
         GitHub Issue: #80
         ADR Reference: ADR-003 Phase 0 (MemoryProvider Protocol)
         """
-        from src.extensions.protocols import MemoryProvider
+        from luminescent_cluster.extensions.protocols import MemoryProvider
 
         assert hasattr(MemoryProvider, "get_by_id")
 
@@ -116,7 +116,7 @@ class TestMemoryProviderProtocolDefinition:
         GitHub Issue: #80
         ADR Reference: ADR-003 Phase 0 (MemoryProvider Protocol)
         """
-        from src.extensions.protocols import MemoryProvider
+        from luminescent_cluster.extensions.protocols import MemoryProvider
 
         assert hasattr(MemoryProvider, "delete")
 
@@ -126,7 +126,7 @@ class TestMemoryProviderProtocolDefinition:
         GitHub Issue: #80
         ADR Reference: ADR-003 Phase 0 (MemoryProvider Protocol)
         """
-        from src.extensions.protocols import MemoryProvider
+        from luminescent_cluster.extensions.protocols import MemoryProvider
 
         assert hasattr(MemoryProvider, "search")
 
@@ -140,8 +140,8 @@ class TestMemoryProviderBehavior:
         GitHub Issue: #80
         ADR Reference: ADR-007 (Extension Patterns)
         """
-        from src.extensions.protocols import MemoryProvider
-        from src.memory.schemas.memory_types import Memory
+        from luminescent_cluster.extensions.protocols import MemoryProvider
+        from luminescent_cluster.memory.schemas.memory_types import Memory
 
         class MockMemoryProvider:
             """Mock implementation for testing."""
@@ -175,7 +175,7 @@ class TestMemoryProviderInRegistry:
     @pytest.fixture(autouse=True)
     def reset_registry(self):
         """Reset the singleton before each test."""
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         ExtensionRegistry.reset()
         yield
@@ -187,7 +187,7 @@ class TestMemoryProviderInRegistry:
         GitHub Issue: #80
         ADR Reference: ADR-007 (Extension Registry Pattern)
         """
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         registry = ExtensionRegistry.get()
         assert hasattr(registry, "memory_provider")
@@ -198,7 +198,7 @@ class TestMemoryProviderInRegistry:
         GitHub Issue: #80
         ADR Reference: ADR-007 (Extension Registry Pattern)
         """
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         registry = ExtensionRegistry.get()
         assert registry.memory_provider is None
@@ -209,7 +209,7 @@ class TestMemoryProviderInRegistry:
         GitHub Issue: #80
         ADR Reference: ADR-007 (Extension Registry Pattern)
         """
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         registry = ExtensionRegistry.get()
         assert hasattr(registry, "has_memory_provider")
@@ -220,7 +220,7 @@ class TestMemoryProviderInRegistry:
         GitHub Issue: #80
         ADR Reference: ADR-007 (Extension Registry Pattern)
         """
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         registry = ExtensionRegistry.get()
         assert registry.has_memory_provider() is False
@@ -231,7 +231,7 @@ class TestMemoryProviderInRegistry:
         GitHub Issue: #80
         ADR Reference: ADR-007 (Extension Registry Pattern)
         """
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         registry = ExtensionRegistry.get()
         status = registry.get_status()
@@ -247,7 +247,7 @@ class TestMemoryProviderExports:
         GitHub Issue: #80
         ADR Reference: ADR-007 (Module Exports)
         """
-        from src.extensions import protocols
+        from luminescent_cluster.extensions import protocols
 
         assert "MemoryProvider" in protocols.__all__
 
@@ -257,16 +257,16 @@ class TestMemoryProviderExports:
         GitHub Issue: #80
         ADR Reference: ADR-007 (Module Exports)
         """
-        from src.extensions import protocols
+        from luminescent_cluster.extensions import protocols
 
         assert "MEMORY_PROVIDER_VERSION" in protocols.__all__
 
 
 class TestMemoryProviderModuleExports:
-    """TDD: Tests for module-level exports from src.extensions (ADR-005 dual-repo)."""
+    """TDD: Tests for module-level exports from luminescent_cluster.extensions (ADR-005 dual-repo)."""
 
     def test_memory_provider_importable_from_extensions(self):
-        """MemoryProvider should be importable from src.extensions module.
+        """MemoryProvider should be importable from luminescent_cluster.extensions module.
 
         This is required for the dual-repo pattern (ADR-005) so that
         luminescent-cloud can import from the public extensions API.
@@ -274,27 +274,27 @@ class TestMemoryProviderModuleExports:
         GitHub Issue: #114
         ADR Reference: ADR-005 (Dual-Repo Pattern)
         """
-        from src.extensions import MemoryProvider
+        from luminescent_cluster.extensions import MemoryProvider
 
         assert MemoryProvider is not None
 
     def test_memory_provider_version_importable_from_extensions(self):
-        """MEMORY_PROVIDER_VERSION should be importable from src.extensions module.
+        """MEMORY_PROVIDER_VERSION should be importable from luminescent_cluster.extensions module.
 
         GitHub Issue: #114
         ADR Reference: ADR-005 (Dual-Repo Pattern)
         """
-        from src.extensions import MEMORY_PROVIDER_VERSION
+        from luminescent_cluster.extensions import MEMORY_PROVIDER_VERSION
 
         assert MEMORY_PROVIDER_VERSION == "1.0.0"
 
     def test_response_filter_importable_from_extensions(self):
-        """ResponseFilter should be importable from src.extensions module.
+        """ResponseFilter should be importable from luminescent_cluster.extensions module.
 
         GitHub Issue: #114
         ADR Reference: ADR-005 (Dual-Repo Pattern)
         """
-        from src.extensions import ResponseFilter
+        from luminescent_cluster.extensions import ResponseFilter
 
         assert ResponseFilter is not None
 
@@ -304,7 +304,7 @@ class TestMemoryProviderModuleExports:
         GitHub Issue: #114
         ADR Reference: ADR-005 (Module Exports)
         """
-        import src.extensions as extensions
+        import luminescent_cluster.extensions as extensions
 
         assert "MemoryProvider" in extensions.__all__
 
@@ -314,7 +314,7 @@ class TestMemoryProviderModuleExports:
         GitHub Issue: #114
         ADR Reference: ADR-005 (Module Exports)
         """
-        import src.extensions as extensions
+        import luminescent_cluster.extensions as extensions
 
         assert "ResponseFilter" in extensions.__all__
 
@@ -324,6 +324,6 @@ class TestMemoryProviderModuleExports:
         GitHub Issue: #114
         ADR Reference: ADR-005 (Module Exports)
         """
-        import src.extensions as extensions
+        import luminescent_cluster.extensions as extensions
 
         assert "MEMORY_PROVIDER_VERSION" in extensions.__all__

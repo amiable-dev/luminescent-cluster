@@ -34,20 +34,20 @@ class TestBlockAssemblerExists:
 
     def test_block_assembler_exists(self):
         """BlockAssembler class should be defined."""
-        from src.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
 
         assert BlockAssembler is not None
 
     def test_block_assembler_instantiable(self):
         """BlockAssembler should be instantiable with token_budget."""
-        from src.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
 
         assembler = BlockAssembler(token_budget=5000)
         assert assembler.token_budget == 5000
 
     def test_default_token_budget(self):
         """BlockAssembler should default to 5000 token budget."""
-        from src.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
 
         assembler = BlockAssembler()
         assert assembler.token_budget == 5000
@@ -58,7 +58,7 @@ class TestBlockBudgets:
 
     def test_has_block_budgets(self):
         """BlockAssembler should have block_budgets dict."""
-        from src.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
 
         assembler = BlockAssembler()
         assert hasattr(assembler, "block_budgets")
@@ -66,8 +66,8 @@ class TestBlockBudgets:
 
     def test_default_block_budgets(self):
         """BlockAssembler should have default budgets for all block types."""
-        from src.memory.blocks.assembler import BlockAssembler
-        from src.memory.blocks.schemas import BlockType
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.schemas import BlockType
 
         assembler = BlockAssembler()
 
@@ -80,8 +80,8 @@ class TestBlockBudgets:
 
     def test_custom_block_budgets(self):
         """BlockAssembler should accept custom block budgets."""
-        from src.memory.blocks.assembler import BlockAssembler
-        from src.memory.blocks.schemas import BlockType
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.schemas import BlockType
 
         custom_budgets = {
             BlockType.SYSTEM: 200,
@@ -98,8 +98,8 @@ class TestBlockBudgets:
 
     def test_partial_block_budgets_merged_with_defaults(self):
         """BlockAssembler should merge partial budgets with defaults."""
-        from src.memory.blocks.assembler import BlockAssembler
-        from src.memory.blocks.schemas import DEFAULT_TOKEN_BUDGETS, BlockType
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.schemas import DEFAULT_TOKEN_BUDGETS, BlockType
 
         # Only provide one budget - others should use defaults
         partial_budgets = {BlockType.SYSTEM: 250}
@@ -121,14 +121,14 @@ class TestBuildSystemBlock:
     @pytest.fixture
     def assembler(self):
         """Create a BlockAssembler for tests."""
-        from src.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
 
         return BlockAssembler()
 
     @pytest.mark.asyncio
     async def test_build_system_block_returns_memory_block(self, assembler):
         """build_system_block should return a MemoryBlock."""
-        from src.memory.blocks.schemas import BlockType, MemoryBlock
+        from luminescent_cluster.memory.blocks.schemas import BlockType, MemoryBlock
 
         result = await assembler.build_system_block()
 
@@ -146,7 +146,7 @@ class TestBuildSystemBlock:
     @pytest.mark.asyncio
     async def test_build_system_block_respects_budget(self, assembler):
         """build_system_block should respect token budget."""
-        from src.memory.blocks.schemas import BlockType
+        from luminescent_cluster.memory.blocks.schemas import BlockType
 
         budget = assembler.block_budgets[BlockType.SYSTEM]
         result = await assembler.build_system_block()
@@ -160,14 +160,14 @@ class TestBuildProjectBlock:
     @pytest.fixture
     def assembler(self):
         """Create a BlockAssembler for tests."""
-        from src.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
 
         return BlockAssembler()
 
     @pytest.mark.asyncio
     async def test_build_project_block_returns_memory_block(self, assembler):
         """build_project_block should return a MemoryBlock."""
-        from src.memory.blocks.schemas import BlockType, MemoryBlock
+        from luminescent_cluster.memory.blocks.schemas import BlockType, MemoryBlock
 
         result = await assembler.build_project_block(user_id="test-user")
 
@@ -188,14 +188,14 @@ class TestBuildTaskBlock:
     @pytest.fixture
     def assembler(self):
         """Create a BlockAssembler for tests."""
-        from src.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
 
         return BlockAssembler()
 
     @pytest.mark.asyncio
     async def test_build_task_block_returns_memory_block(self, assembler):
         """build_task_block should return a MemoryBlock."""
-        from src.memory.blocks.schemas import BlockType, MemoryBlock
+        from luminescent_cluster.memory.blocks.schemas import BlockType, MemoryBlock
 
         result = await assembler.build_task_block(task_context="Implement feature X")
 
@@ -224,7 +224,7 @@ class TestBuildHistoryBlock:
     @pytest.fixture
     def assembler(self):
         """Create a BlockAssembler for tests."""
-        from src.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
 
         return BlockAssembler()
 
@@ -243,7 +243,7 @@ class TestBuildHistoryBlock:
         self, assembler, sample_messages
     ):
         """build_history_block should return a MemoryBlock."""
-        from src.memory.blocks.schemas import BlockType, MemoryBlock
+        from luminescent_cluster.memory.blocks.schemas import BlockType, MemoryBlock
 
         result = await assembler.build_history_block(
             conversation_history=sample_messages
@@ -279,14 +279,14 @@ class TestBuildKnowledgeBlock:
     @pytest.fixture
     def assembler(self):
         """Create a BlockAssembler for tests."""
-        from src.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
 
         return BlockAssembler()
 
     @pytest.mark.asyncio
     async def test_build_knowledge_block_returns_memory_block(self, assembler):
         """build_knowledge_block should return a MemoryBlock."""
-        from src.memory.blocks.schemas import BlockType, MemoryBlock
+        from luminescent_cluster.memory.blocks.schemas import BlockType, MemoryBlock
 
         result = await assembler.build_knowledge_block(
             user_id="test-user",
@@ -330,7 +330,7 @@ class TestAssemble:
     @pytest.fixture
     def assembler(self):
         """Create a BlockAssembler for tests."""
-        from src.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
 
         return BlockAssembler()
 
@@ -353,7 +353,7 @@ class TestAssemble:
     @pytest.mark.asyncio
     async def test_assemble_returns_all_block_types(self, assembler, sample_messages):
         """assemble should return blocks for all types."""
-        from src.memory.blocks.schemas import BlockType
+        from luminescent_cluster.memory.blocks.schemas import BlockType
 
         result = await assembler.assemble(
             user_id="test-user",
@@ -413,7 +413,7 @@ class TestToPrompt:
     @pytest.fixture
     def assembler(self):
         """Create a BlockAssembler for tests."""
-        from src.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
 
         return BlockAssembler()
 

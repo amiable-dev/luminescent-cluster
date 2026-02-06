@@ -15,13 +15,13 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from src.memory.ingestion.citation_detector import Citation, CitationDetector, CitationType
-from src.memory.ingestion.dedup_checker import DedupChecker, DuplicateCheckResult
-from src.memory.ingestion.evidence import EvidenceObject
-from src.memory.ingestion.hedge_detector import HedgeDetector
-from src.memory.ingestion.result import IngestionTier, ValidationResult
-from src.memory.ingestion.review_queue import PendingMemory, ReviewQueue
-from src.memory.ingestion.validator import IngestionValidator
+from luminescent_cluster.memory.ingestion.citation_detector import Citation, CitationDetector, CitationType
+from luminescent_cluster.memory.ingestion.dedup_checker import DedupChecker, DuplicateCheckResult
+from luminescent_cluster.memory.ingestion.evidence import EvidenceObject
+from luminescent_cluster.memory.ingestion.hedge_detector import HedgeDetector
+from luminescent_cluster.memory.ingestion.result import IngestionTier, ValidationResult
+from luminescent_cluster.memory.ingestion.review_queue import PendingMemory, ReviewQueue
+from luminescent_cluster.memory.ingestion.validator import IngestionValidator
 
 
 # =============================================================================
@@ -1068,7 +1068,7 @@ class TestReviewQueueMultiTenant:
 
     @pytest.fixture
     def evidence(self):
-        from src.memory.ingestion.evidence import EvidenceObject
+        from luminescent_cluster.memory.ingestion.evidence import EvidenceObject
 
         return EvidenceObject(
             claim="Test claim",
@@ -1078,7 +1078,7 @@ class TestReviewQueueMultiTenant:
 
     @pytest.fixture
     def validation_result(self):
-        from src.memory.ingestion.result import IngestionTier, ValidationResult
+        from luminescent_cluster.memory.ingestion.result import IngestionTier, ValidationResult
 
         return ValidationResult(
             tier=IngestionTier.FLAG_REVIEW,
@@ -1216,7 +1216,7 @@ class TestDedupCheckerSecurity:
         """
         from unittest.mock import AsyncMock
 
-        from src.memory.ingestion.dedup_checker import DedupCheckError, DedupChecker
+        from luminescent_cluster.memory.ingestion.dedup_checker import DedupCheckError, DedupChecker
 
         # Create a provider that always fails
         mock_provider = AsyncMock()
@@ -1237,9 +1237,9 @@ class TestDedupCheckerSecurity:
         """
         from unittest.mock import AsyncMock
 
-        from src.memory.ingestion.dedup_checker import DedupChecker
-        from src.memory.ingestion.result import IngestionTier
-        from src.memory.ingestion.validator import IngestionValidator
+        from luminescent_cluster.memory.ingestion.dedup_checker import DedupChecker
+        from luminescent_cluster.memory.ingestion.result import IngestionTier
+        from luminescent_cluster.memory.ingestion.validator import IngestionValidator
 
         # Create a provider that always fails
         mock_provider = AsyncMock()

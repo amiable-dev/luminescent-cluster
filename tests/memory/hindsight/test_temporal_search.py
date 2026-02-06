@@ -22,8 +22,8 @@ class TestTemporalSearchCreation:
 
     def test_temporal_search_creation(self):
         """TemporalSearch should be instantiated with a timeline."""
-        from src.memory.hindsight.temporal_search import TemporalSearch
-        from src.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.temporal_search import TemporalSearch
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
 
         timeline = Timeline(user_id="user-123")
         search = TemporalSearch(timeline=timeline)
@@ -32,8 +32,8 @@ class TestTemporalSearchCreation:
 
     def test_temporal_search_with_memory_provider(self):
         """TemporalSearch can integrate with MemoryProvider."""
-        from src.memory.hindsight.temporal_search import TemporalSearch
-        from src.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.temporal_search import TemporalSearch
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
         from unittest.mock import Mock
 
         timeline = Timeline(user_id="user-123")
@@ -48,8 +48,8 @@ class TestTemporalQueryParsing:
 
     def test_parse_last_month(self):
         """Should parse 'last month' into TimeRange."""
-        from src.memory.hindsight.temporal_search import TemporalSearch
-        from src.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.temporal_search import TemporalSearch
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
 
         timeline = Timeline(user_id="user-123")
         search = TemporalSearch(timeline=timeline)
@@ -63,8 +63,8 @@ class TestTemporalQueryParsing:
 
     def test_parse_last_week(self):
         """Should parse 'last week' into TimeRange."""
-        from src.memory.hindsight.temporal_search import TemporalSearch
-        from src.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.temporal_search import TemporalSearch
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
 
         timeline = Timeline(user_id="user-123")
         search = TemporalSearch(timeline=timeline)
@@ -77,8 +77,8 @@ class TestTemporalQueryParsing:
 
     def test_parse_quarter(self):
         """Should parse 'Q4 2025' into TimeRange."""
-        from src.memory.hindsight.temporal_search import TemporalSearch
-        from src.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.temporal_search import TemporalSearch
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
 
         timeline = Timeline(user_id="user-123")
         search = TemporalSearch(timeline=timeline)
@@ -91,9 +91,9 @@ class TestTemporalQueryParsing:
 
     def test_parse_before_reference(self):
         """Should parse 'before incident-123' as reference point."""
-        from src.memory.hindsight.temporal_search import TemporalSearch
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.temporal_search import TemporalSearch
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -119,8 +119,8 @@ class TestTemporalQueryParsing:
 
     def test_parse_extracts_entity(self):
         """Should extract entity from query."""
-        from src.memory.hindsight.temporal_search import TemporalSearch
-        from src.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.temporal_search import TemporalSearch
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
 
         timeline = Timeline(user_id="user-123")
         search = TemporalSearch(timeline=timeline)
@@ -133,8 +133,8 @@ class TestTemporalQueryParsing:
 
     def test_parse_extracts_memory_type(self):
         """Should extract memory type (decision, fact, etc.) from query."""
-        from src.memory.hindsight.temporal_search import TemporalSearch
-        from src.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.temporal_search import TemporalSearch
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
 
         timeline = Timeline(user_id="user-123")
         search = TemporalSearch(timeline=timeline)
@@ -149,9 +149,9 @@ class TestTemporalSearchExecution:
 
     def test_search_what_changed(self):
         """Should answer 'What changed last month?'"""
-        from src.memory.hindsight.temporal_search import TemporalSearch
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.temporal_search import TemporalSearch
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
         now = datetime.now(timezone.utc)
@@ -183,9 +183,9 @@ class TestTemporalSearchExecution:
 
     def test_search_entity_status_before_event(self):
         """Should answer 'What was auth-service status before incident-123?'"""
-        from src.memory.hindsight.temporal_search import TemporalSearch
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.temporal_search import TemporalSearch
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -226,9 +226,9 @@ class TestTemporalSearchExecution:
 
     def test_search_decisions_in_quarter(self):
         """Should answer 'Show me decisions made in Q4 2025'"""
-        from src.memory.hindsight.temporal_search import TemporalSearch
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.temporal_search import TemporalSearch
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -277,9 +277,9 @@ class TestTemporalSearchResults:
 
     def test_results_sorted_by_relevance(self):
         """Results should be sorted by relevance to query."""
-        from src.memory.hindsight.temporal_search import TemporalSearch
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.temporal_search import TemporalSearch
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
         now = datetime.now(timezone.utc)
@@ -314,9 +314,9 @@ class TestTemporalSearchResults:
 
     def test_results_include_temporal_context(self):
         """Results should include temporal context for reasoning."""
-        from src.memory.hindsight.temporal_search import TemporalSearch
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.temporal_search import TemporalSearch
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -342,9 +342,9 @@ class TestTemporalSearchWithMemories:
 
     def test_search_converts_events_to_temporal_memories(self):
         """Search should return TemporalMemory wrappers."""
-        from src.memory.hindsight.temporal_search import TemporalSearch
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.temporal_search import TemporalSearch
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 
@@ -370,11 +370,11 @@ class TestTemporalSearchParsedQuery:
 
     def test_parsed_query_has_all_fields(self):
         """ParsedTemporalQuery should contain all parsed components."""
-        from src.memory.hindsight.temporal_search import (
+        from luminescent_cluster.memory.hindsight.temporal_search import (
             TemporalSearch,
             ParsedTemporalQuery,
         )
-        from src.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
 
         timeline = Timeline(user_id="user-123")
         search = TemporalSearch(timeline=timeline)
@@ -394,12 +394,12 @@ class TestTemporalSearchResult:
 
     def test_search_result_has_event_and_score(self):
         """TemporalSearchResult should include event and relevance score."""
-        from src.memory.hindsight.temporal_search import (
+        from luminescent_cluster.memory.hindsight.temporal_search import (
             TemporalSearch,
             TemporalSearchResult,
         )
-        from src.memory.hindsight.timeline import Timeline
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.timeline import Timeline
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         timeline = Timeline(user_id="user-123")
 

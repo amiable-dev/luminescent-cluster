@@ -15,13 +15,13 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from src.memory.retrieval.reranker import (
+from luminescent_cluster.memory.retrieval.reranker import (
     CrossEncoderReranker,
     FallbackReranker,
     RerankResult,
     get_reranker,
 )
-from src.memory.schemas import Memory, MemoryType
+from luminescent_cluster.memory.schemas import Memory, MemoryType
 
 
 class MockCrossEncoder:
@@ -60,7 +60,7 @@ def mock_cross_encoder() -> MockCrossEncoder:
 def reranker(mock_cross_encoder: MockCrossEncoder) -> CrossEncoderReranker:
     """Create a CrossEncoderReranker with mocked model."""
     with patch(
-        "src.memory.retrieval.reranker.CrossEncoderReranker._load_model"
+        "luminescent_cluster.memory.retrieval.reranker.CrossEncoderReranker._load_model"
     ) as mock_load:
         mock_load.return_value = mock_cross_encoder
         r = CrossEncoderReranker(lazy_load=True)
@@ -244,7 +244,7 @@ class TestCrossEncoderLoadState:
     def test_is_loaded_before_use(self) -> None:
         """Test is_loaded before model is used."""
         with patch(
-            "src.memory.retrieval.reranker.CrossEncoderReranker._load_model"
+            "luminescent_cluster.memory.retrieval.reranker.CrossEncoderReranker._load_model"
         ) as mock_load:
             mock_load.return_value = MockCrossEncoder()
             reranker = CrossEncoderReranker(lazy_load=True)

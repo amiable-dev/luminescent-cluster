@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from src.memory.maas.types import AgentCapability, AgentIdentity, AgentType
+from luminescent_cluster.memory.maas.types import AgentCapability, AgentIdentity, AgentType
 
 
 class TestAgentRegistrySingleton:
@@ -22,19 +22,19 @@ class TestAgentRegistrySingleton:
 
     def setup_method(self):
         """Reset registry before each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def teardown_method(self):
         """Reset registry after each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def test_get_returns_singleton(self):
         """Verify get() always returns the same instance."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry1 = AgentRegistry.get()
         registry2 = AgentRegistry.get()
@@ -43,7 +43,7 @@ class TestAgentRegistrySingleton:
 
     def test_reset_creates_new_instance(self):
         """Verify reset() creates a new singleton."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry1 = AgentRegistry.get()
         AgentRegistry.reset()
@@ -53,7 +53,7 @@ class TestAgentRegistrySingleton:
 
     def test_singleton_thread_safety(self):
         """Verify singleton creation is thread-safe."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         instances = []
@@ -76,19 +76,19 @@ class TestAgentRegistration:
 
     def setup_method(self):
         """Reset registry before each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def teardown_method(self):
         """Reset registry after each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def test_register_agent(self):
         """Verify agent can be registered."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -102,7 +102,7 @@ class TestAgentRegistration:
 
     def test_register_agent_with_custom_id(self):
         """Verify agent can be registered with custom ID."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
         custom_id = "my-custom-agent-id"
@@ -117,7 +117,7 @@ class TestAgentRegistration:
 
     def test_register_agent_with_custom_capabilities(self):
         """Verify agent can be registered with custom capabilities."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -133,8 +133,8 @@ class TestAgentRegistration:
 
     def test_register_agent_uses_default_capabilities(self):
         """Verify default capabilities are used when not specified."""
-        from src.memory.maas.registry import AgentRegistry
-        from src.memory.maas.types import get_default_capabilities
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.types import get_default_capabilities
 
         registry = AgentRegistry.get()
 
@@ -149,7 +149,7 @@ class TestAgentRegistration:
 
     def test_register_agent_with_metadata(self):
         """Verify agent can be registered with metadata."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -165,7 +165,7 @@ class TestAgentRegistration:
 
     def test_duplicate_registration_raises(self):
         """Verify duplicate registration raises error."""
-        from src.memory.maas.registry import AgentRegistry, DuplicateAgentError
+        from luminescent_cluster.memory.maas.registry import AgentRegistry, DuplicateAgentError
 
         registry = AgentRegistry.get()
 
@@ -188,19 +188,19 @@ class TestAgentRetrieval:
 
     def setup_method(self):
         """Reset registry before each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def teardown_method(self):
         """Reset registry after each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def test_get_agent(self):
         """Verify agent can be retrieved by ID."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -218,7 +218,7 @@ class TestAgentRetrieval:
 
     def test_get_nonexistent_agent_returns_none(self):
         """Verify getting nonexistent agent returns None."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
         agent = registry.get_agent("nonexistent-id")
@@ -227,7 +227,7 @@ class TestAgentRetrieval:
 
     def test_get_agents_by_owner(self):
         """Verify agents can be retrieved by owner."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -252,7 +252,7 @@ class TestAgentRetrieval:
 
     def test_get_active_agents(self):
         """Verify only active agents are returned."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -278,19 +278,19 @@ class TestAgentDeactivation:
 
     def setup_method(self):
         """Reset registry before each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def teardown_method(self):
         """Reset registry after each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def test_deactivate_agent(self):
         """Verify agent can be deactivated."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -305,7 +305,7 @@ class TestAgentDeactivation:
 
     def test_deactivate_nonexistent_agent(self):
         """Verify deactivating nonexistent agent returns False."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
         result = registry.deactivate_agent("nonexistent-id")
@@ -314,7 +314,7 @@ class TestAgentDeactivation:
 
     def test_deactivated_agent_not_in_active(self):
         """Verify deactivated agent is excluded from active agents."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -329,7 +329,7 @@ class TestAgentDeactivation:
 
     def test_is_agent_active(self):
         """Verify is_agent_active returns correct status."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -350,19 +350,19 @@ class TestSessionManagement:
 
     def setup_method(self):
         """Reset registry before each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def teardown_method(self):
         """Reset registry after each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def test_start_session(self):
         """Verify session can be started for an agent."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -378,7 +378,7 @@ class TestSessionManagement:
 
     def test_start_session_updates_agent(self):
         """Verify starting session updates agent's session_id."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -394,7 +394,7 @@ class TestSessionManagement:
 
     def test_start_session_nonexistent_agent(self):
         """Verify starting session for nonexistent agent returns None."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
         session_id = registry.start_session("nonexistent-id")
@@ -403,7 +403,7 @@ class TestSessionManagement:
 
     def test_end_session(self):
         """Verify session can be ended."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -418,7 +418,7 @@ class TestSessionManagement:
 
     def test_end_session_clears_session_id(self):
         """Verify ending session clears agent's session_id."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -434,7 +434,7 @@ class TestSessionManagement:
 
     def test_get_session(self):
         """Verify session info can be retrieved."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -452,7 +452,7 @@ class TestSessionManagement:
 
     def test_get_nonexistent_session(self):
         """Verify getting nonexistent session returns None."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
         session = registry.get_session("nonexistent-session")
@@ -465,19 +465,19 @@ class TestRegistryMetrics:
 
     def setup_method(self):
         """Reset registry before each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def teardown_method(self):
         """Reset registry after each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def test_get_stats(self):
         """Verify registry stats are returned correctly."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -501,7 +501,7 @@ class TestRegistryMetrics:
 
     def test_agent_count(self):
         """Verify agent count is accurate."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
 
@@ -520,19 +520,19 @@ class TestThreadSafety:
 
     def setup_method(self):
         """Reset registry before each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def teardown_method(self):
         """Reset registry after each test."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
 
     def test_concurrent_registration(self):
         """Verify concurrent registration is thread-safe."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
         registered_ids = []
@@ -555,7 +555,7 @@ class TestThreadSafety:
 
     def test_concurrent_read_write(self):
         """Verify concurrent reads and writes are thread-safe."""
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         registry = AgentRegistry.get()
         errors = []

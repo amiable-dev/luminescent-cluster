@@ -33,20 +33,20 @@ class TestHistoryCompressorExists:
 
     def test_history_compressor_exists(self):
         """HistoryCompressor class should be defined."""
-        from src.memory.blocks.compressor import HistoryCompressor
+        from luminescent_cluster.memory.blocks.compressor import HistoryCompressor
 
         assert HistoryCompressor is not None
 
     def test_history_compressor_instantiable(self):
         """HistoryCompressor should be instantiable with max_tokens."""
-        from src.memory.blocks.compressor import HistoryCompressor
+        from luminescent_cluster.memory.blocks.compressor import HistoryCompressor
 
         compressor = HistoryCompressor(max_tokens=1000)
         assert compressor.max_tokens == 1000
 
     def test_default_max_tokens(self):
         """HistoryCompressor should default to 1000 max_tokens."""
-        from src.memory.blocks.compressor import HistoryCompressor
+        from luminescent_cluster.memory.blocks.compressor import HistoryCompressor
 
         compressor = HistoryCompressor()
         assert compressor.max_tokens == 1000
@@ -57,7 +57,7 @@ class TestTokenCounting:
 
     def test_count_tokens_returns_int(self):
         """count_tokens should return an integer."""
-        from src.memory.blocks.compressor import HistoryCompressor
+        from luminescent_cluster.memory.blocks.compressor import HistoryCompressor
 
         compressor = HistoryCompressor()
         result = compressor.count_tokens("Hello world")
@@ -66,7 +66,7 @@ class TestTokenCounting:
 
     def test_count_tokens_empty_string(self):
         """count_tokens should return 0 for empty string."""
-        from src.memory.blocks.compressor import HistoryCompressor
+        from luminescent_cluster.memory.blocks.compressor import HistoryCompressor
 
         compressor = HistoryCompressor()
         result = compressor.count_tokens("")
@@ -75,7 +75,7 @@ class TestTokenCounting:
 
     def test_count_tokens_simple_text(self):
         """count_tokens should return reasonable count for text."""
-        from src.memory.blocks.compressor import HistoryCompressor
+        from luminescent_cluster.memory.blocks.compressor import HistoryCompressor
 
         compressor = HistoryCompressor()
         result = compressor.count_tokens("Hello world, how are you?")
@@ -91,7 +91,7 @@ class TestCompress:
     @pytest.fixture
     def compressor(self):
         """Create a HistoryCompressor for tests."""
-        from src.memory.blocks.compressor import HistoryCompressor
+        from luminescent_cluster.memory.blocks.compressor import HistoryCompressor
 
         return HistoryCompressor(max_tokens=100)
 
@@ -128,7 +128,7 @@ class TestCompress:
 
     def test_compress_respects_token_limit(self):
         """compress should respect max_tokens limit."""
-        from src.memory.blocks.compressor import HistoryCompressor
+        from luminescent_cluster.memory.blocks.compressor import HistoryCompressor
 
         # Use a very small limit
         compressor = HistoryCompressor(max_tokens=50)
@@ -160,7 +160,7 @@ class TestSummarize:
     @pytest.fixture
     def compressor(self):
         """Create a HistoryCompressor for tests."""
-        from src.memory.blocks.compressor import HistoryCompressor
+        from luminescent_cluster.memory.blocks.compressor import HistoryCompressor
 
         return HistoryCompressor(max_tokens=1000)
 
@@ -199,7 +199,7 @@ class TestDictMessageHandling:
     @pytest.fixture
     def compressor(self):
         """Create a HistoryCompressor for tests."""
-        from src.memory.blocks.compressor import HistoryCompressor
+        from luminescent_cluster.memory.blocks.compressor import HistoryCompressor
 
         return HistoryCompressor(max_tokens=500)
 
@@ -242,7 +242,7 @@ class TestTokenCountingDoSProtection:
     @pytest.fixture
     def compressor(self):
         """Create a HistoryCompressor for tests."""
-        from src.memory.blocks.compressor import HistoryCompressor
+        from luminescent_cluster.memory.blocks.compressor import HistoryCompressor
 
         return HistoryCompressor(max_tokens=100)
 
@@ -283,7 +283,7 @@ class TestWhitespacePreservation:
     @pytest.fixture
     def compressor(self):
         """Create a HistoryCompressor for tests."""
-        from src.memory.blocks.compressor import HistoryCompressor
+        from luminescent_cluster.memory.blocks.compressor import HistoryCompressor
 
         return HistoryCompressor(max_tokens=50)
 

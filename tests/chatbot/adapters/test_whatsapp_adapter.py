@@ -31,13 +31,13 @@ from unittest.mock import MagicMock, AsyncMock, patch
 import hmac
 import hashlib
 
-from src.chatbot.adapters.base import (
+from luminescent_cluster.chatbot.adapters.base import (
     BasePlatformAdapter,
     ConnectionState,
     ChatMessage,
     MessageAuthor,
 )
-from src.chatbot.gateway import GatewayRequest
+from luminescent_cluster.chatbot.gateway import GatewayRequest
 
 
 # =============================================================================
@@ -50,7 +50,7 @@ class TestWhatsAppConfig:
 
     def test_config_has_required_fields(self):
         """WhatsAppConfig should require access_token and phone_number_id."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -62,7 +62,7 @@ class TestWhatsAppConfig:
 
     def test_config_has_webhook_verify_token(self):
         """WhatsAppConfig should support webhook verification token."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -74,7 +74,7 @@ class TestWhatsAppConfig:
 
     def test_config_has_app_secret(self):
         """WhatsAppConfig should support app secret for signature verification."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -86,7 +86,7 @@ class TestWhatsAppConfig:
 
     def test_config_has_business_account_id(self):
         """WhatsAppConfig should support business account ID."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -108,7 +108,7 @@ class TestWhatsAppAdapterConnection:
     @pytest.fixture
     def config(self):
         """Create test WhatsApp config."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig
 
         return WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -119,7 +119,7 @@ class TestWhatsAppAdapterConnection:
 
     def test_adapter_implements_protocol(self, config):
         """WhatsAppAdapter should implement BasePlatformAdapter protocol."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
 
         adapter = WhatsAppAdapter(config)
 
@@ -127,7 +127,7 @@ class TestWhatsAppAdapterConnection:
 
     def test_adapter_has_platform_name(self, config):
         """WhatsAppAdapter should report 'whatsapp' as platform."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
 
         adapter = WhatsAppAdapter(config)
 
@@ -135,7 +135,7 @@ class TestWhatsAppAdapterConnection:
 
     def test_adapter_starts_disconnected(self, config):
         """WhatsAppAdapter should start in DISCONNECTED state."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
 
         adapter = WhatsAppAdapter(config)
 
@@ -144,7 +144,7 @@ class TestWhatsAppAdapterConnection:
     @pytest.mark.asyncio
     async def test_adapter_connects_via_cloud_api(self, config):
         """WhatsAppAdapter should connect via Cloud API."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
 
         adapter = WhatsAppAdapter(config)
 
@@ -157,7 +157,7 @@ class TestWhatsAppAdapterConnection:
     @pytest.mark.asyncio
     async def test_adapter_verifies_api_access(self, config):
         """WhatsAppAdapter should verify API access on connect."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
 
         adapter = WhatsAppAdapter(config)
 
@@ -171,7 +171,7 @@ class TestWhatsAppAdapterConnection:
     @pytest.mark.asyncio
     async def test_adapter_disconnects_successfully(self, config):
         """WhatsAppAdapter should disconnect cleanly."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
 
         adapter = WhatsAppAdapter(config)
 
@@ -186,7 +186,7 @@ class TestWhatsAppAdapterConnection:
     @pytest.mark.asyncio
     async def test_adapter_handles_connection_error(self, config):
         """WhatsAppAdapter should handle connection errors."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
 
         adapter = WhatsAppAdapter(config)
 
@@ -200,7 +200,7 @@ class TestWhatsAppAdapterConnection:
 
     def test_adapter_exposes_phone_number_id(self, config):
         """WhatsAppAdapter should expose phone number ID."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppAdapter
 
         adapter = WhatsAppAdapter(config)
 
@@ -218,7 +218,7 @@ class TestWhatsAppWebhookVerification:
     @pytest.fixture
     def adapter(self):
         """Create test WhatsApp adapter."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -288,7 +288,7 @@ class TestWhatsAppMessageParsing:
     @pytest.fixture
     def adapter(self):
         """Create test WhatsApp adapter."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -581,7 +581,7 @@ class TestWhatsApp24HourWindow:
     @pytest.fixture
     def adapter(self):
         """Create test WhatsApp adapter."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -653,7 +653,7 @@ class TestWhatsAppMessageSending:
     @pytest.fixture
     def adapter(self):
         """Create connected test adapter."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -686,7 +686,7 @@ class TestWhatsAppMessageSending:
     @pytest.mark.asyncio
     async def test_send_message_requires_connection(self):
         """Should require connection to send message."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -725,7 +725,7 @@ class TestWhatsAppInteractiveMessages:
     @pytest.fixture
     def adapter(self):
         """Create connected test adapter."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -738,7 +738,7 @@ class TestWhatsAppInteractiveMessages:
 
     def test_create_button_message(self, adapter):
         """Should create button message."""
-        from src.chatbot.adapters.whatsapp_adapter import ButtonMessage, Button
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import ButtonMessage, Button
 
         message = ButtonMessage(
             body="Please select an option:",
@@ -756,7 +756,7 @@ class TestWhatsAppInteractiveMessages:
 
     def test_create_list_message(self, adapter):
         """Should create list message."""
-        from src.chatbot.adapters.whatsapp_adapter import (
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import (
             ListMessage,
             ListSection,
             ListRow,
@@ -786,7 +786,7 @@ class TestWhatsAppInteractiveMessages:
     @pytest.mark.asyncio
     async def test_send_button_message(self, adapter):
         """Should send button message."""
-        from src.chatbot.adapters.whatsapp_adapter import ButtonMessage, Button
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import ButtonMessage, Button
 
         adapter._api_client.send_interactive = AsyncMock(
             return_value={"messages": [{"id": "wamid.btn"}]}
@@ -807,7 +807,7 @@ class TestWhatsAppInteractiveMessages:
     @pytest.mark.asyncio
     async def test_send_list_message(self, adapter):
         """Should send list message."""
-        from src.chatbot.adapters.whatsapp_adapter import (
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import (
             ListMessage,
             ListSection,
             ListRow,
@@ -847,7 +847,7 @@ class TestWhatsAppTemplateMessages:
     @pytest.fixture
     def adapter(self):
         """Create connected test adapter."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -860,7 +860,7 @@ class TestWhatsAppTemplateMessages:
 
     def test_create_template_message(self, adapter):
         """Should create template message."""
-        from src.chatbot.adapters.whatsapp_adapter import (
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import (
             TemplateMessage,
             TemplateComponent,
         )
@@ -887,7 +887,7 @@ class TestWhatsAppTemplateMessages:
     @pytest.mark.asyncio
     async def test_send_template_message(self, adapter):
         """Should send template message."""
-        from src.chatbot.adapters.whatsapp_adapter import TemplateMessage
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import TemplateMessage
 
         adapter._api_client.send_template = AsyncMock(
             return_value={"messages": [{"id": "wamid.tpl"}]}
@@ -927,7 +927,7 @@ class TestWhatsAppMediaHandling:
     @pytest.fixture
     def adapter(self):
         """Create connected test adapter."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -998,7 +998,7 @@ class TestWhatsAppEventHandling:
     @pytest.fixture
     def adapter(self):
         """Create test adapter."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -1088,7 +1088,7 @@ class TestWhatsAppGatewayIntegration:
     @pytest.fixture
     def adapter(self):
         """Create test adapter."""
-        from src.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",

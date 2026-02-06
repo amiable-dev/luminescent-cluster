@@ -27,7 +27,7 @@ class TestLifecyclePolicyConstants:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import DEFAULT_TTL_DAYS
+        from luminescent_cluster.memory.lifecycle.policies import DEFAULT_TTL_DAYS
 
         assert DEFAULT_TTL_DAYS is not None
 
@@ -37,7 +37,7 @@ class TestLifecyclePolicyConstants:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import DEFAULT_TTL_DAYS
+        from luminescent_cluster.memory.lifecycle.policies import DEFAULT_TTL_DAYS
 
         assert DEFAULT_TTL_DAYS == 90
 
@@ -47,7 +47,7 @@ class TestLifecyclePolicyConstants:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import MIN_TTL_DAYS
+        from luminescent_cluster.memory.lifecycle.policies import MIN_TTL_DAYS
 
         assert MIN_TTL_DAYS is not None
 
@@ -57,7 +57,7 @@ class TestLifecyclePolicyConstants:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import MIN_TTL_DAYS
+        from luminescent_cluster.memory.lifecycle.policies import MIN_TTL_DAYS
 
         assert MIN_TTL_DAYS == 1
 
@@ -67,7 +67,7 @@ class TestLifecyclePolicyConstants:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import MAX_TTL_DAYS
+        from luminescent_cluster.memory.lifecycle.policies import MAX_TTL_DAYS
 
         assert MAX_TTL_DAYS is not None
 
@@ -77,7 +77,7 @@ class TestLifecyclePolicyConstants:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import MAX_TTL_DAYS
+        from luminescent_cluster.memory.lifecycle.policies import MAX_TTL_DAYS
 
         assert MAX_TTL_DAYS == 365
 
@@ -91,7 +91,7 @@ class TestLifecyclePolicy:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import LifecyclePolicy
+        from luminescent_cluster.memory.lifecycle.policies import LifecyclePolicy
 
         assert LifecyclePolicy is not None
 
@@ -101,7 +101,7 @@ class TestLifecyclePolicy:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import LifecyclePolicy
+        from luminescent_cluster.memory.lifecycle.policies import LifecyclePolicy
 
         policy = LifecyclePolicy()
         assert hasattr(policy, "ttl_days")
@@ -112,7 +112,7 @@ class TestLifecyclePolicy:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import LifecyclePolicy
+        from luminescent_cluster.memory.lifecycle.policies import LifecyclePolicy
 
         policy = LifecyclePolicy()
         assert policy.ttl_days == 90
@@ -123,7 +123,7 @@ class TestLifecyclePolicy:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import LifecyclePolicy
+        from luminescent_cluster.memory.lifecycle.policies import LifecyclePolicy
 
         policy = LifecyclePolicy()
         assert hasattr(policy, "decay_enabled")
@@ -134,7 +134,7 @@ class TestLifecyclePolicy:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import LifecyclePolicy
+        from luminescent_cluster.memory.lifecycle.policies import LifecyclePolicy
 
         policy = LifecyclePolicy()
         assert policy.decay_enabled is True
@@ -145,7 +145,7 @@ class TestLifecyclePolicy:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import LifecyclePolicy
+        from luminescent_cluster.memory.lifecycle.policies import LifecyclePolicy
 
         policy = LifecyclePolicy()
         assert hasattr(policy, "decay_half_life_days")
@@ -156,7 +156,7 @@ class TestLifecyclePolicy:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import LifecyclePolicy
+        from luminescent_cluster.memory.lifecycle.policies import LifecyclePolicy
 
         policy = LifecyclePolicy()
         assert policy.decay_half_life_days == 30
@@ -167,7 +167,7 @@ class TestLifecyclePolicy:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import LifecyclePolicy
+        from luminescent_cluster.memory.lifecycle.policies import LifecyclePolicy
 
         policy = LifecyclePolicy(ttl_days=180)
         assert policy.ttl_days == 180
@@ -182,7 +182,7 @@ class TestExpirationLogic:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import calculate_expiration
+        from luminescent_cluster.memory.lifecycle.policies import calculate_expiration
 
         assert callable(calculate_expiration)
 
@@ -192,7 +192,7 @@ class TestExpirationLogic:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import calculate_expiration
+        from luminescent_cluster.memory.lifecycle.policies import calculate_expiration
 
         created_at = datetime.now(timezone.utc)
         result = calculate_expiration(created_at)
@@ -204,7 +204,7 @@ class TestExpirationLogic:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import calculate_expiration
+        from luminescent_cluster.memory.lifecycle.policies import calculate_expiration
 
         created_at = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
         result = calculate_expiration(created_at)
@@ -217,7 +217,7 @@ class TestExpirationLogic:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import calculate_expiration
+        from luminescent_cluster.memory.lifecycle.policies import calculate_expiration
 
         created_at = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
         result = calculate_expiration(created_at, ttl_days=30)
@@ -230,7 +230,7 @@ class TestExpirationLogic:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import is_expired
+        from luminescent_cluster.memory.lifecycle.policies import is_expired
 
         assert callable(is_expired)
 
@@ -240,7 +240,7 @@ class TestExpirationLogic:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import is_expired
+        from luminescent_cluster.memory.lifecycle.policies import is_expired
 
         expires_at = datetime.now(timezone.utc) + timedelta(days=30)
         assert is_expired(expires_at) is False
@@ -251,7 +251,7 @@ class TestExpirationLogic:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import is_expired
+        from luminescent_cluster.memory.lifecycle.policies import is_expired
 
         expires_at = datetime.now(timezone.utc) - timedelta(days=1)
         assert is_expired(expires_at) is True
@@ -262,7 +262,7 @@ class TestExpirationLogic:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.policies import is_expired
+        from luminescent_cluster.memory.lifecycle.policies import is_expired
 
         assert is_expired(None) is False
 
@@ -276,7 +276,7 @@ class TestDecayScoring:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.decay import calculate_decay_score
+        from luminescent_cluster.memory.lifecycle.decay import calculate_decay_score
 
         assert callable(calculate_decay_score)
 
@@ -286,7 +286,7 @@ class TestDecayScoring:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.decay import calculate_decay_score
+        from luminescent_cluster.memory.lifecycle.decay import calculate_decay_score
 
         last_accessed = datetime.now(timezone.utc)
         score = calculate_decay_score(last_accessed)
@@ -298,7 +298,7 @@ class TestDecayScoring:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.decay import calculate_decay_score
+        from luminescent_cluster.memory.lifecycle.decay import calculate_decay_score
 
         last_accessed = datetime.now(timezone.utc) - timedelta(days=30)
         score = calculate_decay_score(last_accessed)
@@ -310,7 +310,7 @@ class TestDecayScoring:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.decay import calculate_decay_score
+        from luminescent_cluster.memory.lifecycle.decay import calculate_decay_score
 
         last_accessed = datetime.now(timezone.utc) - timedelta(days=60)
         score = calculate_decay_score(last_accessed)
@@ -322,7 +322,7 @@ class TestDecayScoring:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.decay import calculate_decay_score
+        from luminescent_cluster.memory.lifecycle.decay import calculate_decay_score
 
         last_accessed = datetime.now(timezone.utc) - timedelta(days=15)
         # With half_life=15, should be ~0.5
@@ -335,7 +335,7 @@ class TestDecayScoring:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.decay import calculate_decay_score
+        from luminescent_cluster.memory.lifecycle.decay import calculate_decay_score
 
         last_accessed = datetime.now(timezone.utc) - timedelta(days=365)
         score = calculate_decay_score(last_accessed)
@@ -347,7 +347,7 @@ class TestDecayScoring:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.decay import calculate_decay_score
+        from luminescent_cluster.memory.lifecycle.decay import calculate_decay_score
 
         last_accessed = datetime.now(timezone.utc) + timedelta(days=1)  # future
         score = calculate_decay_score(last_accessed)
@@ -363,7 +363,7 @@ class TestCombinedRelevanceScore:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.decay import calculate_relevance_score
+        from luminescent_cluster.memory.lifecycle.decay import calculate_relevance_score
 
         assert callable(calculate_relevance_score)
 
@@ -373,7 +373,7 @@ class TestCombinedRelevanceScore:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.decay import calculate_relevance_score
+        from luminescent_cluster.memory.lifecycle.decay import calculate_relevance_score
 
         last_accessed = datetime.now(timezone.utc)  # decay ~1.0
         similarity = 0.8
@@ -387,7 +387,7 @@ class TestCombinedRelevanceScore:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.decay import calculate_relevance_score
+        from luminescent_cluster.memory.lifecycle.decay import calculate_relevance_score
 
         old_access = datetime.now(timezone.utc) - timedelta(days=60)  # decay ~0.25
         recent_access = datetime.now(timezone.utc)  # decay ~1.0
@@ -404,7 +404,7 @@ class TestCombinedRelevanceScore:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle.decay import calculate_relevance_score
+        from luminescent_cluster.memory.lifecycle.decay import calculate_relevance_score
 
         last_accessed = datetime.now(timezone.utc) - timedelta(days=30)  # decay ~0.5
         similarity = 0.8
@@ -426,14 +426,14 @@ class TestLifecycleModuleExports:
     """TDD: Tests for lifecycle module exports."""
 
     def test_lifecycle_module_exists(self):
-        """src.memory.lifecycle module should exist.
+        """luminescent_cluster.memory.lifecycle module should exist.
 
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        import src.memory.lifecycle
+        import luminescent_cluster.memory.lifecycle
 
-        assert src.memory.lifecycle is not None
+        assert luminescent_cluster.memory.lifecycle is not None
 
     def test_policies_module_exports(self):
         """policies module should export expected items.
@@ -441,7 +441,7 @@ class TestLifecycleModuleExports:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle import policies
+        from luminescent_cluster.memory.lifecycle import policies
 
         assert hasattr(policies, "DEFAULT_TTL_DAYS")
         assert hasattr(policies, "LifecyclePolicy")
@@ -454,7 +454,7 @@ class TestLifecycleModuleExports:
         GitHub Issue: #81
         ADR Reference: ADR-003 (Lifecycle Policies)
         """
-        from src.memory.lifecycle import decay
+        from luminescent_cluster.memory.lifecycle import decay
 
         assert hasattr(decay, "calculate_decay_score")
         assert hasattr(decay, "calculate_relevance_score")

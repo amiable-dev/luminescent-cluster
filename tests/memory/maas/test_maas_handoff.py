@@ -13,8 +13,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from src.memory.maas.registry import AgentRegistry
-from src.memory.maas.types import AgentCapability, AgentType
+from luminescent_cluster.memory.maas.registry import AgentRegistry
+from luminescent_cluster.memory.maas.types import AgentCapability, AgentType
 
 
 class TestHandoffContext:
@@ -22,7 +22,7 @@ class TestHandoffContext:
 
     def test_handoff_context_creation(self):
         """Verify HandoffContext can be created."""
-        from src.memory.maas.handoff import HandoffContext
+        from luminescent_cluster.memory.maas.handoff import HandoffContext
 
         context = HandoffContext(
             task_description="Complete the authentication flow",
@@ -38,7 +38,7 @@ class TestHandoffContext:
 
     def test_handoff_context_defaults(self):
         """Verify HandoffContext has sensible defaults."""
-        from src.memory.maas.handoff import HandoffContext
+        from luminescent_cluster.memory.maas.handoff import HandoffContext
 
         context = HandoffContext(
             task_description="Simple task",
@@ -50,7 +50,7 @@ class TestHandoffContext:
 
     def test_handoff_context_to_dict(self):
         """Verify HandoffContext serialization."""
-        from src.memory.maas.handoff import HandoffContext
+        from luminescent_cluster.memory.maas.handoff import HandoffContext
 
         context = HandoffContext(
             task_description="Test task",
@@ -67,7 +67,7 @@ class TestHandoffContext:
 
     def test_handoff_context_from_dict(self):
         """Verify HandoffContext deserialization."""
-        from src.memory.maas.handoff import HandoffContext
+        from luminescent_cluster.memory.maas.handoff import HandoffContext
 
         data = {
             "task_description": "Test task",
@@ -87,7 +87,7 @@ class TestHandoffStatus:
 
     def test_status_values(self):
         """Verify all status values exist."""
-        from src.memory.maas.handoff import HandoffStatus
+        from luminescent_cluster.memory.maas.handoff import HandoffStatus
 
         assert hasattr(HandoffStatus, "PENDING")
         assert hasattr(HandoffStatus, "ACCEPTED")
@@ -101,8 +101,8 @@ class TestHandoffCreation:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         HandoffManager.reset()
@@ -128,15 +128,15 @@ class TestHandoffCreation:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         HandoffManager.reset()
 
     def test_initiate_handoff(self):
         """Verify handoff can be initiated."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
 
         manager = HandoffManager.get()
 
@@ -155,7 +155,7 @@ class TestHandoffCreation:
 
     def test_initiate_handoff_requires_capability(self):
         """Verify initiating handoff requires HANDOFF_INITIATE capability."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
 
         manager = HandoffManager.get()
 
@@ -178,7 +178,7 @@ class TestHandoffCreation:
 
     def test_initiate_handoff_target_requires_receive(self):
         """Verify target must have HANDOFF_RECEIVE capability."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
 
         manager = HandoffManager.get()
 
@@ -205,8 +205,8 @@ class TestHandoffLifecycle:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         HandoffManager.reset()
@@ -225,15 +225,15 @@ class TestHandoffLifecycle:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         HandoffManager.reset()
 
     def test_accept_handoff(self):
         """Verify handoff can be accepted."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager, HandoffStatus
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager, HandoffStatus
 
         manager = HandoffManager.get()
 
@@ -252,7 +252,7 @@ class TestHandoffLifecycle:
 
     def test_accept_handoff_wrong_agent(self):
         """Verify only target agent can accept."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
 
         manager = HandoffManager.get()
 
@@ -270,7 +270,7 @@ class TestHandoffLifecycle:
 
     def test_reject_handoff(self):
         """Verify handoff can be rejected."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager, HandoffStatus
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager, HandoffStatus
 
         manager = HandoffManager.get()
 
@@ -290,7 +290,7 @@ class TestHandoffLifecycle:
 
     def test_complete_handoff(self):
         """Verify handoff can be completed."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager, HandoffStatus
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager, HandoffStatus
 
         manager = HandoffManager.get()
 
@@ -315,7 +315,7 @@ class TestHandoffLifecycle:
 
     def test_complete_requires_accepted(self):
         """Verify handoff must be accepted before completion."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
 
         manager = HandoffManager.get()
 
@@ -337,8 +337,8 @@ class TestHandoffQueries:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         HandoffManager.reset()
@@ -365,15 +365,15 @@ class TestHandoffQueries:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         HandoffManager.reset()
 
     def test_get_pending_handoffs(self):
         """Verify pending handoffs can be retrieved."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
 
         manager = HandoffManager.get()
 
@@ -395,7 +395,7 @@ class TestHandoffQueries:
 
     def test_get_handoffs_by_agent(self):
         """Verify handoffs can be retrieved by agent."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
 
         manager = HandoffManager.get()
 
@@ -416,7 +416,7 @@ class TestHandoffQueries:
 
     def test_get_handoff(self):
         """Verify handoff can be retrieved by ID."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
 
         manager = HandoffManager.get()
 
@@ -436,7 +436,7 @@ class TestHandoffQueries:
 
     def test_get_nonexistent_handoff(self):
         """Verify getting nonexistent handoff returns None."""
-        from src.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
 
         manager = HandoffManager.get()
         handoff = manager.get_handoff("nonexistent-id")
@@ -449,8 +449,8 @@ class TestHandoffExpiration:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         HandoffManager.reset()
@@ -469,15 +469,15 @@ class TestHandoffExpiration:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         HandoffManager.reset()
 
     def test_handoff_with_ttl(self):
         """Verify handoff can have TTL."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
 
         manager = HandoffManager.get()
 
@@ -494,7 +494,7 @@ class TestHandoffExpiration:
 
     def test_expire_old_handoffs(self):
         """Verify expired handoffs are marked as expired."""
-        from src.memory.maas.handoff import (
+        from luminescent_cluster.memory.maas.handoff import (
             HandoffContext,
             HandoffManager,
             HandoffStatus,
@@ -524,23 +524,23 @@ class TestHandoffThreadSafety:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         HandoffManager.reset()
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         HandoffManager.reset()
 
     def test_concurrent_handoff_operations(self):
         """Verify concurrent handoff operations are thread-safe."""
-        from src.memory.maas.handoff import HandoffContext, HandoffManager
+        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager
 
         agent_registry = AgentRegistry.get()
         handoff_manager = HandoffManager.get()

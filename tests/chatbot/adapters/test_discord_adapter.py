@@ -35,7 +35,7 @@ from typing import Optional, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
 # Import the adapter - this will fail until implemented (RED phase)
-from src.chatbot.adapters.discord_adapter import (
+from luminescent_cluster.chatbot.adapters.discord_adapter import (
     DiscordAdapter,
     DiscordConfig,
     DiscordMessage,
@@ -44,7 +44,7 @@ from src.chatbot.adapters.discord_adapter import (
     DiscordInteraction,
 )
 
-from src.chatbot.adapters.base import (
+from luminescent_cluster.chatbot.adapters.base import (
     BasePlatformAdapter,
     ConnectionState,
     ChatMessage,

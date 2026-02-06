@@ -61,7 +61,7 @@ class TestIngestFileFunction:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         assert callable(ingest_file)
 
@@ -70,12 +70,12 @@ class TestIngestFileFunction:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         file_content = sample_markdown_file.read_text()
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -94,12 +94,12 @@ class TestIngestFileFunction:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         file_content = sample_markdown_file.read_text()
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -126,12 +126,12 @@ class TestIngestFileContent:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         file_content = sample_markdown_file.read_text()
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -152,12 +152,12 @@ class TestIngestFileContent:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         file_content = sample_markdown_file.read_text()
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -182,12 +182,12 @@ class TestIngestFileMetadata:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         file_content = sample_markdown_file.read_text()
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -208,12 +208,12 @@ class TestIngestFileMetadata:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         file_content = sample_markdown_file.read_text()
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -232,12 +232,12 @@ class TestIngestFileMetadata:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         file_content = sample_markdown_file.read_text()
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -257,13 +257,13 @@ class TestIngestFileMetadata:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         md_content = sample_markdown_file.read_text()
         adr_content = sample_adr_file.read_text()
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(md_content)):
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(md_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -279,8 +279,8 @@ class TestIngestFileMetadata:
             assert call_args["type"] == "documentation"
 
         # ADR file should be 'decision'
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(adr_content)):
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(adr_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -303,13 +303,13 @@ class TestIngestFileIdempotency:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         content = sample_markdown_file.read_text()
         content_hash = hashlib.sha256(content.encode()).hexdigest()
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(content)):
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(content)):
             mock_kb = MagicMock()
             # Simulate existing entry with same hash
             mock_kb.where.return_value.select.return_value.collect.return_value = [
@@ -333,12 +333,12 @@ class TestIngestFileIdempotency:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         content = sample_markdown_file.read_text()
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(content)):
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(content)):
             mock_kb = MagicMock()
             # Simulate existing entry with different hash
             mock_kb.where.return_value.select.return_value.collect.return_value = [
@@ -365,12 +365,12 @@ class TestIngestFileSecurity:
 
         ADR Reference: ADR-002 Security - Path Traversal Prevention (Council Review)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         # Try to ingest a path outside project root using absolute path
         outside_path = Path("/etc/passwd")
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb:
             mock_kb = MagicMock()
             mock_get_kb.return_value = mock_kb
 
@@ -393,15 +393,15 @@ class TestIngestFileSecurity:
         not potentially modified working tree state. Working tree existence
         and symlinks are irrelevant since we use 'git show commit:path'.
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         file_content = sample_markdown_file.read_text()
 
         # Create git mock that returns specific content
         git_content = "# Content from Git\n\nThis is what git show returns."
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("src.workflows.ingestion.subprocess.run", side_effect=create_git_mock(git_content)):
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
+             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(git_content)):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
@@ -424,8 +424,8 @@ class TestIngestFileSecurity:
 
         ADR Reference: ADR-002 Security - Custom Secrets Patterns (Council Review)
         """
-        from src.workflows.ingestion import ingest_file
-        from src.workflows.config import WorkflowConfig
+        from luminescent_cluster.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.config import WorkflowConfig
 
         # Create a file with a custom pattern that should be blocked
         api_key_file = temp_project_dir / "docs" / "api-keys.md"
@@ -436,7 +436,7 @@ class TestIngestFileSecurity:
             secrets_patterns=[r"api[-_]?key"],  # Custom pattern
         )
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb:
             mock_kb = MagicMock()
             mock_get_kb.return_value = mock_kb
 
@@ -456,9 +456,9 @@ class TestIngestFileSecurity:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb:
             mock_kb = MagicMock()
             mock_get_kb.return_value = mock_kb
 
@@ -479,12 +479,12 @@ class TestIngestFileSecurity:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         key_file = temp_project_dir / "server.key"
         key_file.write_text("-----BEGIN PRIVATE KEY-----\nfake\n-----END PRIVATE KEY-----")
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb:
             mock_kb = MagicMock()
             mock_get_kb.return_value = mock_kb
 
@@ -502,12 +502,12 @@ class TestIngestFileSecurity:
 
         ADR Reference: ADR-002 Security Considerations
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         pwd_file = temp_project_dir / "passwords.txt"
         pwd_file.write_text("admin:hunter2")
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb:
             mock_kb = MagicMock()
             mock_get_kb.return_value = mock_kb
 
@@ -529,9 +529,9 @@ class TestIngestFileErrorHandling:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb:
             mock_kb = MagicMock()
             mock_get_kb.return_value = mock_kb
 
@@ -549,12 +549,12 @@ class TestIngestFileErrorHandling:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         binary_file = temp_project_dir / "image.png"
         binary_file.write_bytes(b'\x89PNG\r\n\x1a\n' + b'\x00' * 100)
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb:
             mock_kb = MagicMock()
             mock_get_kb.return_value = mock_kb
 
@@ -573,13 +573,13 @@ class TestIngestFileErrorHandling:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import ingest_file
+        from luminescent_cluster.workflows.ingestion import ingest_file
 
         # Create a file larger than default limit (500KB)
         large_file = temp_project_dir / "large.md"
         large_file.write_text("# Large\n" + "x" * (600 * 1024))
 
-        with patch("src.workflows.ingestion.get_knowledge_base") as mock_get_kb:
+        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb:
             mock_kb = MagicMock()
             mock_get_kb.return_value = mock_kb
 
@@ -601,7 +601,7 @@ class TestComputeContentHash:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import compute_content_hash
+        from luminescent_cluster.workflows.ingestion import compute_content_hash
 
         assert callable(compute_content_hash)
 
@@ -610,7 +610,7 @@ class TestComputeContentHash:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import compute_content_hash
+        from luminescent_cluster.workflows.ingestion import compute_content_hash
 
         result = compute_content_hash("test content")
 
@@ -625,7 +625,7 @@ class TestComputeContentHash:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import compute_content_hash
+        from luminescent_cluster.workflows.ingestion import compute_content_hash
 
         hash1 = compute_content_hash("same content")
         hash2 = compute_content_hash("same content")
@@ -637,7 +637,7 @@ class TestComputeContentHash:
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
         """
-        from src.workflows.ingestion import compute_content_hash
+        from luminescent_cluster.workflows.ingestion import compute_content_hash
 
         hash1 = compute_content_hash("content a")
         hash2 = compute_content_hash("content b")

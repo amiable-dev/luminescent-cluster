@@ -8,8 +8,8 @@ TDD RED phase: Write tests first, then implement.
 
 import pytest
 
-from src.memory.maas.registry import AgentRegistry
-from src.memory.maas.types import AgentCapability, AgentType
+from luminescent_cluster.memory.maas.registry import AgentRegistry
+from luminescent_cluster.memory.maas.types import AgentCapability, AgentType
 
 
 class TestMaaSProvider:
@@ -17,9 +17,9 @@ class TestMaaSProvider:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -27,9 +27,9 @@ class TestMaaSProvider:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -38,8 +38,8 @@ class TestMaaSProvider:
     @pytest.mark.asyncio
     async def test_provider_store(self):
         """Verify provider can store memory with agent context."""
-        from src.memory.maas.provider import MaaSMemoryProvider
-        from src.memory.schemas.memory_types import Memory, MemoryType
+        from luminescent_cluster.memory.maas.provider import MaaSMemoryProvider
+        from luminescent_cluster.memory.schemas.memory_types import Memory, MemoryType
 
         provider = MaaSMemoryProvider()
 
@@ -61,8 +61,8 @@ class TestMaaSProvider:
     @pytest.mark.asyncio
     async def test_provider_retrieve(self):
         """Verify provider can retrieve memories."""
-        from src.memory.maas.provider import MaaSMemoryProvider
-        from src.memory.schemas.memory_types import Memory, MemoryType
+        from luminescent_cluster.memory.maas.provider import MaaSMemoryProvider
+        from luminescent_cluster.memory.schemas.memory_types import Memory, MemoryType
 
         provider = MaaSMemoryProvider()
 
@@ -87,8 +87,8 @@ class TestMaaSProvider:
     @pytest.mark.asyncio
     async def test_provider_get_by_id(self):
         """Verify provider can get memory by ID."""
-        from src.memory.maas.provider import MaaSMemoryProvider
-        from src.memory.schemas.memory_types import Memory, MemoryType
+        from luminescent_cluster.memory.maas.provider import MaaSMemoryProvider
+        from luminescent_cluster.memory.schemas.memory_types import Memory, MemoryType
 
         provider = MaaSMemoryProvider()
 
@@ -108,8 +108,8 @@ class TestMaaSProvider:
     @pytest.mark.asyncio
     async def test_provider_delete(self):
         """Verify provider can delete memory."""
-        from src.memory.maas.provider import MaaSMemoryProvider
-        from src.memory.schemas.memory_types import Memory, MemoryType
+        from luminescent_cluster.memory.maas.provider import MaaSMemoryProvider
+        from luminescent_cluster.memory.schemas.memory_types import Memory, MemoryType
 
         provider = MaaSMemoryProvider()
 
@@ -134,7 +134,7 @@ class TestCodeKBService:
 
     def test_search_code_kb(self):
         """Verify code KB search works."""
-        from src.memory.maas.services import CodeKBService
+        from luminescent_cluster.memory.maas.services import CodeKBService
 
         service = CodeKBService()
 
@@ -145,7 +145,7 @@ class TestCodeKBService:
 
     def test_search_with_service_filter(self):
         """Verify code KB search can filter by service."""
-        from src.memory.maas.services import CodeKBService
+        from luminescent_cluster.memory.maas.services import CodeKBService
 
         service = CodeKBService()
 
@@ -163,7 +163,7 @@ class TestDecisionService:
 
     def test_search_decisions(self):
         """Verify decision search works."""
-        from src.memory.maas.services import DecisionService
+        from luminescent_cluster.memory.maas.services import DecisionService
 
         service = DecisionService()
 
@@ -173,7 +173,7 @@ class TestDecisionService:
 
     def test_get_decision_by_id(self):
         """Verify decision can be retrieved by ID."""
-        from src.memory.maas.services import DecisionService
+        from luminescent_cluster.memory.maas.services import DecisionService
 
         service = DecisionService()
 
@@ -188,7 +188,7 @@ class TestIncidentService:
 
     def test_search_incidents(self):
         """Verify incident search works."""
-        from src.memory.maas.services import IncidentService
+        from luminescent_cluster.memory.maas.services import IncidentService
 
         service = IncidentService()
 
@@ -198,7 +198,7 @@ class TestIncidentService:
 
     def test_search_incidents_by_service(self):
         """Verify incidents can be filtered by service."""
-        from src.memory.maas.services import IncidentService
+        from luminescent_cluster.memory.maas.services import IncidentService
 
         service = IncidentService()
 

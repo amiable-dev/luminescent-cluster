@@ -14,7 +14,7 @@ ADR Reference: ADR-003 Memory Architecture, Phase 3 (Entity Extraction)
 
 import pytest
 
-from src.memory.extraction.entities import Entity, EntityExtractor, EntityType
+from luminescent_cluster.memory.extraction.entities import Entity, EntityExtractor, EntityType
 
 
 class TestMockEntityExtractorExists:
@@ -26,7 +26,7 @@ class TestMockEntityExtractorExists:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         assert MockEntityExtractor is not None
 
@@ -36,7 +36,7 @@ class TestMockEntityExtractorExists:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         assert isinstance(extractor, EntityExtractor)
@@ -47,7 +47,7 @@ class TestMockEntityExtractorExists:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         assert hasattr(extractor, "extract")
@@ -64,7 +64,7 @@ class TestMockEntityExtractorServiceExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("The auth-service handles authentication")
@@ -80,7 +80,7 @@ class TestMockEntityExtractorServiceExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         text = "The auth-service calls payment-api and user-service"
@@ -98,7 +98,7 @@ class TestMockEntityExtractorServiceExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("The payment-api processes transactions")
@@ -117,7 +117,7 @@ class TestMockEntityExtractorDependencyExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("We use PostgreSQL for the database")
@@ -132,7 +132,7 @@ class TestMockEntityExtractorDependencyExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("Redis is used for caching")
@@ -147,7 +147,7 @@ class TestMockEntityExtractorDependencyExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("We use Kafka for event streaming")
@@ -166,7 +166,7 @@ class TestMockEntityExtractorAPIExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("The /api/v1/users endpoint handles user data")
@@ -181,7 +181,7 @@ class TestMockEntityExtractorAPIExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("POST /users creates a new user")
@@ -200,7 +200,7 @@ class TestMockEntityExtractorPatternExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("We use the Repository Pattern for data access")
@@ -215,7 +215,7 @@ class TestMockEntityExtractorPatternExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("The Factory Pattern creates instances")
@@ -234,7 +234,7 @@ class TestMockEntityExtractorFrameworkExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("Built with FastAPI for the backend")
@@ -249,7 +249,7 @@ class TestMockEntityExtractorFrameworkExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("The Django project handles the admin")
@@ -264,7 +264,7 @@ class TestMockEntityExtractorFrameworkExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("The frontend uses React")
@@ -283,7 +283,7 @@ class TestMockEntityExtractorConfigExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("Set REDIS_URL to configure Redis")
@@ -298,7 +298,7 @@ class TestMockEntityExtractorConfigExtraction:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("DATABASE_HOST should be set in .env")
@@ -317,7 +317,7 @@ class TestMockEntityExtractorEntityProperties:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("The auth-service uses PostgreSQL")
@@ -332,7 +332,7 @@ class TestMockEntityExtractorEntityProperties:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract(
@@ -350,7 +350,7 @@ class TestMockEntityExtractorEntityProperties:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         extractor = MockEntityExtractor()
         entities = await extractor.extract("Hello world")
@@ -367,6 +367,6 @@ class TestMockEntityExtractorModuleExport:
         GitHub Issue: #119
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import MockEntityExtractor
+        from luminescent_cluster.memory.extraction.entities import MockEntityExtractor
 
         assert MockEntityExtractor is not None

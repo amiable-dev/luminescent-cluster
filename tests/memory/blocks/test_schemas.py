@@ -24,43 +24,43 @@ class TestBlockType:
 
     def test_block_type_enum_exists(self):
         """BlockType enum should be defined."""
-        from src.memory.blocks.schemas import BlockType
+        from luminescent_cluster.memory.blocks.schemas import BlockType
 
         assert BlockType is not None
 
     def test_block_type_has_system(self):
         """BlockType should have SYSTEM value."""
-        from src.memory.blocks.schemas import BlockType
+        from luminescent_cluster.memory.blocks.schemas import BlockType
 
         assert BlockType.SYSTEM == "system"
 
     def test_block_type_has_project(self):
         """BlockType should have PROJECT value."""
-        from src.memory.blocks.schemas import BlockType
+        from luminescent_cluster.memory.blocks.schemas import BlockType
 
         assert BlockType.PROJECT == "project"
 
     def test_block_type_has_task(self):
         """BlockType should have TASK value."""
-        from src.memory.blocks.schemas import BlockType
+        from luminescent_cluster.memory.blocks.schemas import BlockType
 
         assert BlockType.TASK == "task"
 
     def test_block_type_has_history(self):
         """BlockType should have HISTORY value."""
-        from src.memory.blocks.schemas import BlockType
+        from luminescent_cluster.memory.blocks.schemas import BlockType
 
         assert BlockType.HISTORY == "history"
 
     def test_block_type_has_knowledge(self):
         """BlockType should have KNOWLEDGE value."""
-        from src.memory.blocks.schemas import BlockType
+        from luminescent_cluster.memory.blocks.schemas import BlockType
 
         assert BlockType.KNOWLEDGE == "knowledge"
 
     def test_block_type_is_string_enum(self):
         """BlockType should be a string enum for serialization."""
-        from src.memory.blocks.schemas import BlockType
+        from luminescent_cluster.memory.blocks.schemas import BlockType
 
         assert isinstance(BlockType.SYSTEM.value, str)
 
@@ -70,13 +70,13 @@ class TestProvenance:
 
     def test_provenance_exists(self):
         """Provenance dataclass should be defined."""
-        from src.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.blocks.schemas import Provenance
 
         assert Provenance is not None
 
     def test_provenance_has_required_fields(self):
         """Provenance should have required fields."""
-        from src.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.blocks.schemas import Provenance
 
         now = datetime.now(timezone.utc)
         prov = Provenance(
@@ -93,7 +93,7 @@ class TestProvenance:
 
     def test_provenance_retrieval_score_optional(self):
         """Provenance retrieval_score should be optional."""
-        from src.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.blocks.schemas import Provenance
 
         now = datetime.now(timezone.utc)
         prov = Provenance(
@@ -107,7 +107,7 @@ class TestProvenance:
 
     def test_provenance_with_retrieval_score(self):
         """Provenance should accept retrieval_score."""
-        from src.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.blocks.schemas import Provenance
 
         now = datetime.now(timezone.utc)
         prov = Provenance(
@@ -122,7 +122,7 @@ class TestProvenance:
 
     def test_provenance_to_dict(self):
         """Provenance should be convertible to dict."""
-        from src.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.blocks.schemas import Provenance
 
         now = datetime.now(timezone.utc)
         prov = Provenance(
@@ -147,13 +147,13 @@ class TestMemoryBlock:
 
     def test_memory_block_exists(self):
         """MemoryBlock dataclass should be defined."""
-        from src.memory.blocks.schemas import MemoryBlock
+        from luminescent_cluster.memory.blocks.schemas import MemoryBlock
 
         assert MemoryBlock is not None
 
     def test_memory_block_has_required_fields(self):
         """MemoryBlock should have required fields."""
-        from src.memory.blocks.schemas import BlockType, MemoryBlock
+        from luminescent_cluster.memory.blocks.schemas import BlockType, MemoryBlock
 
         block = MemoryBlock(
             block_type=BlockType.SYSTEM,
@@ -171,7 +171,7 @@ class TestMemoryBlock:
 
     def test_memory_block_provenance_optional(self):
         """MemoryBlock provenance should be optional."""
-        from src.memory.blocks.schemas import BlockType, MemoryBlock
+        from luminescent_cluster.memory.blocks.schemas import BlockType, MemoryBlock
 
         block = MemoryBlock(
             block_type=BlockType.KNOWLEDGE,
@@ -185,7 +185,7 @@ class TestMemoryBlock:
 
     def test_memory_block_with_provenance(self):
         """MemoryBlock should accept provenance."""
-        from src.memory.blocks.schemas import BlockType, MemoryBlock, Provenance
+        from luminescent_cluster.memory.blocks.schemas import BlockType, MemoryBlock, Provenance
 
         now = datetime.now(timezone.utc)
         prov = Provenance(
@@ -209,7 +209,7 @@ class TestMemoryBlock:
 
     def test_memory_block_to_dict(self):
         """MemoryBlock should be convertible to dict."""
-        from src.memory.blocks.schemas import BlockType, MemoryBlock
+        from luminescent_cluster.memory.blocks.schemas import BlockType, MemoryBlock
 
         block = MemoryBlock(
             block_type=BlockType.TASK,
@@ -229,7 +229,7 @@ class TestMemoryBlock:
 
     def test_memory_block_priority_order(self):
         """Lower priority number should mean higher importance."""
-        from src.memory.blocks.schemas import BlockType, MemoryBlock
+        from luminescent_cluster.memory.blocks.schemas import BlockType, MemoryBlock
 
         system_block = MemoryBlock(
             block_type=BlockType.SYSTEM,
@@ -254,42 +254,42 @@ class TestBlockTypeDefaults:
 
     def test_default_priorities_defined(self):
         """DEFAULT_BLOCK_PRIORITIES should be defined."""
-        from src.memory.blocks.schemas import DEFAULT_BLOCK_PRIORITIES
+        from luminescent_cluster.memory.blocks.schemas import DEFAULT_BLOCK_PRIORITIES
 
         assert DEFAULT_BLOCK_PRIORITIES is not None
         assert isinstance(DEFAULT_BLOCK_PRIORITIES, dict)
 
     def test_default_priorities_for_all_block_types(self):
         """DEFAULT_BLOCK_PRIORITIES should cover all block types."""
-        from src.memory.blocks.schemas import BlockType, DEFAULT_BLOCK_PRIORITIES
+        from luminescent_cluster.memory.blocks.schemas import BlockType, DEFAULT_BLOCK_PRIORITIES
 
         for block_type in BlockType:
             assert block_type in DEFAULT_BLOCK_PRIORITIES
 
     def test_system_has_highest_priority(self):
         """System block should have priority 1 (highest)."""
-        from src.memory.blocks.schemas import BlockType, DEFAULT_BLOCK_PRIORITIES
+        from luminescent_cluster.memory.blocks.schemas import BlockType, DEFAULT_BLOCK_PRIORITIES
 
         assert DEFAULT_BLOCK_PRIORITIES[BlockType.SYSTEM] == 1
 
     def test_default_token_budgets_defined(self):
         """DEFAULT_TOKEN_BUDGETS should be defined."""
-        from src.memory.blocks.schemas import DEFAULT_TOKEN_BUDGETS
+        from luminescent_cluster.memory.blocks.schemas import DEFAULT_TOKEN_BUDGETS
 
         assert DEFAULT_TOKEN_BUDGETS is not None
         assert isinstance(DEFAULT_TOKEN_BUDGETS, dict)
 
     def test_default_token_budgets_for_all_block_types(self):
         """DEFAULT_TOKEN_BUDGETS should cover all block types."""
-        from src.memory.blocks.schemas import BlockType, DEFAULT_TOKEN_BUDGETS
+        from luminescent_cluster.memory.blocks.schemas import BlockType, DEFAULT_TOKEN_BUDGETS
 
         for block_type in BlockType:
             assert block_type in DEFAULT_TOKEN_BUDGETS
 
     def test_total_default_budget_fits_5000_with_overhead(self):
         """Content budgets + XML overhead should fit within 5000 total budget."""
-        from src.memory.blocks.assembler import BlockAssembler
-        from src.memory.blocks.schemas import DEFAULT_TOKEN_BUDGETS
+        from luminescent_cluster.memory.blocks.assembler import BlockAssembler
+        from luminescent_cluster.memory.blocks.schemas import DEFAULT_TOKEN_BUDGETS
 
         # Content budgets sum to 4925
         content_total = sum(DEFAULT_TOKEN_BUDGETS.values())

@@ -32,7 +32,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 # Import the context manager - this will fail until implemented (RED phase)
-from src.chatbot.context import (
+from luminescent_cluster.chatbot.context import (
     ThreadContextManager,
     ContextConfig,
     ThreadContext,

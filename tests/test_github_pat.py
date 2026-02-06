@@ -26,7 +26,7 @@ import base64
 from unittest.mock import patch, MagicMock
 from urllib.error import HTTPError
 
-from integrations.github_pat import (
+from luminescent_cluster.integrations.github_pat import (
     GitHubPATClient,
     GitHubFile,
     GitHubCommit,
@@ -91,7 +91,7 @@ class TestGitHubPATClientRequests:
 
     def test_request_includes_auth_header(self, client, mock_response):
         """Request should include Bearer token in Authorization header."""
-        with patch("integrations.github_pat.urlopen") as mock_urlopen:
+        with patch("luminescent_cluster.integrations.github_pat.urlopen") as mock_urlopen:
             mock_urlopen.return_value = mock_response({"test": "data"})
 
             client._request("/test")
@@ -103,7 +103,7 @@ class TestGitHubPATClientRequests:
 
     def test_request_includes_user_agent(self, client, mock_response):
         """Request should include User-Agent header."""
-        with patch("integrations.github_pat.urlopen") as mock_urlopen:
+        with patch("luminescent_cluster.integrations.github_pat.urlopen") as mock_urlopen:
             mock_urlopen.return_value = mock_response({"test": "data"})
 
             client._request("/test")
@@ -113,7 +113,7 @@ class TestGitHubPATClientRequests:
 
     def test_request_handles_401_as_auth_error(self, client):
         """401 response should raise GitHubAuthError."""
-        with patch("integrations.github_pat.urlopen") as mock_urlopen:
+        with patch("luminescent_cluster.integrations.github_pat.urlopen") as mock_urlopen:
             mock_error = HTTPError(
                 url="https://api.github.com/test",
                 code=401,
@@ -128,7 +128,7 @@ class TestGitHubPATClientRequests:
 
     def test_request_handles_404_as_not_found(self, client):
         """404 response should raise GitHubNotFoundError."""
-        with patch("integrations.github_pat.urlopen") as mock_urlopen:
+        with patch("luminescent_cluster.integrations.github_pat.urlopen") as mock_urlopen:
             mock_error = HTTPError(
                 url="https://api.github.com/test",
                 code=404,
@@ -143,7 +143,7 @@ class TestGitHubPATClientRequests:
 
     def test_request_handles_rate_limit(self, client):
         """403 with rate limit message should raise GitHubRateLimitError."""
-        with patch("integrations.github_pat.urlopen") as mock_urlopen:
+        with patch("luminescent_cluster.integrations.github_pat.urlopen") as mock_urlopen:
             mock_fp = MagicMock()
             mock_fp.read.return_value = b"API rate limit exceeded"
             mock_error = HTTPError(

@@ -17,7 +17,7 @@ import pytest
 from datetime import datetime, timedelta, timezone
 from typing import List
 
-from src.memory.schemas import Memory, MemoryType
+from luminescent_cluster.memory.schemas import Memory, MemoryType
 
 
 class TestJanitorFramework:
@@ -26,8 +26,8 @@ class TestJanitorFramework:
     @pytest.fixture
     def janitor(self):
         """Create janitor for testing."""
-        from src.memory.janitor.runner import JanitorRunner
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.janitor.runner import JanitorRunner
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
         provider = LocalMemoryProvider()
         return JanitorRunner(provider)
 
@@ -64,13 +64,13 @@ class TestDeduplication:
     @pytest.fixture
     def deduplicator(self):
         """Create deduplicator for testing."""
-        from src.memory.janitor.deduplication import Deduplicator
+        from luminescent_cluster.memory.janitor.deduplication import Deduplicator
         return Deduplicator()
 
     @pytest.fixture
     async def populated_provider(self):
         """Provider with duplicate memories."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
         provider = LocalMemoryProvider()
         now = datetime.now(timezone.utc)
 
@@ -122,7 +122,7 @@ class TestDeduplication:
 
     def test_custom_similarity_threshold(self):
         """Should accept custom similarity threshold."""
-        from src.memory.janitor.deduplication import Deduplicator
+        from luminescent_cluster.memory.janitor.deduplication import Deduplicator
         dedup = Deduplicator(similarity_threshold=0.9)
         assert dedup.similarity_threshold == 0.9
 
@@ -221,7 +221,7 @@ class TestDeduplication:
     @pytest.mark.asyncio
     async def test_deduplication_run(self, populated_provider):
         """Should deduplicate memories in provider."""
-        from src.memory.janitor.deduplication import Deduplicator
+        from luminescent_cluster.memory.janitor.deduplication import Deduplicator
         dedup = Deduplicator(similarity_threshold=0.7)
 
         result = await dedup.run(populated_provider, "user-1")
@@ -235,13 +235,13 @@ class TestContradictionHandling:
     @pytest.fixture
     def handler(self):
         """Create contradiction handler for testing."""
-        from src.memory.janitor.contradiction import ContradictionHandler
+        from luminescent_cluster.memory.janitor.contradiction import ContradictionHandler
         return ContradictionHandler()
 
     @pytest.fixture
     async def contradicting_provider(self):
         """Provider with contradicting memories."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
         provider = LocalMemoryProvider()
         now = datetime.now(timezone.utc)
 
@@ -371,7 +371,7 @@ class TestContradictionHandling:
     @pytest.mark.asyncio
     async def test_contradiction_run(self, contradicting_provider):
         """Should resolve contradictions in provider."""
-        from src.memory.janitor.contradiction import ContradictionHandler
+        from luminescent_cluster.memory.janitor.contradiction import ContradictionHandler
         handler = ContradictionHandler()
 
         result = await handler.run(contradicting_provider, "user-1")
@@ -385,13 +385,13 @@ class TestExpirationCleanup:
     @pytest.fixture
     def cleaner(self):
         """Create expiration cleaner for testing."""
-        from src.memory.janitor.expiration import ExpirationCleaner
+        from luminescent_cluster.memory.janitor.expiration import ExpirationCleaner
         return ExpirationCleaner()
 
     @pytest.fixture
     async def expired_provider(self):
         """Provider with expired memories."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
         provider = LocalMemoryProvider()
         now = datetime.now(timezone.utc)
 
@@ -486,7 +486,7 @@ class TestExpirationCleanup:
     @pytest.mark.asyncio
     async def test_expiration_cleanup_run(self, expired_provider):
         """Should remove expired memories from provider."""
-        from src.memory.janitor.expiration import ExpirationCleaner
+        from luminescent_cluster.memory.janitor.expiration import ExpirationCleaner
         cleaner = ExpirationCleaner()
 
         result = await cleaner.run(expired_provider, "user-1")
@@ -496,7 +496,7 @@ class TestExpirationCleanup:
     @pytest.mark.asyncio
     async def test_cleanup_preserves_valid_memories(self, expired_provider):
         """Cleanup should preserve non-expired memories."""
-        from src.memory.janitor.expiration import ExpirationCleaner
+        from luminescent_cluster.memory.janitor.expiration import ExpirationCleaner
         cleaner = ExpirationCleaner()
 
         await cleaner.run(expired_provider, "user-1")
@@ -512,7 +512,7 @@ class TestJanitorScheduler:
     @pytest.fixture
     def scheduler(self):
         """Create scheduler for testing."""
-        from src.memory.janitor.scheduler import JanitorScheduler
+        from luminescent_cluster.memory.janitor.scheduler import JanitorScheduler
         return JanitorScheduler()
 
     def test_scheduler_initialization(self, scheduler):
@@ -521,7 +521,7 @@ class TestJanitorScheduler:
 
     def test_custom_schedule_interval(self):
         """Should accept custom schedule interval."""
-        from src.memory.janitor.scheduler import JanitorScheduler
+        from luminescent_cluster.memory.janitor.scheduler import JanitorScheduler
         scheduler = JanitorScheduler(schedule_interval_hours=12)
         assert scheduler.schedule_interval_hours == 12
 
@@ -555,7 +555,7 @@ class TestJanitorSoftDelete:
     @pytest.fixture
     async def provider_with_duplicates(self):
         """Provider with duplicate memories for testing."""
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
         provider = LocalMemoryProvider()
         now = datetime.now(timezone.utc)
 
@@ -592,8 +592,8 @@ class TestJanitorSoftDelete:
     @pytest.mark.asyncio
     async def test_deduplicator_has_dry_run_mode(self):
         """Deduplicator should support dry_run mode."""
-        from src.memory.janitor.deduplication import Deduplicator
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.janitor.deduplication import Deduplicator
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         dedup = Deduplicator()
         provider = LocalMemoryProvider()
@@ -605,7 +605,7 @@ class TestJanitorSoftDelete:
     @pytest.mark.asyncio
     async def test_deduplicator_soft_delete_default(self, provider_with_duplicates):
         """Deduplicator should use soft-delete (invalidate) by default."""
-        from src.memory.janitor.deduplication import Deduplicator
+        from luminescent_cluster.memory.janitor.deduplication import Deduplicator
 
         dedup = Deduplicator(similarity_threshold=0.9)
         initial_count = provider_with_duplicates.count()
@@ -621,8 +621,8 @@ class TestJanitorSoftDelete:
     @pytest.mark.asyncio
     async def test_contradiction_handler_has_dry_run_mode(self):
         """ContradictionHandler should support dry_run mode."""
-        from src.memory.janitor.contradiction import ContradictionHandler
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.janitor.contradiction import ContradictionHandler
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         handler = ContradictionHandler()
         provider = LocalMemoryProvider()
@@ -633,8 +633,8 @@ class TestJanitorSoftDelete:
     @pytest.mark.asyncio
     async def test_contradiction_handler_soft_delete_default(self):
         """ContradictionHandler should use soft-delete by default."""
-        from src.memory.janitor.contradiction import ContradictionHandler
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.janitor.contradiction import ContradictionHandler
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         handler = ContradictionHandler()
         provider = LocalMemoryProvider()

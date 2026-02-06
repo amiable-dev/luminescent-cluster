@@ -8,7 +8,7 @@ ADR Reference: ADR-003 Memory Architecture, Phase 3 (Two-Stage Retrieval)
 
 import pytest
 
-from src.memory.retrieval.fusion import FusedResult, RRFFusion
+from luminescent_cluster.memory.retrieval.fusion import FusedResult, RRFFusion
 
 
 @pytest.fixture

@@ -2,22 +2,29 @@
 # Copyright 2024-2026 Amiable Development
 # SPDX-License-Identifier: Apache-2.0
 
-.PHONY: help install test lint format docs validate-ledger validate-all clean
+.PHONY: help install install-all test lint format docs validate-ledger validate-all clean build publish-test publish
 
 # Default target
 help:
 	@echo "Luminescent Cluster - Development Commands"
 	@echo ""
 	@echo "Setup:"
-	@echo "  make install          Install dependencies"
+	@echo "  make install          Install core + dev dependencies"
+	@echo "  make install-all      Install all optional dependencies"
 	@echo ""
 	@echo "Testing:"
 	@echo "  make test             Run all tests"
 	@echo "  make test-fast        Run tests (skip slow tests)"
+	@echo "  make test-coverage    Run tests with coverage"
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  make lint             Run linter (ruff)"
 	@echo "  make format           Format code (ruff format)"
+	@echo ""
+	@echo "Build & Publish:"
+	@echo "  make build            Build package (wheel + sdist)"
+	@echo "  make publish-test     Publish to Test PyPI"
+	@echo "  make publish          Publish to PyPI"
 	@echo ""
 	@echo "Documentation:"
 	@echo "  make docs             Serve documentation locally"
@@ -38,6 +45,9 @@ help:
 install:
 	uv pip install -e ".[dev]"
 
+install-all:
+	uv pip install -e ".[dev,pixeltable,summarization,docs]"
+
 # =============================================================================
 # Testing
 # =============================================================================
@@ -49,7 +59,7 @@ test-fast:
 	pytest tests/ -v --ignore=tests/test_pixeltable_mcp_server.py -m "not slow"
 
 test-coverage:
-	pytest tests/ -v --cov=src --cov=integrations --ignore=tests/test_pixeltable_mcp_server.py
+	pytest tests/ -v --cov=luminescent_cluster --ignore=tests/test_pixeltable_mcp_server.py
 
 # =============================================================================
 # Code Quality
@@ -63,6 +73,19 @@ format:
 
 lint-fix:
 	ruff check --fix .
+
+# =============================================================================
+# Build & Publish
+# =============================================================================
+
+build:
+	uv build
+
+publish-test: build
+	uv publish --repository testpypi
+
+publish: build
+	uv publish
 
 # =============================================================================
 # Documentation
@@ -124,5 +147,6 @@ clean:
 	rm -rf site/
 	rm -rf dist/
 	rm -rf *.egg-info
+	rm -rf src/luminescent_cluster/_version.py
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true

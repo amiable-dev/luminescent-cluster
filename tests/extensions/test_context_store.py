@@ -29,25 +29,25 @@ class TestContextStoreProtocolInProtocols:
 
     def test_context_store_protocol_exists_in_protocols(self):
         """ContextStore protocol is defined in protocols module."""
-        from src.extensions.protocols import ContextStore
+        from luminescent_cluster.extensions.protocols import ContextStore
 
         assert ContextStore is not None
 
     def test_context_store_version_constant_exists(self):
         """CONTEXT_STORE_VERSION constant exists."""
-        from src.extensions.protocols import CONTEXT_STORE_VERSION
+        from luminescent_cluster.extensions.protocols import CONTEXT_STORE_VERSION
 
         assert CONTEXT_STORE_VERSION is not None
 
     def test_context_store_version_is_1_0_0(self):
         """CONTEXT_STORE_VERSION is 1.0.0."""
-        from src.extensions.protocols import CONTEXT_STORE_VERSION
+        from luminescent_cluster.extensions.protocols import CONTEXT_STORE_VERSION
 
         assert CONTEXT_STORE_VERSION == "1.0.0"
 
     def test_context_store_is_runtime_checkable(self):
         """ContextStore should be a runtime-checkable Protocol."""
-        from src.extensions.protocols import ContextStore
+        from luminescent_cluster.extensions.protocols import ContextStore
 
         # Can use isinstance() check
         assert hasattr(ContextStore, "__protocol_attrs__") or isinstance(
@@ -60,25 +60,25 @@ class TestContextStoreProtocolMethods:
 
     def test_context_store_has_save_method(self):
         """ContextStore protocol defines save method."""
-        from src.extensions.protocols import ContextStore
+        from luminescent_cluster.extensions.protocols import ContextStore
 
         assert hasattr(ContextStore, "save")
 
     def test_context_store_has_load_method(self):
         """ContextStore protocol defines load method."""
-        from src.extensions.protocols import ContextStore
+        from luminescent_cluster.extensions.protocols import ContextStore
 
         assert hasattr(ContextStore, "load")
 
     def test_context_store_has_delete_method(self):
         """ContextStore protocol defines delete method."""
-        from src.extensions.protocols import ContextStore
+        from luminescent_cluster.extensions.protocols import ContextStore
 
         assert hasattr(ContextStore, "delete")
 
     def test_context_store_has_cleanup_expired_method(self):
         """ContextStore protocol defines cleanup_expired method."""
-        from src.extensions.protocols import ContextStore
+        from luminescent_cluster.extensions.protocols import ContextStore
 
         assert hasattr(ContextStore, "cleanup_expired")
 
@@ -89,7 +89,7 @@ class TestContextStoreInRegistry:
     @pytest.fixture(autouse=True)
     def reset_registry(self):
         """Reset the singleton before each test."""
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         ExtensionRegistry.reset()
         yield
@@ -97,21 +97,21 @@ class TestContextStoreInRegistry:
 
     def test_registry_has_context_store_attribute(self):
         """ExtensionRegistry has context_store attribute."""
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         registry = ExtensionRegistry.get()
         assert hasattr(registry, "context_store")
 
     def test_context_store_defaults_to_none(self):
         """context_store defaults to None in OSS mode."""
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         registry = ExtensionRegistry.get()
         assert registry.context_store is None
 
     def test_can_register_context_store(self):
         """Can register a ContextStore implementation."""
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         registry = ExtensionRegistry.get()
         mock_store = MagicMock()
@@ -126,7 +126,7 @@ class TestContextStoreInRegistry:
 
     def test_context_store_in_status(self):
         """get_status() includes context_store status."""
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         registry = ExtensionRegistry.get()
         status = registry.get_status()
@@ -136,7 +136,7 @@ class TestContextStoreInRegistry:
 
     def test_context_store_status_true_when_registered(self):
         """get_status() shows context_store=True when registered."""
-        from src.extensions.registry import ExtensionRegistry
+        from luminescent_cluster.extensions.registry import ExtensionRegistry
 
         registry = ExtensionRegistry.get()
         registry.context_store = MagicMock()
@@ -150,25 +150,25 @@ class TestContextStoreExports:
 
     def test_context_store_in_protocols_all(self):
         """ContextStore is in protocols.__all__."""
-        from src.extensions import protocols
+        from luminescent_cluster.extensions import protocols
 
         assert "ContextStore" in protocols.__all__
 
     def test_context_store_version_in_protocols_all(self):
         """CONTEXT_STORE_VERSION is in protocols.__all__."""
-        from src.extensions import protocols
+        from luminescent_cluster.extensions import protocols
 
         assert "CONTEXT_STORE_VERSION" in protocols.__all__
 
     def test_context_store_in_extensions_all(self):
         """ContextStore is in extensions.__all__."""
-        from src import extensions
+        from luminescent_cluster import extensions
 
         assert "ContextStore" in extensions.__all__
 
     def test_context_store_version_in_extensions_all(self):
         """CONTEXT_STORE_VERSION is in extensions.__all__."""
-        from src import extensions
+        from luminescent_cluster import extensions
 
         assert "CONTEXT_STORE_VERSION" in extensions.__all__
 
@@ -178,7 +178,7 @@ class TestContextStoreImplementationSatisfiesProtocol:
 
     def test_mock_implementation_satisfies_protocol(self):
         """A properly implemented class should satisfy ContextStore protocol."""
-        from src.extensions.protocols import ContextStore
+        from luminescent_cluster.extensions.protocols import ContextStore
         from typing import Optional, Dict, Any
 
         class MockContextStore:

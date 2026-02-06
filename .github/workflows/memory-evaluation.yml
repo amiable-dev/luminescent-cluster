@@ -11,12 +11,12 @@ name: Memory Evaluation
 on:
   pull_request:
     paths:
-      - 'src/memory/**'
+      - 'src/luminescent_cluster/memory/**'
       - 'tests/memory/**'
   push:
     branches: [main]
     paths:
-      - 'src/memory/**'
+      - 'src/luminescent_cluster/memory/**'
       - 'tests/memory/**'
 
 jobs:
@@ -27,6 +27,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -34,7 +36,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v5
 
       - name: Install dependencies
         run: uv sync
@@ -79,6 +81,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -86,7 +90,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v5
 
       - name: Install dependencies
         run: uv sync

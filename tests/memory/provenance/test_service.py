@@ -25,13 +25,13 @@ class TestProvenanceServiceExists:
 
     def test_provenance_service_exists(self):
         """ProvenanceService class should be defined."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         assert ProvenanceService is not None
 
     def test_provenance_service_instantiable(self):
         """ProvenanceService should be instantiable."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         service = ProvenanceService()
         assert service is not None
@@ -43,8 +43,8 @@ class TestCreateProvenance:
     @pytest.mark.asyncio
     async def test_create_provenance_returns_provenance(self):
         """create_provenance should return a Provenance object."""
-        from src.memory.blocks.schemas import Provenance
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         service = ProvenanceService()
         result = await service.create_provenance(
@@ -61,7 +61,7 @@ class TestCreateProvenance:
     @pytest.mark.asyncio
     async def test_create_provenance_sets_created_at(self):
         """create_provenance should set created_at timestamp."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         service = ProvenanceService()
         before = datetime.now(timezone.utc)
@@ -78,7 +78,7 @@ class TestCreateProvenance:
     @pytest.mark.asyncio
     async def test_create_provenance_with_metadata(self):
         """create_provenance should store optional metadata."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         service = ProvenanceService()
         result = await service.create_provenance(
@@ -100,7 +100,7 @@ class TestCreateProvenance:
         Council Round 12/13: Prevents DoS via oversized metadata payloads.
         Now validates bounds BEFORE serialization to prevent json.dumps DoS.
         """
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         service = ProvenanceService()
         # Create metadata that exceeds the limit
@@ -122,14 +122,14 @@ class TestAttachProvenance:
     @pytest.fixture
     def service(self):
         """Create a fresh ProvenanceService for each test."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         return ProvenanceService()
 
     @pytest.mark.asyncio
     async def test_attach_to_memory(self, service):
         """attach_to_memory should store provenance for memory ID."""
-        from src.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.blocks.schemas import Provenance
 
         prov = await service.create_provenance(
             source_id="mem-123",
@@ -171,7 +171,7 @@ class TestGetProvenance:
     @pytest.fixture
     def service(self):
         """Create a fresh ProvenanceService for each test."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         return ProvenanceService()
 
@@ -204,7 +204,7 @@ class TestTrackRetrieval:
     @pytest.fixture
     def service(self):
         """Create a fresh ProvenanceService for each test."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         return ProvenanceService()
 
@@ -256,7 +256,7 @@ class TestProvenanceHistory:
     @pytest.fixture
     def service(self):
         """Create a fresh ProvenanceService for each test."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         return ProvenanceService()
 
@@ -295,7 +295,7 @@ class TestMemoryBoundedStorage:
     @pytest.fixture
     def service(self):
         """Create a fresh ProvenanceService for each test."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         return ProvenanceService()
 
@@ -342,7 +342,7 @@ class TestMemoryBoundedStorage:
     @pytest.mark.asyncio
     async def test_provenance_store_is_bounded(self, service):
         """Provenance store should enforce MAX_PROVENANCE_ENTRIES limit with LRU eviction."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         # Create service with smaller limit for testing
         service.MAX_PROVENANCE_ENTRIES = 100
@@ -370,7 +370,7 @@ class TestMemoryBoundedStorage:
     @pytest.mark.asyncio
     async def test_provenance_store_lru_updates_on_access(self, service):
         """Accessing provenance should update LRU order to prevent eviction."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         # Create service with smaller limit for testing
         service.MAX_PROVENANCE_ENTRIES = 5
@@ -415,7 +415,7 @@ class TestStringIdValidation:
     @pytest.fixture
     def service(self):
         """Create a fresh ProvenanceService for each test."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         return ProvenanceService()
 
@@ -507,7 +507,7 @@ class TestMetadataBoundsValidation:
     @pytest.fixture
     def service(self):
         """Create a fresh ProvenanceService for each test."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         return ProvenanceService()
 
@@ -580,7 +580,7 @@ class TestNestedMetadataValidation:
     @pytest.fixture
     def service(self):
         """Create a fresh ProvenanceService for each test."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         return ProvenanceService()
 
@@ -745,7 +745,7 @@ class TestProvenanceBypassPrevention:
     @pytest.fixture
     def service(self):
         """Create a fresh ProvenanceService for each test."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         return ProvenanceService()
 
@@ -753,7 +753,7 @@ class TestProvenanceBypassPrevention:
     async def test_attach_validates_provenance_source_id(self, service):
         """attach_to_memory should validate provenance.source_id length."""
         from datetime import datetime, timezone
-        from src.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.blocks.schemas import Provenance
 
         # Directly construct Provenance with oversized source_id
         malicious_prov = Provenance(
@@ -772,7 +772,7 @@ class TestProvenanceBypassPrevention:
     async def test_attach_validates_provenance_source_type(self, service):
         """attach_to_memory should validate provenance.source_type length."""
         from datetime import datetime, timezone
-        from src.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.blocks.schemas import Provenance
 
         malicious_prov = Provenance(
             source_id="src-123",
@@ -790,7 +790,7 @@ class TestProvenanceBypassPrevention:
     async def test_attach_validates_provenance_metadata_keys(self, service):
         """attach_to_memory should validate provenance.metadata key count."""
         from datetime import datetime, timezone
-        from src.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.blocks.schemas import Provenance
 
         # Bypass create_provenance by directly constructing Provenance
         malicious_metadata = {f"key_{i}": f"value_{i}" for i in range(150)}
@@ -810,7 +810,7 @@ class TestProvenanceBypassPrevention:
     async def test_attach_validates_provenance_metadata_depth(self, service):
         """attach_to_memory should validate provenance.metadata nesting depth."""
         from datetime import datetime, timezone
-        from src.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.blocks.schemas import Provenance
 
         # Create deeply nested structure
         nested = {"level": "bottom"}
@@ -833,7 +833,7 @@ class TestProvenanceBypassPrevention:
     async def test_attach_accepts_valid_provenance(self, service):
         """attach_to_memory should accept valid Provenance objects."""
         from datetime import datetime, timezone
-        from src.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.blocks.schemas import Provenance
 
         valid_prov = Provenance(
             source_id="src-123",
@@ -854,7 +854,7 @@ class TestProvenanceBypassPrevention:
     async def test_attach_validates_provenance_metadata_total_size(self, service):
         """attach_to_memory should validate total metadata size (Council Round 16)."""
         from datetime import datetime, timezone
-        from src.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.blocks.schemas import Provenance
 
         # Create fewer keys with larger values that together exceed size limit
         # MAX_METADATA_SIZE_BYTES is 10000, MAX_METADATA_KEYS is 100
@@ -883,7 +883,7 @@ class TestStrictTypeSafety:
     @pytest.fixture
     def service(self):
         """Create a fresh ProvenanceService for each test."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         return ProvenanceService()
 
@@ -996,7 +996,7 @@ class TestScoreRangeValidation:
     @pytest.fixture
     def service(self):
         """Create a fresh ProvenanceService for each test."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         return ProvenanceService()
 
@@ -1077,7 +1077,7 @@ class TestScoreRangeValidation:
     async def test_attach_rejects_invalid_confidence(self, service):
         """attach_to_memory should reject invalid confidence values."""
         from datetime import datetime, timezone
-        from src.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.blocks.schemas import Provenance
 
         invalid_prov = Provenance(
             source_id="src-123",
@@ -1102,7 +1102,7 @@ class TestCyclicReferenceDetection:
     @pytest.fixture
     def service(self):
         """Create a fresh ProvenanceService for each test."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         return ProvenanceService()
 
@@ -1147,7 +1147,7 @@ class TestUTF8ByteSize:
     @pytest.fixture
     def service(self):
         """Create a fresh ProvenanceService for each test."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         return ProvenanceService()
 
@@ -1197,7 +1197,7 @@ class TestTOCTOUPrevention:
     @pytest.fixture
     def service(self):
         """Create a fresh ProvenanceService for each test."""
-        from src.memory.provenance.service import ProvenanceService
+        from luminescent_cluster.memory.provenance.service import ProvenanceService
 
         return ProvenanceService()
 
@@ -1225,7 +1225,7 @@ class TestTOCTOUPrevention:
     async def test_attach_to_memory_deep_copies_metadata(self, service):
         """attach_to_memory should deep copy metadata to prevent TOCTOU."""
         from datetime import datetime, timezone
-        from src.memory.blocks.schemas import Provenance
+        from luminescent_cluster.memory.blocks.schemas import Provenance
 
         original_metadata = {"list": [1, 2, 3]}
         prov = Provenance(

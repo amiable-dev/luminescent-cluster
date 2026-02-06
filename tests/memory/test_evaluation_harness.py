@@ -29,7 +29,7 @@ class TestEvaluationMetricsModule:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.metrics import precision
+        from luminescent_cluster.memory.evaluation.metrics import precision
 
         assert callable(precision)
 
@@ -39,7 +39,7 @@ class TestEvaluationMetricsModule:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.metrics import recall
+        from luminescent_cluster.memory.evaluation.metrics import recall
 
         assert callable(recall)
 
@@ -49,7 +49,7 @@ class TestEvaluationMetricsModule:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.metrics import f1_score
+        from luminescent_cluster.memory.evaluation.metrics import f1_score
 
         assert callable(f1_score)
 
@@ -59,7 +59,7 @@ class TestEvaluationMetricsModule:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.metrics import precision
+        from luminescent_cluster.memory.evaluation.metrics import precision
 
         # 8 true positives, 2 false positives = 8/10 = 0.8
         assert precision(true_positives=8, false_positives=2) == 0.8
@@ -70,7 +70,7 @@ class TestEvaluationMetricsModule:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.metrics import recall
+        from luminescent_cluster.memory.evaluation.metrics import recall
 
         # 8 true positives, 2 false negatives = 8/10 = 0.8
         assert recall(true_positives=8, false_negatives=2) == 0.8
@@ -81,7 +81,7 @@ class TestEvaluationMetricsModule:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.metrics import f1_score
+        from luminescent_cluster.memory.evaluation.metrics import f1_score
 
         # precision=0.8, recall=0.8 => f1 = 2 * 0.8 * 0.8 / (0.8 + 0.8) = 0.8
         assert f1_score(precision_val=0.8, recall_val=0.8) == pytest.approx(0.8)
@@ -92,7 +92,7 @@ class TestEvaluationMetricsModule:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.metrics import precision
+        from luminescent_cluster.memory.evaluation.metrics import precision
 
         assert precision(true_positives=0, false_positives=0) == 0.0
 
@@ -102,7 +102,7 @@ class TestEvaluationMetricsModule:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.metrics import recall
+        from luminescent_cluster.memory.evaluation.metrics import recall
 
         assert recall(true_positives=0, false_negatives=0) == 0.0
 
@@ -112,7 +112,7 @@ class TestEvaluationMetricsModule:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.metrics import f1_score
+        from luminescent_cluster.memory.evaluation.metrics import f1_score
 
         assert f1_score(precision_val=0.0, recall_val=0.0) == 0.0
 
@@ -126,7 +126,7 @@ class TestEvaluationResult:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.harness import EvaluationResult
+        from luminescent_cluster.memory.evaluation.harness import EvaluationResult
 
         assert EvaluationResult is not None
 
@@ -136,7 +136,7 @@ class TestEvaluationResult:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.harness import EvaluationResult
+        from luminescent_cluster.memory.evaluation.harness import EvaluationResult
 
         result = EvaluationResult(
             question_id="factual-001",
@@ -153,7 +153,7 @@ class TestEvaluationResult:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.harness import EvaluationResult
+        from luminescent_cluster.memory.evaluation.harness import EvaluationResult
 
         result = EvaluationResult(
             question_id="factual-001",
@@ -170,7 +170,7 @@ class TestEvaluationResult:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.harness import EvaluationResult
+        from luminescent_cluster.memory.evaluation.harness import EvaluationResult
 
         result = EvaluationResult(
             question_id="factual-001",
@@ -192,7 +192,7 @@ class TestEvaluationHarness:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.harness import EvaluationHarness
+        from luminescent_cluster.memory.evaluation.harness import EvaluationHarness
 
         assert EvaluationHarness is not None
 
@@ -202,7 +202,7 @@ class TestEvaluationHarness:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.harness import EvaluationHarness
+        from luminescent_cluster.memory.evaluation.harness import EvaluationHarness
 
         harness = EvaluationHarness()
         harness.load_dataset("tests/memory/golden_dataset.json")
@@ -214,7 +214,7 @@ class TestEvaluationHarness:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.harness import EvaluationHarness
+        from luminescent_cluster.memory.evaluation.harness import EvaluationHarness
 
         harness = EvaluationHarness()
         assert hasattr(harness, "run")
@@ -226,7 +226,7 @@ class TestEvaluationHarness:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.harness import EvaluationHarness
+        from luminescent_cluster.memory.evaluation.harness import EvaluationHarness
 
         harness = EvaluationHarness()
         assert hasattr(harness, "run_category")
@@ -242,7 +242,7 @@ class TestEvaluationReport:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.reporter import EvaluationReport
+        from luminescent_cluster.memory.evaluation.reporter import EvaluationReport
 
         assert EvaluationReport is not None
 
@@ -252,7 +252,7 @@ class TestEvaluationReport:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.reporter import EvaluationReport
+        from luminescent_cluster.memory.evaluation.reporter import EvaluationReport
 
         report = EvaluationReport(
             total_questions=50,
@@ -271,7 +271,7 @@ class TestEvaluationReport:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.reporter import EvaluationReport
+        from luminescent_cluster.memory.evaluation.reporter import EvaluationReport
 
         report = EvaluationReport(
             total_questions=50,
@@ -290,7 +290,7 @@ class TestEvaluationReport:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.reporter import EvaluationReport
+        from luminescent_cluster.memory.evaluation.reporter import EvaluationReport
 
         report = EvaluationReport(
             total_questions=50,
@@ -314,7 +314,7 @@ class TestReporter:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.reporter import generate_json_report
+        from luminescent_cluster.memory.evaluation.reporter import generate_json_report
 
         assert callable(generate_json_report)
 
@@ -324,7 +324,7 @@ class TestReporter:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.reporter import generate_markdown_report
+        from luminescent_cluster.memory.evaluation.reporter import generate_markdown_report
 
         assert callable(generate_markdown_report)
 
@@ -334,7 +334,7 @@ class TestReporter:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation.reporter import (
+        from luminescent_cluster.memory.evaluation.reporter import (
             EvaluationReport,
             generate_json_report,
         )
@@ -371,7 +371,7 @@ class TestEvaluationHarnessMetrics:
         Without evaluate_fn, we can't determine if retrieval was correct,
         so success should default to False, not True.
         """
-        from src.memory.evaluation.harness import EvaluationHarness
+        from luminescent_cluster.memory.evaluation.harness import EvaluationHarness
 
         harness = EvaluationHarness()
         harness.load_dataset("tests/memory/golden_dataset.json")
@@ -390,7 +390,7 @@ class TestEvaluationHarnessMetrics:
 
         Precision measures: Of all retrieved memories, how many were relevant?
         """
-        from src.memory.evaluation.harness import EvaluationHarness
+        from luminescent_cluster.memory.evaluation.harness import EvaluationHarness
 
         harness = EvaluationHarness()
         harness.load_dataset("tests/memory/golden_dataset.json")
@@ -418,7 +418,7 @@ class TestEvaluationHarnessMetrics:
 
         This was the Council's finding - metrics were just aliased to accuracy.
         """
-        from src.memory.evaluation.harness import EvaluationHarness
+        from luminescent_cluster.memory.evaluation.harness import EvaluationHarness
 
         harness = EvaluationHarness()
         harness.load_dataset("tests/memory/golden_dataset.json")
@@ -448,14 +448,14 @@ class TestEvaluationModuleExports:
     """TDD: Tests for evaluation module exports."""
 
     def test_evaluation_module_exists(self):
-        """src.memory.evaluation module should exist.
+        """luminescent_cluster.memory.evaluation module should exist.
 
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        import src.memory.evaluation
+        import luminescent_cluster.memory.evaluation
 
-        assert src.memory.evaluation is not None
+        assert luminescent_cluster.memory.evaluation is not None
 
     def test_evaluation_exports_harness(self):
         """evaluation module should export EvaluationHarness.
@@ -463,7 +463,7 @@ class TestEvaluationModuleExports:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation import EvaluationHarness
+        from luminescent_cluster.memory.evaluation import EvaluationHarness
 
         assert EvaluationHarness is not None
 
@@ -473,7 +473,7 @@ class TestEvaluationModuleExports:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation import EvaluationReport
+        from luminescent_cluster.memory.evaluation import EvaluationReport
 
         assert EvaluationReport is not None
 
@@ -483,7 +483,7 @@ class TestEvaluationModuleExports:
         GitHub Issue: #78
         ADR Reference: ADR-003 (Evaluation Harness)
         """
-        from src.memory.evaluation import precision, recall, f1_score
+        from luminescent_cluster.memory.evaluation import precision, recall, f1_score
 
         assert callable(precision)
         assert callable(recall)

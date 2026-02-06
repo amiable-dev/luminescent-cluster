@@ -28,7 +28,7 @@ class TestMemoryTypeEnum:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Memory Types)
         """
-        from src.memory.schemas.memory_types import MemoryType
+        from luminescent_cluster.memory.schemas.memory_types import MemoryType
 
         assert MemoryType.PREFERENCE.value == "preference"
 
@@ -38,7 +38,7 @@ class TestMemoryTypeEnum:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Memory Types)
         """
-        from src.memory.schemas.memory_types import MemoryType
+        from luminescent_cluster.memory.schemas.memory_types import MemoryType
 
         assert MemoryType.FACT.value == "fact"
 
@@ -48,7 +48,7 @@ class TestMemoryTypeEnum:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Memory Types)
         """
-        from src.memory.schemas.memory_types import MemoryType
+        from luminescent_cluster.memory.schemas.memory_types import MemoryType
 
         assert MemoryType.DECISION.value == "decision"
 
@@ -62,7 +62,7 @@ class TestMemorySchema:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Memory Schema)
         """
-        from src.memory.schemas.memory_types import Memory, MemoryType
+        from luminescent_cluster.memory.schemas.memory_types import Memory, MemoryType
 
         memory = Memory(
             user_id="user-123",
@@ -82,7 +82,7 @@ class TestMemorySchema:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Memory Schema)
         """
-        from src.memory.schemas.memory_types import Memory, MemoryType
+        from luminescent_cluster.memory.schemas.memory_types import Memory, MemoryType
 
         memory = Memory(
             user_id="user-123",
@@ -99,7 +99,7 @@ class TestMemorySchema:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Memory Schema)
         """
-        from src.memory.schemas.memory_types import Memory, MemoryType
+        from luminescent_cluster.memory.schemas.memory_types import Memory, MemoryType
 
         # Valid confidence
         memory = Memory(
@@ -137,7 +137,7 @@ class TestMemorySchema:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Memory Schema)
         """
-        from src.memory.schemas.memory_types import Memory, MemoryType
+        from luminescent_cluster.memory.schemas.memory_types import Memory, MemoryType
 
         before = datetime.now(timezone.utc)
         memory = Memory(
@@ -159,7 +159,7 @@ class TestMemorySchema:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Memory Schema)
         """
-        from src.memory.schemas.memory_types import Memory, MemoryType
+        from luminescent_cluster.memory.schemas.memory_types import Memory, MemoryType
 
         # Without expiration
         memory1 = Memory(
@@ -187,7 +187,7 @@ class TestMemorySchema:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Memory Schema)
         """
-        from src.memory.schemas.memory_types import Memory, MemoryType
+        from luminescent_cluster.memory.schemas.memory_types import Memory, MemoryType
 
         memory = Memory(
             user_id="user-123",
@@ -204,7 +204,7 @@ class TestMemorySchema:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Memory Schema)
         """
-        from src.memory.schemas.memory_types import Memory, MemoryType
+        from luminescent_cluster.memory.schemas.memory_types import Memory, MemoryType
 
         memory = Memory(
             user_id="user-123",
@@ -222,7 +222,7 @@ class TestMemorySchema:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Memory Schema)
         """
-        from src.memory.schemas.memory_types import Memory, MemoryType
+        from luminescent_cluster.memory.schemas.memory_types import Memory, MemoryType
 
         original = Memory(
             user_id="user-123",
@@ -254,7 +254,7 @@ class TestMemoryScopeEnum:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Scope Hierarchy)
         """
-        from src.memory.schemas.memory_types import MemoryScope
+        from luminescent_cluster.memory.schemas.memory_types import MemoryScope
 
         assert MemoryScope.USER.value == "user"
 
@@ -264,7 +264,7 @@ class TestMemoryScopeEnum:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Scope Hierarchy)
         """
-        from src.memory.schemas.memory_types import MemoryScope
+        from luminescent_cluster.memory.schemas.memory_types import MemoryScope
 
         assert MemoryScope.PROJECT.value == "project"
 
@@ -274,7 +274,7 @@ class TestMemoryScopeEnum:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Scope Hierarchy)
         """
-        from src.memory.schemas.memory_types import MemoryScope
+        from luminescent_cluster.memory.schemas.memory_types import MemoryScope
 
         assert MemoryScope.GLOBAL.value == "global"
 
@@ -288,7 +288,7 @@ class TestMemoryMetadata:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Memory Schema)
         """
-        from src.memory.schemas.memory_types import Memory, MemoryType
+        from luminescent_cluster.memory.schemas.memory_types import Memory, MemoryType
 
         memory = Memory(
             user_id="user-123",
@@ -307,7 +307,7 @@ class TestMemoryMetadata:
         GitHub Issue: #79
         ADR Reference: ADR-003 Phase 0 (Memory Schema)
         """
-        from src.memory.schemas.memory_types import Memory, MemoryType
+        from luminescent_cluster.memory.schemas.memory_types import Memory, MemoryType
 
         memory = Memory(
             user_id="user-123",

@@ -8,9 +8,9 @@ TDD RED phase: Write tests first, then implement.
 
 import pytest
 
-from src.memory.maas.registry import AgentRegistry
-from src.memory.maas.scope import PermissionModel, SharedScope
-from src.memory.maas.types import AgentCapability, AgentType
+from luminescent_cluster.memory.maas.registry import AgentRegistry
+from luminescent_cluster.memory.maas.scope import PermissionModel, SharedScope
+from luminescent_cluster.memory.maas.types import AgentCapability, AgentType
 
 
 class TestAgentMCPTools:
@@ -18,9 +18,9 @@ class TestAgentMCPTools:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -28,9 +28,9 @@ class TestAgentMCPTools:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -39,7 +39,7 @@ class TestAgentMCPTools:
     @pytest.mark.asyncio
     async def test_register_agent_tool(self):
         """Verify register_agent MCP tool works."""
-        from src.memory.maas.mcp_tools import register_agent
+        from luminescent_cluster.memory.maas.mcp_tools import register_agent
 
         result = await register_agent(
             agent_type="claude_code",
@@ -52,7 +52,7 @@ class TestAgentMCPTools:
     @pytest.mark.asyncio
     async def test_get_agent_info_tool(self):
         """Verify get_agent_info MCP tool works."""
-        from src.memory.maas.mcp_tools import get_agent_info, register_agent
+        from luminescent_cluster.memory.maas.mcp_tools import get_agent_info, register_agent
 
         reg_result = await register_agent(
             agent_type="claude_code",
@@ -69,7 +69,7 @@ class TestAgentMCPTools:
     @pytest.mark.asyncio
     async def test_get_agents_for_user_tool(self):
         """Verify get_agents_for_user MCP tool works."""
-        from src.memory.maas.mcp_tools import get_agents_for_user, register_agent
+        from luminescent_cluster.memory.maas.mcp_tools import get_agents_for_user, register_agent
 
         await register_agent(agent_type="claude_code", owner_id="user-123")
         await register_agent(agent_type="gpt_agent", owner_id="user-123")
@@ -84,9 +84,9 @@ class TestHandoffMCPTools:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -94,9 +94,9 @@ class TestHandoffMCPTools:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -105,7 +105,7 @@ class TestHandoffMCPTools:
     @pytest.mark.asyncio
     async def test_initiate_handoff_tool(self):
         """Verify initiate_handoff MCP tool works."""
-        from src.memory.maas.mcp_tools import initiate_handoff, register_agent
+        from luminescent_cluster.memory.maas.mcp_tools import initiate_handoff, register_agent
 
         # Create agents with appropriate capabilities
         source = await register_agent(
@@ -129,7 +129,7 @@ class TestHandoffMCPTools:
     @pytest.mark.asyncio
     async def test_accept_handoff_tool(self):
         """Verify accept_handoff MCP tool works."""
-        from src.memory.maas.mcp_tools import (
+        from luminescent_cluster.memory.maas.mcp_tools import (
             accept_handoff,
             initiate_handoff,
             register_agent,
@@ -154,7 +154,7 @@ class TestHandoffMCPTools:
     @pytest.mark.asyncio
     async def test_complete_handoff_tool(self):
         """Verify complete_handoff MCP tool works."""
-        from src.memory.maas.mcp_tools import (
+        from luminescent_cluster.memory.maas.mcp_tools import (
             accept_handoff,
             complete_handoff,
             initiate_handoff,
@@ -185,7 +185,7 @@ class TestHandoffMCPTools:
     @pytest.mark.asyncio
     async def test_get_pending_handoffs_tool(self):
         """Verify get_pending_handoffs MCP tool works."""
-        from src.memory.maas.mcp_tools import (
+        from luminescent_cluster.memory.maas.mcp_tools import (
             get_pending_handoffs,
             initiate_handoff,
             register_agent,
@@ -210,9 +210,9 @@ class TestPoolMCPTools:
 
     def setup_method(self):
         """Reset registries before each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -220,9 +220,9 @@ class TestPoolMCPTools:
 
     def teardown_method(self):
         """Reset registries after each test."""
-        from src.memory.maas.handoff import HandoffManager
-        from src.memory.maas.pool import PoolRegistry
-        from src.memory.maas.registry import AgentRegistry
+        from luminescent_cluster.memory.maas.handoff import HandoffManager
+        from luminescent_cluster.memory.maas.pool import PoolRegistry
+        from luminescent_cluster.memory.maas.registry import AgentRegistry
 
         AgentRegistry.reset()
         PoolRegistry.reset()
@@ -231,7 +231,7 @@ class TestPoolMCPTools:
     @pytest.mark.asyncio
     async def test_create_pool_tool(self):
         """Verify create_pool MCP tool works."""
-        from src.memory.maas.mcp_tools import create_pool
+        from luminescent_cluster.memory.maas.mcp_tools import create_pool
 
         result = await create_pool(
             name="test-pool",
@@ -245,7 +245,7 @@ class TestPoolMCPTools:
     @pytest.mark.asyncio
     async def test_join_pool_tool(self):
         """Verify join_pool MCP tool works."""
-        from src.memory.maas.mcp_tools import create_pool, join_pool, register_agent
+        from luminescent_cluster.memory.maas.mcp_tools import create_pool, join_pool, register_agent
 
         pool_result = await create_pool(
             name="test-pool",
@@ -268,7 +268,7 @@ class TestPoolMCPTools:
     @pytest.mark.asyncio
     async def test_leave_pool_tool(self):
         """Verify leave_pool MCP tool works."""
-        from src.memory.maas.mcp_tools import (
+        from luminescent_cluster.memory.maas.mcp_tools import (
             create_pool,
             join_pool,
             leave_pool,
@@ -293,7 +293,7 @@ class TestPoolMCPTools:
     @pytest.mark.asyncio
     async def test_share_memory_to_scope_tool(self):
         """Verify share_memory_to_scope MCP tool works."""
-        from src.memory.maas.mcp_tools import (
+        from luminescent_cluster.memory.maas.mcp_tools import (
             create_pool,
             join_pool,
             register_agent,
@@ -320,7 +320,7 @@ class TestPoolMCPTools:
     @pytest.mark.asyncio
     async def test_query_shared_tool(self):
         """Verify query_shared MCP tool works."""
-        from src.memory.maas.mcp_tools import (
+        from luminescent_cluster.memory.maas.mcp_tools import (
             create_pool,
             join_pool,
             query_shared,
@@ -358,7 +358,7 @@ class TestKBMCPTools:
     @pytest.mark.asyncio
     async def test_search_code_kb_tool(self):
         """Verify search_code_kb MCP tool works."""
-        from src.memory.maas.mcp_tools import search_code_kb
+        from luminescent_cluster.memory.maas.mcp_tools import search_code_kb
 
         result = await search_code_kb(
             query="authentication",
@@ -370,7 +370,7 @@ class TestKBMCPTools:
     @pytest.mark.asyncio
     async def test_search_decisions_tool(self):
         """Verify search_decisions MCP tool works."""
-        from src.memory.maas.mcp_tools import search_decisions
+        from luminescent_cluster.memory.maas.mcp_tools import search_decisions
 
         result = await search_decisions(
             query="database choice",
@@ -382,7 +382,7 @@ class TestKBMCPTools:
     @pytest.mark.asyncio
     async def test_search_incidents_tool(self):
         """Verify search_incidents MCP tool works."""
-        from src.memory.maas.mcp_tools import search_incidents
+        from luminescent_cluster.memory.maas.mcp_tools import search_incidents
 
         result = await search_incidents(
             query="outage",

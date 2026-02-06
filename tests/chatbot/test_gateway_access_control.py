@@ -30,7 +30,7 @@ from datetime import datetime
 from typing import Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from src.chatbot.gateway import (
+from luminescent_cluster.chatbot.gateway import (
     ChatbotGateway,
     GatewayConfig,
     InvocationPolicy,
@@ -38,9 +38,9 @@ from src.chatbot.gateway import (
     GatewayRequest,
     GatewayResponse,
 )
-from src.chatbot.adapters.base import ChatMessage, MessageAuthor
-from src.extensions.registry import ExtensionRegistry
-from src.extensions.protocols import ChatbotAccessController
+from luminescent_cluster.chatbot.adapters.base import ChatMessage, MessageAuthor
+from luminescent_cluster.extensions.registry import ExtensionRegistry
+from luminescent_cluster.extensions.protocols import ChatbotAccessController
 
 
 class MockAccessController:
@@ -332,7 +332,7 @@ class TestGatewayAccessControlIntegration:
 
         Denied requests should not count against rate limits.
         """
-        from src.chatbot.rate_limiter import TokenBucketRateLimiter, RateLimitConfig
+        from luminescent_cluster.chatbot.rate_limiter import TokenBucketRateLimiter, RateLimitConfig
 
         # Arrange: Create gateway with rate limiting
         config = GatewayConfig(

@@ -30,7 +30,7 @@ import pytest
 from typing import Protocol, runtime_checkable
 
 # Import the protocols - this will fail until implemented (RED phase)
-from src.extensions.protocols import (
+from luminescent_cluster.extensions.protocols import (
     ChatbotAuthProvider,
     ChatbotRateLimiter,
     ChatbotAccessController,

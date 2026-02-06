@@ -24,7 +24,7 @@ class TestNetworkType:
 
     def test_network_type_enum_exists(self):
         """NetworkType enum should define all four networks."""
-        from src.memory.hindsight.types import NetworkType
+        from luminescent_cluster.memory.hindsight.types import NetworkType
 
         assert hasattr(NetworkType, "WORLD")
         assert hasattr(NetworkType, "BANK")
@@ -33,7 +33,7 @@ class TestNetworkType:
 
     def test_network_type_values(self):
         """Each network type should have a distinct string value."""
-        from src.memory.hindsight.types import NetworkType
+        from luminescent_cluster.memory.hindsight.types import NetworkType
 
         assert NetworkType.WORLD.value == "world"
         assert NetworkType.BANK.value == "bank"
@@ -42,7 +42,7 @@ class TestNetworkType:
 
     def test_network_type_all_values(self):
         """Should be able to iterate all network types."""
-        from src.memory.hindsight.types import NetworkType
+        from luminescent_cluster.memory.hindsight.types import NetworkType
 
         all_types = list(NetworkType)
         assert len(all_types) == 4
@@ -53,7 +53,7 @@ class TestTimeRange:
 
     def test_time_range_creation(self):
         """TimeRange should accept start and end datetime."""
-        from src.memory.hindsight.types import TimeRange
+        from luminescent_cluster.memory.hindsight.types import TimeRange
 
         start = datetime(2025, 1, 1, tzinfo=timezone.utc)
         end = datetime(2025, 12, 31, tzinfo=timezone.utc)
@@ -65,7 +65,7 @@ class TestTimeRange:
 
     def test_time_range_optional_end(self):
         """TimeRange should allow None end (open-ended)."""
-        from src.memory.hindsight.types import TimeRange
+        from luminescent_cluster.memory.hindsight.types import TimeRange
 
         start = datetime(2025, 1, 1, tzinfo=timezone.utc)
         tr = TimeRange(start=start, end=None)
@@ -75,7 +75,7 @@ class TestTimeRange:
 
     def test_time_range_contains_datetime(self):
         """TimeRange should test if a datetime is contained."""
-        from src.memory.hindsight.types import TimeRange
+        from luminescent_cluster.memory.hindsight.types import TimeRange
 
         start = datetime(2025, 1, 1, tzinfo=timezone.utc)
         end = datetime(2025, 12, 31, tzinfo=timezone.utc)
@@ -91,7 +91,7 @@ class TestTimeRange:
 
     def test_time_range_contains_open_ended(self):
         """Open-ended TimeRange should include all future dates."""
-        from src.memory.hindsight.types import TimeRange
+        from luminescent_cluster.memory.hindsight.types import TimeRange
 
         start = datetime(2025, 1, 1, tzinfo=timezone.utc)
         tr = TimeRange(start=start, end=None)
@@ -101,7 +101,7 @@ class TestTimeRange:
 
     def test_time_range_overlaps(self):
         """TimeRange should detect overlapping ranges."""
-        from src.memory.hindsight.types import TimeRange
+        from luminescent_cluster.memory.hindsight.types import TimeRange
 
         tr1 = TimeRange(
             start=datetime(2025, 1, 1, tzinfo=timezone.utc),
@@ -121,7 +121,7 @@ class TestTimeRange:
 
     def test_time_range_from_relative(self):
         """TimeRange should support relative time creation."""
-        from src.memory.hindsight.types import TimeRange
+        from luminescent_cluster.memory.hindsight.types import TimeRange
 
         # "last month"
         tr = TimeRange.last_n_days(30)
@@ -133,7 +133,7 @@ class TestTimeRange:
 
     def test_time_range_from_quarter(self):
         """TimeRange should support quarter-based creation."""
-        from src.memory.hindsight.types import TimeRange
+        from luminescent_cluster.memory.hindsight.types import TimeRange
 
         # Q4 2025
         tr = TimeRange.quarter(2025, 4)
@@ -143,7 +143,7 @@ class TestTimeRange:
 
     def test_time_range_invalid_raises(self):
         """TimeRange should reject invalid ranges (end before start)."""
-        from src.memory.hindsight.types import TimeRange
+        from luminescent_cluster.memory.hindsight.types import TimeRange
 
         with pytest.raises(ValueError, match="end.*before.*start"):
             TimeRange(
@@ -157,7 +157,7 @@ class TestTemporalEvent:
 
     def test_temporal_event_creation(self):
         """TemporalEvent should capture event with timestamp."""
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         event = TemporalEvent(
             id="evt-001",
@@ -174,7 +174,7 @@ class TestTemporalEvent:
 
     def test_temporal_event_optional_fields(self):
         """TemporalEvent should have optional metadata fields."""
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         event = TemporalEvent(
             id="evt-002",
@@ -195,7 +195,7 @@ class TestTemporalEvent:
 
     def test_temporal_event_valid_at(self):
         """TemporalEvent should have validity period."""
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         event = TemporalEvent(
             id="evt-003",
@@ -214,7 +214,7 @@ class TestTemporalEvent:
 
     def test_temporal_event_bank_network_action(self):
         """Bank network events should capture agent actions."""
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         event = TemporalEvent(
             id="evt-004",
@@ -232,7 +232,7 @@ class TestTemporalEvent:
 
     def test_temporal_event_opinion_network_confidence(self):
         """Opinion network events should have confidence scores."""
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         event = TemporalEvent(
             id="evt-005",
@@ -254,8 +254,8 @@ class TestTemporalMemory:
 
     def test_temporal_memory_wraps_memory(self):
         """TemporalMemory should wrap existing Memory with temporal fields."""
-        from src.memory.hindsight.types import TemporalMemory, NetworkType
-        from src.memory.schemas import Memory
+        from luminescent_cluster.memory.hindsight.types import TemporalMemory, NetworkType
+        from luminescent_cluster.memory.schemas import Memory
 
         base_memory = Memory(
             user_id="user-123",
@@ -278,8 +278,8 @@ class TestTemporalMemory:
 
     def test_temporal_memory_state_change(self):
         """TemporalMemory should track state changes over time."""
-        from src.memory.hindsight.types import TemporalMemory, NetworkType, StateChange
-        from src.memory.schemas import Memory
+        from luminescent_cluster.memory.hindsight.types import TemporalMemory, NetworkType, StateChange
+        from luminescent_cluster.memory.schemas import Memory
 
         base = Memory(
             user_id="user-123",
@@ -307,8 +307,8 @@ class TestTemporalMemory:
 
     def test_temporal_memory_causation(self):
         """TemporalMemory should track causal relationships."""
-        from src.memory.hindsight.types import TemporalMemory, NetworkType
-        from src.memory.schemas import Memory
+        from luminescent_cluster.memory.hindsight.types import TemporalMemory, NetworkType
+        from luminescent_cluster.memory.schemas import Memory
 
         base = Memory(
             user_id="user-123",
@@ -335,7 +335,7 @@ class TestStateChange:
 
     def test_state_change_creation(self):
         """StateChange should capture attribute transitions."""
-        from src.memory.hindsight.types import StateChange
+        from luminescent_cluster.memory.hindsight.types import StateChange
 
         change = StateChange(
             attribute="version",
@@ -349,7 +349,7 @@ class TestStateChange:
 
     def test_state_change_initial_value(self):
         """StateChange should allow None from_value for initial state."""
-        from src.memory.hindsight.types import StateChange
+        from luminescent_cluster.memory.hindsight.types import StateChange
 
         change = StateChange(
             attribute="created",
@@ -362,7 +362,7 @@ class TestStateChange:
 
     def test_state_change_deletion(self):
         """StateChange should allow None to_value for deletions."""
-        from src.memory.hindsight.types import StateChange
+        from luminescent_cluster.memory.hindsight.types import StateChange
 
         change = StateChange(
             attribute="deprecated",
@@ -379,7 +379,7 @@ class TestTemporalTypesSerialization:
 
     def test_time_range_to_dict(self):
         """TimeRange should serialize to dict."""
-        from src.memory.hindsight.types import TimeRange
+        from luminescent_cluster.memory.hindsight.types import TimeRange
 
         tr = TimeRange(
             start=datetime(2025, 1, 1, tzinfo=timezone.utc),
@@ -393,7 +393,7 @@ class TestTemporalTypesSerialization:
 
     def test_time_range_from_dict(self):
         """TimeRange should deserialize from dict."""
-        from src.memory.hindsight.types import TimeRange
+        from luminescent_cluster.memory.hindsight.types import TimeRange
 
         data = {
             "start": "2025-01-01T00:00:00+00:00",
@@ -408,7 +408,7 @@ class TestTemporalTypesSerialization:
 
     def test_temporal_event_to_dict(self):
         """TemporalEvent should serialize to dict."""
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         event = TemporalEvent(
             id="evt-001",
@@ -427,7 +427,7 @@ class TestTemporalTypesSerialization:
 
     def test_temporal_event_from_dict(self):
         """TemporalEvent should deserialize from dict."""
-        from src.memory.hindsight.types import TemporalEvent, NetworkType
+        from luminescent_cluster.memory.hindsight.types import TemporalEvent, NetworkType
 
         data = {
             "id": "evt-001",

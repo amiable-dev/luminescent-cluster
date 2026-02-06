@@ -1,6 +1,6 @@
 [project]
 name = "luminescent-cluster"
-version = "0.2.0"
+dynamic = ["version"]
 description = "Context-aware AI development system with session memory and long-term knowledge"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -31,36 +31,66 @@ classifiers = [
 # 3. Layer 3 enforcement: The runtime guard catches mismatches before segfault
 requires-python = ">=3.10,<3.14"
 
+# Core dependencies - lightweight, no heavy ML libs
 dependencies = [
-    "pixeltable>=0.1.0",
     "gitpython>=3.1.0",
     "mcp>=0.1.0",
-    "sentence-transformers>=2.2.0",
-    "torch>=2.0.0",
-    "pathspec>=0.11.0",
     "networkx>=3.0",
+    "pathspec>=0.11.0",
 ]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "pytest-asyncio>=0.21.0",
+# Pixeltable long-term memory - install with: pip install "luminescent-cluster[pixeltable]"
+pixeltable = [
+    "pixeltable>=0.1.0",
+    "sentence-transformers>=2.2.0",
+    "torch>=2.0.0",
 ]
+# Summarization support
 summarization = [
     "openai>=1.0.0",
 ]
+# All optional dependencies
+all = [
+    "luminescent-cluster[pixeltable,summarization]",
+]
+# Development dependencies
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "ruff>=0.1.0",
+    "pytest-cov>=4.0.0",
+]
+# Documentation dependencies
+docs = [
+    "mkdocs-material>=9.5.0",
+    "mkdocs>=1.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/amiable-dev/luminescent-cluster"
+Repository = "https://github.com/amiable-dev/luminescent-cluster"
+Issues = "https://github.com/amiable-dev/luminescent-cluster/issues"
+
+[project.scripts]
+luminescent-cluster = "luminescent_cluster.cli:main"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/luminescent_cluster/_version.py"
+
 [tool.hatch.build.targets.wheel]
-packages = ["src", "integrations"]
+packages = ["src/luminescent_cluster"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-pythonpath = ["."]
 markers = [
     "requirement(req_id): Link test to a requirement ID (e.g., REQ-MCP-001)",
     "critical: Mark test as critical priority (100% coverage required)",
@@ -72,3 +102,28 @@ markers = [
     "performance: Mark test as performance benchmark",
     "slow: Mark test as slow-running (may be skipped in quick runs)",
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+ignore = [
+    "E501",   # Line too long (handled by formatter)
+    "E402",   # Module level import not at top (intentional for config-before-import pattern)
+    "E741",   # Ambiguous variable name - false positives on loop vars
+    "F401",   # Unused imports - common in __init__.py re-exports and tests
+    "F541",   # f-string without placeholders - harmless
+    "F811",   # Redefinition - common in tests and intentional re-imports
+    "F821",   # Undefined name - false positives on forward references
+    "F841",   # Local variable assigned but never used (common in tests for setup)
+    "I001",   # Import sorting - auto-fix causes circular imports, so ignore
+    "N806",   # Variable in function should be lowercase
+    "N818",   # Exception name should end with Error
+    "W291",   # Trailing whitespace - cosmetic
+    "W293",   # Blank line contains whitespace - cosmetic
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["F401"]

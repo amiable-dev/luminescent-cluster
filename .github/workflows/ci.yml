@@ -1,4 +1,4 @@
-# Copyright 2024-2025 Amiable Development
+# Copyright 2024-2026 Amiable Development
 # SPDX-License-Identifier: Apache-2.0
 
 name: CI
@@ -14,11 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
       fail-fast: false
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for hatch-vcs version detection
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -42,7 +44,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install linters
         run: |
@@ -65,15 +67,15 @@ jobs:
         run: |
           # Check that main source files have Apache 2.0 license headers
           files=(
-            "session_memory_server.py"
-            "pixeltable_mcp_server.py"
+            "src/luminescent_cluster/servers/session_memory.py"
+            "src/luminescent_cluster/servers/pixeltable.py"
             "pixeltable_setup.py"
             "agent_tools.py"
-            "src/version_guard.py"
-            "src/extensions/protocols.py"
-            "src/extensions/registry.py"
-            "integrations/github_pat.py"
-            "integrations/gitlab_pat.py"
+            "src/luminescent_cluster/version_guard.py"
+            "src/luminescent_cluster/extensions/protocols.py"
+            "src/luminescent_cluster/extensions/registry.py"
+            "src/luminescent_cluster/integrations/github_pat.py"
+            "src/luminescent_cluster/integrations/gitlab_pat.py"
           )
 
           missing=()

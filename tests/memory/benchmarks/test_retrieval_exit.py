@@ -19,12 +19,12 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-from src.memory.retrieval.bm25 import BM25Search
-from src.memory.retrieval.fusion import RRFFusion
-from src.memory.retrieval.hybrid import HybridRetriever
-from src.memory.retrieval.reranker import FallbackReranker
-from src.memory.retrieval.vector_search import VectorSearch
-from src.memory.schemas import Memory, MemoryType
+from luminescent_cluster.memory.retrieval.bm25 import BM25Search
+from luminescent_cluster.memory.retrieval.fusion import RRFFusion
+from luminescent_cluster.memory.retrieval.hybrid import HybridRetriever
+from luminescent_cluster.memory.retrieval.reranker import FallbackReranker
+from luminescent_cluster.memory.retrieval.vector_search import VectorSearch
+from luminescent_cluster.memory.schemas import Memory, MemoryType
 
 
 class MockSentenceTransformer:
@@ -163,7 +163,7 @@ def multihop_memory_corpus() -> list[Memory]:
 def mock_vector_search() -> VectorSearch:
     """Create a VectorSearch with mocked model."""
     with patch(
-        "src.memory.retrieval.vector_search.VectorSearch._load_model"
+        "luminescent_cluster.memory.retrieval.vector_search.VectorSearch._load_model"
     ) as mock_load:
         mock_load.return_value = MockSentenceTransformer()
         vs = VectorSearch(lazy_load=True)

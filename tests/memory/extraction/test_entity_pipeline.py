@@ -17,7 +17,7 @@ import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from src.memory.extraction.entities import Entity, EntityExtractor, EntityType
+from luminescent_cluster.memory.extraction.entities import Entity, EntityExtractor, EntityType
 
 
 class TestEntityExtractionPipelineExists:
@@ -29,7 +29,7 @@ class TestEntityExtractionPipelineExists:
         GitHub Issue: #121
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityExtractionPipeline
+        from luminescent_cluster.memory.extraction.entities import EntityExtractionPipeline
 
         assert EntityExtractionPipeline is not None
 
@@ -39,7 +39,7 @@ class TestEntityExtractionPipelineExists:
         GitHub Issue: #121
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityExtractionPipeline
+        from luminescent_cluster.memory.extraction.entities import EntityExtractionPipeline
 
         pipeline = EntityExtractionPipeline()
         assert hasattr(pipeline, "process")
@@ -51,7 +51,7 @@ class TestEntityExtractionPipelineExists:
         GitHub Issue: #121
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityExtractionPipeline
+        from luminescent_cluster.memory.extraction.entities import EntityExtractionPipeline
 
         pipeline = EntityExtractionPipeline()
         assert hasattr(pipeline, "process_async")
@@ -67,7 +67,7 @@ class TestEntityExtractionPipelineConstructor:
         GitHub Issue: #121
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import (
+        from luminescent_cluster.memory.extraction.entities import (
             EntityExtractionPipeline,
             MockEntityExtractor,
         )
@@ -82,8 +82,8 @@ class TestEntityExtractionPipelineConstructor:
         GitHub Issue: #121
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityExtractionPipeline
-        from src.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.extraction.entities import EntityExtractionPipeline
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
 
         provider = LocalMemoryProvider()
         pipeline = EntityExtractionPipeline(provider=provider)
@@ -95,7 +95,7 @@ class TestEntityExtractionPipelineConstructor:
         GitHub Issue: #121
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import (
+        from luminescent_cluster.memory.extraction.entities import (
             EntityExtractionPipeline,
             MockEntityExtractor,
         )
@@ -114,12 +114,12 @@ class TestEntityExtractionPipelineProcess:
         GitHub Issue: #121
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import (
+        from luminescent_cluster.memory.extraction.entities import (
             EntityExtractionPipeline,
             MockEntityExtractor,
         )
-        from src.memory.providers.local import LocalMemoryProvider
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         # Set up provider with a memory
         provider = LocalMemoryProvider()
@@ -156,12 +156,12 @@ class TestEntityExtractionPipelineProcess:
         GitHub Issue: #121
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import (
+        from luminescent_cluster.memory.extraction.entities import (
             EntityExtractionPipeline,
             MockEntityExtractor,
         )
-        from src.memory.providers.local import LocalMemoryProvider
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         # Set up provider with a memory
         provider = LocalMemoryProvider()
@@ -199,12 +199,12 @@ class TestEntityExtractionPipelineProcess:
         GitHub Issue: #121
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import (
+        from luminescent_cluster.memory.extraction.entities import (
             EntityExtractionPipeline,
             MockEntityExtractor,
         )
-        from src.memory.providers.local import LocalMemoryProvider
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         # Set up provider with a memory
         provider = LocalMemoryProvider()
@@ -243,12 +243,12 @@ class TestEntityExtractionPipelineProcessAsync:
         GitHub Issue: #121
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import (
+        from luminescent_cluster.memory.extraction.entities import (
             EntityExtractionPipeline,
             MockEntityExtractor,
         )
-        from src.memory.providers.local import LocalMemoryProvider
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         # Set up provider
         provider = LocalMemoryProvider()
@@ -284,12 +284,12 @@ class TestEntityExtractionPipelineProcessAsync:
         GitHub Issue: #121
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import (
+        from luminescent_cluster.memory.extraction.entities import (
             EntityExtractionPipeline,
             MockEntityExtractor,
         )
-        from src.memory.providers.local import LocalMemoryProvider
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         # Set up provider
         provider = LocalMemoryProvider()
@@ -329,12 +329,12 @@ class TestEntityExtractionPipelineEntityStorage:
         GitHub Issue: #121
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import (
+        from luminescent_cluster.memory.extraction.entities import (
             EntityExtractionPipeline,
             MockEntityExtractor,
         )
-        from src.memory.providers.local import LocalMemoryProvider
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         # Set up provider
         provider = LocalMemoryProvider()
@@ -376,12 +376,12 @@ class TestEntityExtractionPipelineEntityStorage:
         GitHub Issue: #121
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import (
+        from luminescent_cluster.memory.extraction.entities import (
             EntityExtractionPipeline,
             MockEntityExtractor,
         )
-        from src.memory.providers.local import LocalMemoryProvider
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         # Set up provider
         provider = LocalMemoryProvider()
@@ -422,12 +422,12 @@ class TestEntityExtractionPipelineSecurity:
         Security: Prevents cross-user memory modification.
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import (
+        from luminescent_cluster.memory.extraction.entities import (
             EntityExtractionPipeline,
             MockEntityExtractor,
         )
-        from src.memory.providers.local import LocalMemoryProvider
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         # Set up provider with memory owned by user-123
         provider = LocalMemoryProvider()
@@ -467,12 +467,12 @@ class TestEntityExtractionPipelineSecurity:
         Security: Verifies authorized updates work correctly.
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import (
+        from luminescent_cluster.memory.extraction.entities import (
             EntityExtractionPipeline,
             MockEntityExtractor,
         )
-        from src.memory.providers.local import LocalMemoryProvider
-        from src.memory.schemas import Memory, MemoryType
+        from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+        from luminescent_cluster.memory.schemas import Memory, MemoryType
 
         # Set up provider with memory owned by user-123
         provider = LocalMemoryProvider()
@@ -512,6 +512,6 @@ class TestEntityExtractionPipelineModuleExport:
         GitHub Issue: #121
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityExtractionPipeline
+        from luminescent_cluster.memory.extraction.entities import EntityExtractionPipeline
 
         assert EntityExtractionPipeline is not None

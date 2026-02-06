@@ -32,7 +32,7 @@ class TestExtractionResult:
         GitHub Issue: #91
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.types import ExtractionResult
+        from luminescent_cluster.memory.extraction.types import ExtractionResult
 
         assert ExtractionResult is not None
 
@@ -42,7 +42,7 @@ class TestExtractionResult:
         GitHub Issue: #91
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.types import ExtractionResult
+        from luminescent_cluster.memory.extraction.types import ExtractionResult
 
         result = ExtractionResult(
             content="User prefers tabs",
@@ -57,7 +57,7 @@ class TestExtractionResult:
         GitHub Issue: #91
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.types import ExtractionResult
+        from luminescent_cluster.memory.extraction.types import ExtractionResult
 
         result = ExtractionResult(
             content="Test",
@@ -72,7 +72,7 @@ class TestExtractionResult:
         GitHub Issue: #94
         ADR Reference: ADR-003 Phase 1b (Confidence Scoring)
         """
-        from src.memory.extraction.types import ExtractionResult
+        from luminescent_cluster.memory.extraction.types import ExtractionResult
 
         result = ExtractionResult(
             content="Test",
@@ -87,7 +87,7 @@ class TestExtractionResult:
         GitHub Issue: #91
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.types import ExtractionResult
+        from luminescent_cluster.memory.extraction.types import ExtractionResult
 
         result = ExtractionResult(
             content="Extracted fact",
@@ -107,7 +107,7 @@ class TestMemoryExtractorProtocol:
         GitHub Issue: #91
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.types import MemoryExtractor
+        from luminescent_cluster.memory.extraction.types import MemoryExtractor
 
         assert MemoryExtractor is not None
 
@@ -117,7 +117,7 @@ class TestMemoryExtractorProtocol:
         GitHub Issue: #91
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.types import MemoryExtractor
+        from luminescent_cluster.memory.extraction.types import MemoryExtractor
 
         assert hasattr(MemoryExtractor, "extract")
 
@@ -131,7 +131,7 @@ class TestExtractionPrompts:
         GitHub Issue: #92
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.prompts import EXTRACTION_SYSTEM_PROMPT
+        from luminescent_cluster.memory.extraction.prompts import EXTRACTION_SYSTEM_PROMPT
 
         assert EXTRACTION_SYSTEM_PROMPT is not None
         assert len(EXTRACTION_SYSTEM_PROMPT) > 100
@@ -142,7 +142,7 @@ class TestExtractionPrompts:
         GitHub Issue: #92
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.prompts import EXTRACTION_SYSTEM_PROMPT
+        from luminescent_cluster.memory.extraction.prompts import EXTRACTION_SYSTEM_PROMPT
 
         assert "preference" in EXTRACTION_SYSTEM_PROMPT.lower()
         assert "fact" in EXTRACTION_SYSTEM_PROMPT.lower()
@@ -154,7 +154,7 @@ class TestExtractionPrompts:
         GitHub Issue: #92
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.prompts import EXTRACTION_USER_PROMPT_TEMPLATE
+        from luminescent_cluster.memory.extraction.prompts import EXTRACTION_USER_PROMPT_TEMPLATE
 
         assert EXTRACTION_USER_PROMPT_TEMPLATE is not None
         assert "{conversation}" in EXTRACTION_USER_PROMPT_TEMPLATE
@@ -169,7 +169,7 @@ class TestHaikuExtractor:
         GitHub Issue: #92
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.haiku_extractor import HaikuExtractor
+        from luminescent_cluster.memory.extraction.haiku_extractor import HaikuExtractor
 
         assert HaikuExtractor is not None
 
@@ -179,8 +179,8 @@ class TestHaikuExtractor:
         GitHub Issue: #92
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.haiku_extractor import HaikuExtractor
-        from src.memory.extraction.types import MemoryExtractor
+        from luminescent_cluster.memory.extraction.haiku_extractor import HaikuExtractor
+        from luminescent_cluster.memory.extraction.types import MemoryExtractor
 
         extractor = HaikuExtractor()
         assert isinstance(extractor, MemoryExtractor)
@@ -191,7 +191,7 @@ class TestHaikuExtractor:
         GitHub Issue: #92
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.haiku_extractor import HaikuExtractor
+        from luminescent_cluster.memory.extraction.haiku_extractor import HaikuExtractor
 
         extractor = HaikuExtractor()
         assert extractor.temperature == 0.0
@@ -203,7 +203,7 @@ class TestHaikuExtractor:
         GitHub Issue: #92
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.haiku_extractor import HaikuExtractor
+        from luminescent_cluster.memory.extraction.haiku_extractor import HaikuExtractor
 
         extractor = HaikuExtractor()
 
@@ -224,7 +224,7 @@ class TestMockExtractor:
         GitHub Issue: #91
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.mock_extractor import MockExtractor
+        from luminescent_cluster.memory.extraction.mock_extractor import MockExtractor
 
         assert MockExtractor is not None
 
@@ -235,7 +235,7 @@ class TestMockExtractor:
         GitHub Issue: #91
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.mock_extractor import MockExtractor
+        from luminescent_cluster.memory.extraction.mock_extractor import MockExtractor
 
         extractor = MockExtractor()
         results = await extractor.extract("I prefer tabs over spaces for indentation")
@@ -250,7 +250,7 @@ class TestMockExtractor:
         GitHub Issue: #91
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.mock_extractor import MockExtractor
+        from luminescent_cluster.memory.extraction.mock_extractor import MockExtractor
 
         extractor = MockExtractor()
         results = await extractor.extract("The API uses PostgreSQL as the database")
@@ -265,7 +265,7 @@ class TestMockExtractor:
         GitHub Issue: #91
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction.mock_extractor import MockExtractor
+        from luminescent_cluster.memory.extraction.mock_extractor import MockExtractor
 
         extractor = MockExtractor()
         results = await extractor.extract("We decided to use REST instead of GraphQL")
@@ -283,7 +283,7 @@ class TestExtractionPipeline:
         GitHub Issue: #93
         ADR Reference: ADR-003 Phase 1b (Async Extraction)
         """
-        from src.memory.extraction.pipeline import ExtractionPipeline
+        from luminescent_cluster.memory.extraction.pipeline import ExtractionPipeline
 
         assert ExtractionPipeline is not None
 
@@ -293,7 +293,7 @@ class TestExtractionPipeline:
         GitHub Issue: #93
         ADR Reference: ADR-003 Phase 1b (Async Extraction)
         """
-        from src.memory.extraction.pipeline import ExtractionPipeline
+        from luminescent_cluster.memory.extraction.pipeline import ExtractionPipeline
 
         pipeline = ExtractionPipeline()
         assert hasattr(pipeline, "process")
@@ -305,7 +305,7 @@ class TestExtractionPipeline:
         GitHub Issue: #93
         ADR Reference: ADR-003 Phase 1b (Async Extraction)
         """
-        from src.memory.extraction.pipeline import ExtractionPipeline
+        from luminescent_cluster.memory.extraction.pipeline import ExtractionPipeline
 
         pipeline = ExtractionPipeline()
         assert hasattr(pipeline, "process_async")
@@ -317,8 +317,8 @@ class TestExtractionPipeline:
         GitHub Issue: #93
         ADR Reference: ADR-003 Phase 1b (Async Extraction)
         """
-        from src.memory.extraction.pipeline import ExtractionPipeline
-        from src.memory.extraction.mock_extractor import MockExtractor
+        from luminescent_cluster.memory.extraction.pipeline import ExtractionPipeline
+        from luminescent_cluster.memory.extraction.mock_extractor import MockExtractor
 
         pipeline = ExtractionPipeline(extractor=MockExtractor())
 
@@ -339,7 +339,7 @@ class TestExtractionVersioning:
         GitHub Issue: #95
         ADR Reference: ADR-003 Phase 1b (Version Tracking)
         """
-        from src.memory.extraction import EXTRACTION_VERSION
+        from luminescent_cluster.memory.extraction import EXTRACTION_VERSION
 
         assert EXTRACTION_VERSION is not None
 
@@ -349,7 +349,7 @@ class TestExtractionVersioning:
         GitHub Issue: #95
         ADR Reference: ADR-003 Phase 1b (Version Tracking)
         """
-        from src.memory.extraction import EXTRACTION_VERSION
+        from luminescent_cluster.memory.extraction import EXTRACTION_VERSION
 
         assert isinstance(EXTRACTION_VERSION, int)
         assert EXTRACTION_VERSION >= 1
@@ -364,7 +364,7 @@ class TestConfidenceScoring:
         GitHub Issue: #94
         ADR Reference: ADR-003 Phase 1b (Confidence Scoring)
         """
-        from src.memory.extraction.confidence import calculate_confidence
+        from luminescent_cluster.memory.extraction.confidence import calculate_confidence
 
         assert callable(calculate_confidence)
 
@@ -374,7 +374,7 @@ class TestConfidenceScoring:
         GitHub Issue: #94
         ADR Reference: ADR-003 Phase 1b (Confidence Scoring)
         """
-        from src.memory.extraction.confidence import calculate_confidence
+        from luminescent_cluster.memory.extraction.confidence import calculate_confidence
 
         # Test with various inputs
         score = calculate_confidence(
@@ -391,7 +391,7 @@ class TestConfidenceScoring:
         GitHub Issue: #94
         ADR Reference: ADR-003 Phase 1b (Confidence Scoring)
         """
-        from src.memory.extraction.confidence import calculate_confidence
+        from luminescent_cluster.memory.extraction.confidence import calculate_confidence
 
         # Explicit statement
         explicit_score = calculate_confidence(
@@ -414,14 +414,14 @@ class TestExtractionModuleExports:
     """TDD: Tests for extraction module exports."""
 
     def test_extraction_module_exists(self):
-        """src.memory.extraction module should exist.
+        """luminescent_cluster.memory.extraction module should exist.
 
         GitHub Issue: #91
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        import src.memory.extraction
+        import luminescent_cluster.memory.extraction
 
-        assert src.memory.extraction is not None
+        assert luminescent_cluster.memory.extraction is not None
 
     def test_extraction_exports_types(self):
         """extraction module should export types.
@@ -429,7 +429,7 @@ class TestExtractionModuleExports:
         GitHub Issue: #91
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction import ExtractionResult, MemoryExtractor
+        from luminescent_cluster.memory.extraction import ExtractionResult, MemoryExtractor
 
         assert ExtractionResult is not None
         assert MemoryExtractor is not None
@@ -440,7 +440,7 @@ class TestExtractionModuleExports:
         GitHub Issue: #93
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction import ExtractionPipeline
+        from luminescent_cluster.memory.extraction import ExtractionPipeline
 
         assert ExtractionPipeline is not None
 
@@ -450,7 +450,7 @@ class TestExtractionModuleExports:
         GitHub Issue: #91-92
         ADR Reference: ADR-003 Phase 1b (Extraction)
         """
-        from src.memory.extraction import HaikuExtractor, MockExtractor
+        from luminescent_cluster.memory.extraction import HaikuExtractor, MockExtractor
 
         assert HaikuExtractor is not None
         assert MockExtractor is not None

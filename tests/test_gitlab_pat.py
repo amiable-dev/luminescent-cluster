@@ -26,7 +26,7 @@ import base64
 from unittest.mock import patch, MagicMock
 from urllib.error import HTTPError
 
-from integrations.gitlab_pat import (
+from luminescent_cluster.integrations.gitlab_pat import (
     GitLabPATClient,
     GitLabFile,
     GitLabCommit,
@@ -95,7 +95,7 @@ class TestGitLabPATClientRequests:
 
     def test_request_includes_private_token_header(self, client, mock_response):
         """Request should include PRIVATE-TOKEN header."""
-        with patch("integrations.gitlab_pat.urlopen") as mock_urlopen:
+        with patch("luminescent_cluster.integrations.gitlab_pat.urlopen") as mock_urlopen:
             mock_urlopen.return_value = mock_response({"test": "data"})
 
             client._request("/test")
@@ -106,7 +106,7 @@ class TestGitLabPATClientRequests:
 
     def test_request_includes_user_agent(self, client, mock_response):
         """Request should include User-Agent header."""
-        with patch("integrations.gitlab_pat.urlopen") as mock_urlopen:
+        with patch("luminescent_cluster.integrations.gitlab_pat.urlopen") as mock_urlopen:
             mock_urlopen.return_value = mock_response({"test": "data"})
 
             client._request("/test")
@@ -116,7 +116,7 @@ class TestGitLabPATClientRequests:
 
     def test_request_handles_401_as_auth_error(self, client):
         """401 response should raise GitLabAuthError."""
-        with patch("integrations.gitlab_pat.urlopen") as mock_urlopen:
+        with patch("luminescent_cluster.integrations.gitlab_pat.urlopen") as mock_urlopen:
             mock_error = HTTPError(
                 url="https://gitlab.com/api/v4/test",
                 code=401,
@@ -131,7 +131,7 @@ class TestGitLabPATClientRequests:
 
     def test_request_handles_404_as_not_found(self, client):
         """404 response should raise GitLabNotFoundError."""
-        with patch("integrations.gitlab_pat.urlopen") as mock_urlopen:
+        with patch("luminescent_cluster.integrations.gitlab_pat.urlopen") as mock_urlopen:
             mock_error = HTTPError(
                 url="https://gitlab.com/api/v4/test",
                 code=404,
@@ -146,7 +146,7 @@ class TestGitLabPATClientRequests:
 
     def test_request_handles_rate_limit(self, client):
         """429 response should raise GitLabRateLimitError."""
-        with patch("integrations.gitlab_pat.urlopen") as mock_urlopen:
+        with patch("luminescent_cluster.integrations.gitlab_pat.urlopen") as mock_urlopen:
             mock_error = HTTPError(
                 url="https://gitlab.com/api/v4/test",
                 code=429,

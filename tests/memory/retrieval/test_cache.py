@@ -22,7 +22,7 @@ class TestRetrievalCacheCreation:
 
     def test_cache_creation_with_defaults(self):
         """Cache should be instantiated with default settings."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache()
 
@@ -31,7 +31,7 @@ class TestRetrievalCacheCreation:
 
     def test_cache_creation_with_custom_settings(self):
         """Cache should accept custom max_size and TTL."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache(max_size=100, ttl_seconds=300)
 
@@ -40,7 +40,7 @@ class TestRetrievalCacheCreation:
 
     def test_cache_initially_empty(self):
         """New cache should be empty."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache()
 
@@ -53,7 +53,7 @@ class TestCacheKeyGeneration:
 
     def test_generate_key_from_user_and_query(self):
         """Key should be generated from user_id and query."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache()
 
@@ -66,7 +66,7 @@ class TestCacheKeyGeneration:
 
     def test_key_includes_optional_params(self):
         """Key should incorporate optional parameters."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache()
 
@@ -77,7 +77,7 @@ class TestCacheKeyGeneration:
 
     def test_key_is_deterministic(self):
         """Same inputs should always produce same key."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache()
 
@@ -94,7 +94,7 @@ class TestCacheOperations:
 
     def test_set_and_get(self):
         """Should store and retrieve cached results."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache()
         results = [{"id": "mem-1", "content": "test"}]
@@ -112,7 +112,7 @@ class TestCacheOperations:
 
     def test_get_miss_returns_none(self):
         """Cache miss should return None."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache()
 
@@ -122,7 +122,7 @@ class TestCacheOperations:
 
     def test_size_increases_on_set(self):
         """Cache size should increase when items are added."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache()
 
@@ -138,7 +138,7 @@ class TestCacheTTL:
 
     def test_entry_expires_after_ttl(self):
         """Cached entry should expire after TTL."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache(ttl_seconds=1)  # 1 second TTL
 
@@ -151,7 +151,7 @@ class TestCacheTTL:
 
     def test_fresh_entry_not_expired(self):
         """Recently cached entry should not be expired."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache(ttl_seconds=60)
 
@@ -162,7 +162,7 @@ class TestCacheTTL:
 
     def test_ttl_refresh_on_access(self):
         """TTL should optionally refresh on access."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache(ttl_seconds=2, refresh_on_access=True)
 
@@ -181,7 +181,7 @@ class TestCacheLRU:
 
     def test_lru_eviction_on_max_size(self):
         """Oldest entry should be evicted when max size reached."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache(max_size=3)
 
@@ -198,7 +198,7 @@ class TestCacheLRU:
 
     def test_recently_accessed_not_evicted(self):
         """Recently accessed entries should not be evicted."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache(max_size=3)
 
@@ -223,7 +223,7 @@ class TestCacheInvalidation:
 
     def test_invalidate_by_user(self):
         """Should invalidate all entries for a user."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache()
 
@@ -239,7 +239,7 @@ class TestCacheInvalidation:
 
     def test_invalidate_all(self):
         """Should clear entire cache."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache()
 
@@ -252,7 +252,7 @@ class TestCacheInvalidation:
 
     def test_invalidate_returns_count(self):
         """Invalidation should return count of evicted entries."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache()
 
@@ -269,7 +269,7 @@ class TestCacheMetrics:
 
     def test_hit_rate_calculation(self):
         """Hit rate should be calculated correctly."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache()
 
@@ -288,7 +288,7 @@ class TestCacheMetrics:
 
     def test_metrics_include_size(self):
         """Metrics should include current cache size."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache(max_size=100)
 
@@ -302,7 +302,7 @@ class TestCacheMetrics:
 
     def test_metrics_include_hits_and_misses(self):
         """Metrics should include hit and miss counts."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache()
 
@@ -321,7 +321,7 @@ class TestCacheThreadSafety:
 
     def test_concurrent_access(self):
         """Cache should handle concurrent access."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
         import threading
 
         cache = RetrievalCache(max_size=1000)
@@ -363,7 +363,7 @@ class TestCacheSerialization:
 
     def test_cache_to_dict(self):
         """Cache should serialize to dictionary."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         cache = RetrievalCache(max_size=100, ttl_seconds=300)
 
@@ -377,7 +377,7 @@ class TestCacheSerialization:
 
     def test_cache_from_dict(self):
         """Cache should deserialize from dictionary."""
-        from src.memory.retrieval.cache import RetrievalCache
+        from luminescent_cluster.memory.retrieval.cache import RetrievalCache
 
         original = RetrievalCache(max_size=50, ttl_seconds=120)
         original.set(user_id="user-123", query="test", results=["data"])

@@ -36,7 +36,7 @@ from datetime import datetime, timedelta
 from typing import Optional, AsyncIterator
 
 # Import the LLM provider - this will fail until implemented (RED phase)
-from src.chatbot.llm_provider import (
+from luminescent_cluster.chatbot.llm_provider import (
     LLMProvider,
     LLMConfig,
     LLMResponse,

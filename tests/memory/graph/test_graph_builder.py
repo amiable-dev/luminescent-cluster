@@ -14,9 +14,9 @@ ADR Reference: ADR-003 Memory Architecture, Phase 4 (Knowledge Graph)
 
 import pytest
 
-from src.memory.extraction.entities import EntityType
-from src.memory.graph.types import GraphNode, RelationshipType
-from src.memory.schemas import Memory, MemoryType
+from luminescent_cluster.memory.extraction.entities import EntityType
+from luminescent_cluster.memory.graph.types import GraphNode, RelationshipType
+from luminescent_cluster.memory.schemas import Memory, MemoryType
 
 
 class TestGraphBuilderExists:
@@ -28,7 +28,7 @@ class TestGraphBuilderExists:
         GitHub Issue: #124
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_builder import GraphBuilder
+        from luminescent_cluster.memory.graph.graph_builder import GraphBuilder
 
         assert GraphBuilder is not None
 
@@ -38,7 +38,7 @@ class TestGraphBuilderExists:
         GitHub Issue: #124
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_builder import GraphBuilder
+        from luminescent_cluster.memory.graph.graph_builder import GraphBuilder
 
         builder = GraphBuilder(user_id="user-123")
         assert builder.user_id == "user-123"
@@ -53,7 +53,7 @@ class TestGraphBuilderAddMemory:
         GitHub Issue: #124
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_builder import GraphBuilder
+        from luminescent_cluster.memory.graph.graph_builder import GraphBuilder
 
         builder = GraphBuilder(user_id="user-123")
         memory = Memory(
@@ -82,7 +82,7 @@ class TestGraphBuilderAddMemory:
         GitHub Issue: #124
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_builder import GraphBuilder
+        from luminescent_cluster.memory.graph.graph_builder import GraphBuilder
 
         builder = GraphBuilder(user_id="user-123")
         memory = Memory(
@@ -111,7 +111,7 @@ class TestGraphBuilderAddMemory:
         GitHub Issue: #124
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_builder import GraphBuilder
+        from luminescent_cluster.memory.graph.graph_builder import GraphBuilder
 
         builder = GraphBuilder(user_id="user-123")
         memory = Memory(
@@ -139,7 +139,7 @@ class TestGraphBuilderAddMemory:
         GitHub Issue: #124
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_builder import GraphBuilder
+        from luminescent_cluster.memory.graph.graph_builder import GraphBuilder
 
         builder = GraphBuilder(user_id="user-123")
         memory = Memory(
@@ -166,7 +166,7 @@ class TestGraphBuilderRelationshipInference:
         GitHub Issue: #124
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_builder import GraphBuilder
+        from luminescent_cluster.memory.graph.graph_builder import GraphBuilder
 
         builder = GraphBuilder(user_id="user-123")
         memory = Memory(
@@ -196,7 +196,7 @@ class TestGraphBuilderRelationshipInference:
         GitHub Issue: #124
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_builder import GraphBuilder
+        from luminescent_cluster.memory.graph.graph_builder import GraphBuilder
 
         builder = GraphBuilder(user_id="user-123")
         memory = Memory(
@@ -226,7 +226,7 @@ class TestGraphBuilderRelationshipInference:
         GitHub Issue: #124
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_builder import GraphBuilder
+        from luminescent_cluster.memory.graph.graph_builder import GraphBuilder
 
         builder = GraphBuilder(user_id="user-123")
         memory = Memory(
@@ -260,7 +260,7 @@ class TestGraphBuilderNodeMerging:
         GitHub Issue: #124
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_builder import GraphBuilder
+        from luminescent_cluster.memory.graph.graph_builder import GraphBuilder
 
         builder = GraphBuilder(user_id="user-123")
 
@@ -310,8 +310,8 @@ class TestGraphBuilderBuild:
         GitHub Issue: #124
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_builder import GraphBuilder
-        from src.memory.graph.graph_store import KnowledgeGraph
+        from luminescent_cluster.memory.graph.graph_builder import GraphBuilder
+        from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         builder = GraphBuilder(user_id="user-123")
 
@@ -326,7 +326,7 @@ class TestGraphBuilderBuild:
         GitHub Issue: #124
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph.graph_builder import GraphBuilder
+        from luminescent_cluster.memory.graph.graph_builder import GraphBuilder
 
         builder = GraphBuilder(user_id="user-123")
 
@@ -363,6 +363,6 @@ class TestModuleExports:
         GitHub Issue: #124
         ADR Reference: ADR-003 Phase 4 (Knowledge Graph)
         """
-        from src.memory.graph import GraphBuilder
+        from luminescent_cluster.memory.graph import GraphBuilder
 
         assert GraphBuilder is not None

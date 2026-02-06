@@ -11,6 +11,9 @@ ENV/
 dist/
 build/
 
+# Auto-generated version file (hatch-vcs)
+src/luminescent_cluster/_version.py
+
 # Pixeltable data
 .pixeltable/
 pixeltable_data/

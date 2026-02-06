@@ -15,8 +15,8 @@ ADR Reference: ADR-003 Memory Architecture (Security Requirements)
 import pytest
 from datetime import datetime, timezone
 
-from src.memory.providers.local import LocalMemoryProvider
-from src.memory.schemas import Memory, MemoryType
+from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+from luminescent_cluster.memory.schemas import Memory, MemoryType
 
 
 class TestMemoryIsolation:

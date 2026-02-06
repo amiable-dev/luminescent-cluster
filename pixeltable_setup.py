@@ -34,7 +34,7 @@ RECOVERY: If you encounter segfaults during INSERT operations:
 """
 
 # CRITICAL: Version guard must run BEFORE any pixeltable import (ADR-001)
-from src.version_guard import enforce_python_version
+from luminescent_cluster.version_guard import enforce_python_version
 enforce_python_version()
 
 import pixeltable as pxt  # Safe to import after version guard

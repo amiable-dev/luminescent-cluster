@@ -27,7 +27,7 @@ class TestEntityTypeEnum:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityType
+        from luminescent_cluster.memory.extraction.entities import EntityType
 
         assert EntityType is not None
 
@@ -37,7 +37,7 @@ class TestEntityTypeEnum:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityType
+        from luminescent_cluster.memory.extraction.entities import EntityType
 
         assert EntityType.SERVICE == "service"
 
@@ -47,7 +47,7 @@ class TestEntityTypeEnum:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityType
+        from luminescent_cluster.memory.extraction.entities import EntityType
 
         assert EntityType.DEPENDENCY == "dependency"
 
@@ -57,7 +57,7 @@ class TestEntityTypeEnum:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityType
+        from luminescent_cluster.memory.extraction.entities import EntityType
 
         assert EntityType.API == "api"
 
@@ -67,7 +67,7 @@ class TestEntityTypeEnum:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityType
+        from luminescent_cluster.memory.extraction.entities import EntityType
 
         assert EntityType.PATTERN == "pattern"
 
@@ -77,7 +77,7 @@ class TestEntityTypeEnum:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityType
+        from luminescent_cluster.memory.extraction.entities import EntityType
 
         assert EntityType.FRAMEWORK == "framework"
 
@@ -87,7 +87,7 @@ class TestEntityTypeEnum:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityType
+        from luminescent_cluster.memory.extraction.entities import EntityType
 
         assert EntityType.CONFIG == "config"
 
@@ -97,7 +97,7 @@ class TestEntityTypeEnum:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityType
+        from luminescent_cluster.memory.extraction.entities import EntityType
 
         assert isinstance(EntityType.SERVICE, str)
         assert EntityType.SERVICE.value == "service"
@@ -112,7 +112,7 @@ class TestEntityDataclass:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import Entity
+        from luminescent_cluster.memory.extraction.entities import Entity
 
         assert Entity is not None
 
@@ -122,7 +122,7 @@ class TestEntityDataclass:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import Entity, EntityType
+        from luminescent_cluster.memory.extraction.entities import Entity, EntityType
 
         entity = Entity(
             name="auth-service",
@@ -137,7 +137,7 @@ class TestEntityDataclass:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import Entity, EntityType
+        from luminescent_cluster.memory.extraction.entities import Entity, EntityType
 
         entity = Entity(
             name="PostgreSQL",
@@ -152,7 +152,7 @@ class TestEntityDataclass:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import Entity, EntityType
+        from luminescent_cluster.memory.extraction.entities import Entity, EntityType
 
         entity = Entity(
             name="FastAPI",
@@ -168,7 +168,7 @@ class TestEntityDataclass:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import Entity, EntityType
+        from luminescent_cluster.memory.extraction.entities import Entity, EntityType
 
         # Without source_memory_id
         entity1 = Entity(
@@ -193,7 +193,7 @@ class TestEntityDataclass:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import Entity, EntityType
+        from luminescent_cluster.memory.extraction.entities import Entity, EntityType
 
         entity = Entity(
             name="auth-service",
@@ -209,7 +209,7 @@ class TestEntityDataclass:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import Entity, EntityType
+        from luminescent_cluster.memory.extraction.entities import Entity, EntityType
 
         entity = Entity(
             name="FastAPI",
@@ -224,7 +224,7 @@ class TestEntityDataclass:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import Entity, EntityType
+        from luminescent_cluster.memory.extraction.entities import Entity, EntityType
 
         entity = Entity(
             name="PostgreSQL",
@@ -240,7 +240,7 @@ class TestEntityDataclass:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import Entity, EntityType
+        from luminescent_cluster.memory.extraction.entities import Entity, EntityType
 
         entity = Entity(
             name="Redis",
@@ -256,7 +256,7 @@ class TestEntityDataclass:
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
         from dataclasses import is_dataclass
-        from src.memory.extraction.entities import Entity
+        from luminescent_cluster.memory.extraction.entities import Entity
 
         assert is_dataclass(Entity)
 
@@ -270,7 +270,7 @@ class TestEntityExtractorProtocol:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityExtractor
+        from luminescent_cluster.memory.extraction.entities import EntityExtractor
 
         assert EntityExtractor is not None
 
@@ -281,7 +281,7 @@ class TestEntityExtractorProtocol:
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
         from typing import Protocol
-        from src.memory.extraction.entities import EntityExtractor
+        from luminescent_cluster.memory.extraction.entities import EntityExtractor
 
         assert issubclass(EntityExtractor, Protocol)
 
@@ -291,7 +291,7 @@ class TestEntityExtractorProtocol:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityExtractor
+        from luminescent_cluster.memory.extraction.entities import EntityExtractor
 
         # Check that extract is defined (will have __func__ for protocol methods)
         assert hasattr(EntityExtractor, "extract")
@@ -303,7 +303,7 @@ class TestEntityExtractorProtocol:
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
         from typing import runtime_checkable
-        from src.memory.extraction.entities import EntityExtractor
+        from luminescent_cluster.memory.extraction.entities import EntityExtractor
 
         # runtime_checkable protocols have __protocol_attrs__
         assert hasattr(EntityExtractor, "__protocol_attrs__") or hasattr(
@@ -315,14 +315,14 @@ class TestModuleExports:
     """TDD: Tests for module exports."""
 
     def test_module_exists(self):
-        """src.memory.extraction.entities module should exist.
+        """luminescent_cluster.memory.extraction.entities module should exist.
 
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        import src.memory.extraction.entities
+        import luminescent_cluster.memory.extraction.entities
 
-        assert src.memory.extraction.entities is not None
+        assert luminescent_cluster.memory.extraction.entities is not None
 
     def test_module_exports_entity_type(self):
         """Module should export EntityType.
@@ -330,7 +330,7 @@ class TestModuleExports:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityType
+        from luminescent_cluster.memory.extraction.entities import EntityType
 
         assert EntityType is not None
 
@@ -340,7 +340,7 @@ class TestModuleExports:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import Entity
+        from luminescent_cluster.memory.extraction.entities import Entity
 
         assert Entity is not None
 
@@ -350,6 +350,6 @@ class TestModuleExports:
         GitHub Issue: #118
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from src.memory.extraction.entities import EntityExtractor
+        from luminescent_cluster.memory.extraction.entities import EntityExtractor
 
         assert EntityExtractor is not None

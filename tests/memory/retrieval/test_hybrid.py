@@ -15,17 +15,17 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from src.memory.retrieval.bm25 import BM25Search
-from src.memory.retrieval.fusion import RRFFusion
-from src.memory.retrieval.hybrid import (
+from luminescent_cluster.memory.retrieval.bm25 import BM25Search
+from luminescent_cluster.memory.retrieval.fusion import RRFFusion
+from luminescent_cluster.memory.retrieval.hybrid import (
     HybridResult,
     HybridRetriever,
     RetrievalMetrics,
     create_hybrid_retriever,
 )
-from src.memory.retrieval.reranker import FallbackReranker
-from src.memory.retrieval.vector_search import VectorSearch
-from src.memory.schemas import Memory, MemoryType
+from luminescent_cluster.memory.retrieval.reranker import FallbackReranker
+from luminescent_cluster.memory.retrieval.vector_search import VectorSearch
+from luminescent_cluster.memory.schemas import Memory, MemoryType
 
 
 class MockSentenceTransformer:
@@ -56,7 +56,7 @@ class MockSentenceTransformer:
 def mock_vector_search() -> VectorSearch:
     """Create a VectorSearch with mocked model."""
     with patch(
-        "src.memory.retrieval.vector_search.VectorSearch._load_model"
+        "luminescent_cluster.memory.retrieval.vector_search.VectorSearch._load_model"
     ) as mock_load:
         mock_load.return_value = MockSentenceTransformer()
         vs = VectorSearch(lazy_load=True)
@@ -485,7 +485,7 @@ class TestCreateHybridRetriever:
         retriever = create_hybrid_retriever(use_cross_encoder=True)
 
         # Should have cross-encoder reranker
-        from src.memory.retrieval.reranker import CrossEncoderReranker
+        from luminescent_cluster.memory.retrieval.reranker import CrossEncoderReranker
         assert isinstance(retriever.reranker, CrossEncoderReranker)
 
     def test_create_without_cross_encoder(self) -> None:

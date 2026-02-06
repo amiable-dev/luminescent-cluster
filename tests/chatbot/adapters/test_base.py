@@ -31,7 +31,7 @@ from datetime import datetime
 from dataclasses import dataclass
 
 # Import the adapter protocol and message types - this will fail until implemented (RED phase)
-from src.chatbot.adapters.base import (
+from luminescent_cluster.chatbot.adapters.base import (
     BasePlatformAdapter,
     ChatMessage,
     MessageAuthor,
@@ -361,7 +361,7 @@ class TestMessageNormalization:
         raw_content = "Hello <@123456789>!"
 
         # This function will be part of the adapter
-        from src.chatbot.adapters.base import normalize_mentions
+        from luminescent_cluster.chatbot.adapters.base import normalize_mentions
 
         normalized = normalize_mentions(raw_content, platform="discord")
 
@@ -373,7 +373,7 @@ class TestMessageNormalization:
         # Slack format: <@U12345>
         raw_content = "Hello <@U12345>!"
 
-        from src.chatbot.adapters.base import normalize_mentions
+        from luminescent_cluster.chatbot.adapters.base import normalize_mentions
 
         normalized = normalize_mentions(raw_content, platform="slack")
 
@@ -383,7 +383,7 @@ class TestMessageNormalization:
         """Normalization should preserve non-mention content."""
         raw_content = "Hello, world! How are you?"
 
-        from src.chatbot.adapters.base import normalize_mentions
+        from luminescent_cluster.chatbot.adapters.base import normalize_mentions
 
         normalized = normalize_mentions(raw_content, platform="discord")
 

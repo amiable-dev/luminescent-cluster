@@ -17,7 +17,7 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 import pytest
 
-# Import will be from src.version_guard once implemented
+# Import will be from luminescent_cluster.version_guard once implemented
 # For now, we import to verify tests fail (TDD Red phase)
 
 
@@ -43,7 +43,7 @@ class TestVersionGuard:
     # ========================================
     def test_fresh_install_creates_version_marker(self, tmp_path):
         """On fresh install, version guard should create .python_version marker."""
-        from src.version_guard import enforce_python_version, get_pixeltable_dir
+        from luminescent_cluster.version_guard import enforce_python_version, get_pixeltable_dir
 
         pixeltable_dir = tmp_path / ".pixeltable"
         # Don't create directory - let the guard do it
@@ -66,7 +66,7 @@ class TestVersionGuard:
     # ========================================
     def test_version_match_proceeds_normally(self, tmp_path):
         """When version matches, guard should allow execution to continue."""
-        from src.version_guard import enforce_python_version
+        from luminescent_cluster.version_guard import enforce_python_version
 
         pixeltable_dir = tmp_path / ".pixeltable"
         pixeltable_dir.mkdir()
@@ -88,7 +88,7 @@ class TestVersionGuard:
     # ========================================
     def test_version_mismatch_exits_with_code_78(self, tmp_path):
         """When version mismatches, guard should exit with code 78 (EX_CONFIG)."""
-        from src.version_guard import enforce_python_version, EX_CONFIG
+        from luminescent_cluster.version_guard import enforce_python_version, EX_CONFIG
 
         pixeltable_dir = tmp_path / ".pixeltable"
         pixeltable_dir.mkdir()
@@ -108,7 +108,7 @@ class TestVersionGuard:
     # ========================================
     def test_legacy_database_exits_with_code_65(self, tmp_path):
         """When database exists but no marker, guard should exit with code 65."""
-        from src.version_guard import enforce_python_version, EX_DATAERR
+        from luminescent_cluster.version_guard import enforce_python_version, EX_DATAERR
 
         pixeltable_dir = tmp_path / ".pixeltable"
         pixeltable_dir.mkdir()
@@ -128,7 +128,7 @@ class TestVersionGuard:
     # ========================================
     def test_respects_pixeltable_home_env_var(self, tmp_path):
         """Guard should respect PIXELTABLE_HOME environment variable."""
-        from src.version_guard import get_pixeltable_dir
+        from luminescent_cluster.version_guard import get_pixeltable_dir
 
         custom_dir = tmp_path / "custom_pixeltable"
 
@@ -139,7 +139,7 @@ class TestVersionGuard:
 
     def test_defaults_to_home_pixeltable(self):
         """Without PIXELTABLE_HOME, should default to ~/.pixeltable."""
-        from src.version_guard import get_pixeltable_dir
+        from luminescent_cluster.version_guard import get_pixeltable_dir
 
         # Ensure PIXELTABLE_HOME is not set
         env = os.environ.copy()
@@ -157,7 +157,7 @@ class TestVersionGuard:
     # ========================================
     def test_detects_metadata_directory_as_database(self, tmp_path):
         """Should detect 'metadata' directory as existing database."""
-        from src.version_guard import has_existing_database
+        from luminescent_cluster.version_guard import has_existing_database
 
         pixeltable_dir = tmp_path / ".pixeltable"
         pixeltable_dir.mkdir()
@@ -167,7 +167,7 @@ class TestVersionGuard:
 
     def test_detects_data_directory_as_database(self, tmp_path):
         """Should detect 'data' directory as existing database."""
-        from src.version_guard import has_existing_database
+        from luminescent_cluster.version_guard import has_existing_database
 
         pixeltable_dir = tmp_path / ".pixeltable"
         pixeltable_dir.mkdir()
@@ -177,7 +177,7 @@ class TestVersionGuard:
 
     def test_detects_pgdata_directory_as_database(self, tmp_path):
         """Should detect 'pgdata' directory as existing database."""
-        from src.version_guard import has_existing_database
+        from luminescent_cluster.version_guard import has_existing_database
 
         pixeltable_dir = tmp_path / ".pixeltable"
         pixeltable_dir.mkdir()
@@ -187,7 +187,7 @@ class TestVersionGuard:
 
     def test_detects_pixeltable_db_file_as_database(self, tmp_path):
         """Should detect '.pixeltable.db' file as existing database."""
-        from src.version_guard import has_existing_database
+        from luminescent_cluster.version_guard import has_existing_database
 
         pixeltable_dir = tmp_path / ".pixeltable"
         pixeltable_dir.mkdir()
@@ -197,7 +197,7 @@ class TestVersionGuard:
 
     def test_empty_directory_is_not_database(self, tmp_path):
         """Empty directory should not be detected as database."""
-        from src.version_guard import has_existing_database
+        from luminescent_cluster.version_guard import has_existing_database
 
         pixeltable_dir = tmp_path / ".pixeltable"
         pixeltable_dir.mkdir()
@@ -206,7 +206,7 @@ class TestVersionGuard:
 
     def test_nonexistent_directory_is_not_database(self, tmp_path):
         """Non-existent directory should not be detected as database."""
-        from src.version_guard import has_existing_database
+        from luminescent_cluster.version_guard import has_existing_database
 
         pixeltable_dir = tmp_path / ".pixeltable"
         # Don't create it
@@ -218,14 +218,14 @@ class TestVersionGuard:
     # ========================================
     def test_lock_file_functions_exist(self):
         """Lock and unlock functions should be available (cross-platform)."""
-        from src.version_guard import lock_file, unlock_file
+        from luminescent_cluster.version_guard import lock_file, unlock_file
 
         assert callable(lock_file), "lock_file should be callable"
         assert callable(unlock_file), "unlock_file should be callable"
 
     def test_file_locking_works(self, tmp_path):
         """File locking should work without errors."""
-        from src.version_guard import lock_file, unlock_file
+        from luminescent_cluster.version_guard import lock_file, unlock_file
 
         lock_path = tmp_path / "test.lock"
 
@@ -242,7 +242,7 @@ class TestVersionGuard:
     # ========================================
     def test_exit_code_constants(self):
         """Exit code constants should match sysexits.h convention."""
-        from src.version_guard import EX_CONFIG, EX_DATAERR
+        from luminescent_cluster.version_guard import EX_CONFIG, EX_DATAERR
 
         assert EX_CONFIG == 78, "EX_CONFIG should be 78"
         assert EX_DATAERR == 65, "EX_DATAERR should be 65"
@@ -252,7 +252,7 @@ class TestVersionGuard:
     # ========================================
     def test_version_marker_contains_full_version(self, tmp_path):
         """Version marker should contain both short and full version."""
-        from src.version_guard import enforce_python_version
+        from luminescent_cluster.version_guard import enforce_python_version
 
         pixeltable_dir = tmp_path / ".pixeltable"
 
@@ -276,7 +276,7 @@ class TestVersionGuard:
     # ========================================
     def test_patch_version_difference_is_safe(self, tmp_path):
         """Patch version changes (3.11.0 -> 3.11.9) should be allowed."""
-        from src.version_guard import enforce_python_version
+        from luminescent_cluster.version_guard import enforce_python_version
 
         pixeltable_dir = tmp_path / ".pixeltable"
         pixeltable_dir.mkdir()
@@ -300,7 +300,7 @@ class TestVersionGuardIntegration:
     def test_guard_runs_before_pixeltable_import(self, tmp_path):
         """Version guard should be designed to run before pixeltable import."""
         # This is a design test - the guard module should not import pixeltable
-        from src import version_guard
+        from luminescent_cluster import version_guard
 
         # Check that pixeltable is not in the module's imports
         import_names = [name for name in dir(version_guard) if not name.startswith("_")]
@@ -311,7 +311,7 @@ class TestVersionGuardIntegration:
 
     def test_guard_creates_lock_file(self, tmp_path):
         """Version guard should create a lock file for concurrent access."""
-        from src.version_guard import enforce_python_version
+        from luminescent_cluster.version_guard import enforce_python_version
 
         pixeltable_dir = tmp_path / ".pixeltable"
 

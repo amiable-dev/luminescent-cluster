@@ -24,7 +24,7 @@ import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
-from src.chatbot.gateway import (
+from luminescent_cluster.chatbot.gateway import (
     ChatbotGateway,
     GatewayConfig,
     InvocationPolicy,
@@ -32,8 +32,8 @@ from src.chatbot.gateway import (
     GatewayRequest,
     GatewayResponse,
 )
-from src.chatbot.adapters.base import ChatMessage, MessageAuthor
-from src.extensions.registry import ExtensionRegistry
+from luminescent_cluster.chatbot.adapters.base import ChatMessage, MessageAuthor
+from luminescent_cluster.extensions.registry import ExtensionRegistry
 
 
 class TestResponseFilterProtocol:
@@ -41,20 +41,20 @@ class TestResponseFilterProtocol:
 
     def test_response_filter_protocol_exists(self):
         """ResponseFilter protocol is defined in protocols module."""
-        from src.extensions.protocols import ResponseFilter
+        from luminescent_cluster.extensions.protocols import ResponseFilter
 
         assert ResponseFilter is not None
 
     def test_response_filter_version_exists(self):
         """ResponseFilter has a version constant."""
-        from src.extensions.protocols import RESPONSE_FILTER_VERSION
+        from luminescent_cluster.extensions.protocols import RESPONSE_FILTER_VERSION
 
         assert RESPONSE_FILTER_VERSION is not None
 
     def test_response_filter_version_is_semver(self):
         """ResponseFilter version follows SemVer."""
         import re
-        from src.extensions.protocols import RESPONSE_FILTER_VERSION
+        from luminescent_cluster.extensions.protocols import RESPONSE_FILTER_VERSION
 
         semver_pattern = r"^\d+\.\d+\.\d+$"
         assert re.match(semver_pattern, RESPONSE_FILTER_VERSION)

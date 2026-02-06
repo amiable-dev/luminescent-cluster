@@ -20,8 +20,8 @@ from typing import List
 
 import pytest
 
-from src.memory.providers.local import LocalMemoryProvider
-from src.memory.schemas import Memory, MemoryType
+from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+from luminescent_cluster.memory.schemas import Memory, MemoryType
 
 
 class TestHotMemoryLatency:
@@ -266,7 +266,7 @@ class TestLatencyReportGeneration:
         GitHub Issue: #90
         ADR Reference: ADR-003 Phase 1a (Exit Criteria)
         """
-        from src.memory.observability.metrics import MemoryMetrics
+        from luminescent_cluster.memory.observability.metrics import MemoryMetrics
 
         metrics = MemoryMetrics()
 
