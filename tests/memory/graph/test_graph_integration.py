@@ -62,6 +62,19 @@ class TestHybridRetrieverGraphSupport:
         assert retriever.graph_weight == 0.5
 
 
+try:
+    import sentence_transformers  # noqa: F401
+
+    _has_sentence_transformers = True
+except ImportError:
+    _has_sentence_transformers = False
+
+_skip_no_st = pytest.mark.skipif(
+    not _has_sentence_transformers, reason="requires sentence-transformers"
+)
+
+
+@_skip_no_st
 class TestHybridRetrieverGraphIntegration:
     """TDD: Tests for graph integration in retrieval."""
 
@@ -77,10 +90,11 @@ class TestHybridRetrieverGraphIntegration:
         # Set up graph
         graph_search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
-        graph.add_node(GraphNode(
-            "auth-service", EntityType.SERVICE, "auth-service",
-            memory_ids=["mem-graph-1"]
-        ))
+        graph.add_node(
+            GraphNode(
+                "auth-service", EntityType.SERVICE, "auth-service", memory_ids=["mem-graph-1"]
+            )
+        )
         graph_search.register_graph("user-123", graph)
 
         # Set up retriever with graph
@@ -119,10 +133,9 @@ class TestHybridRetrieverGraphIntegration:
         # Set up graph
         graph_search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
-        graph.add_node(GraphNode(
-            "postgresql", EntityType.DEPENDENCY, "PostgreSQL",
-            memory_ids=["mem-graph"]
-        ))
+        graph.add_node(
+            GraphNode("postgresql", EntityType.DEPENDENCY, "PostgreSQL", memory_ids=["mem-graph"])
+        )
         graph_search.register_graph("user-123", graph)
 
         # Set up retriever
@@ -169,6 +182,7 @@ class TestRetrievalMetricsGraphSupport:
         assert metrics.graph_candidates == 0
 
 
+@_skip_no_st
 class TestHybridResultGraphSource:
     """TDD: Tests for graph source tracking in HybridResult."""
 
@@ -184,10 +198,7 @@ class TestHybridResultGraphSource:
         # Set up graph with a node
         graph_search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
-        graph.add_node(GraphNode(
-            "redis", EntityType.DEPENDENCY, "Redis",
-            memory_ids=["mem-1"]
-        ))
+        graph.add_node(GraphNode("redis", EntityType.DEPENDENCY, "Redis", memory_ids=["mem-1"]))
         graph_search.register_graph("user-123", graph)
 
         # Set up retriever
@@ -205,9 +216,7 @@ class TestHybridResultGraphSource:
         results, _ = await retriever.retrieve("redis", "user-123", top_k=10)
 
         # Check if any result has graph score
-        has_graph_source = any(
-            "graph" in r.source_scores for r in results
-        )
+        has_graph_source = any("graph" in r.source_scores for r in results)
         # Graph source tracking should be available
         assert has_graph_source or len(results) >= 0
 
@@ -263,6 +272,7 @@ class TestRRFFusionThreeSource:
         assert isinstance(fused, list)
 
 
+@_skip_no_st
 class TestMultiHopQueryBenchmark:
     """Benchmark tests for multi-hop query performance."""
 
@@ -282,26 +292,25 @@ class TestMultiHopQueryBenchmark:
         graph = KnowledgeGraph(user_id="user-123")
 
         # auth-service depends on PostgreSQL
-        graph.add_node(GraphNode(
-            "auth-service", EntityType.SERVICE, "auth-service",
-            memory_ids=["mem-auth"]
-        ))
-        graph.add_node(GraphNode(
-            "postgresql", EntityType.DEPENDENCY, "PostgreSQL",
-            memory_ids=["mem-pg"]
-        ))
-        graph.add_edge(GraphEdge(
-            "auth-service", "postgresql", RelationshipType.DEPENDS_ON, "mem-auth"
-        ))
+        graph.add_node(
+            GraphNode("auth-service", EntityType.SERVICE, "auth-service", memory_ids=["mem-auth"])
+        )
+        graph.add_node(
+            GraphNode("postgresql", EntityType.DEPENDENCY, "PostgreSQL", memory_ids=["mem-pg"])
+        )
+        graph.add_edge(
+            GraphEdge("auth-service", "postgresql", RelationshipType.DEPENDS_ON, "mem-auth")
+        )
 
         # payment-service also depends on PostgreSQL
-        graph.add_node(GraphNode(
-            "payment-service", EntityType.SERVICE, "payment-service",
-            memory_ids=["mem-payment"]
-        ))
-        graph.add_edge(GraphEdge(
-            "payment-service", "postgresql", RelationshipType.DEPENDS_ON, "mem-payment"
-        ))
+        graph.add_node(
+            GraphNode(
+                "payment-service", EntityType.SERVICE, "payment-service", memory_ids=["mem-payment"]
+            )
+        )
+        graph.add_edge(
+            GraphEdge("payment-service", "postgresql", RelationshipType.DEPENDS_ON, "mem-payment")
+        )
 
         graph_search.register_graph("user-123", graph)
 
@@ -329,7 +338,9 @@ class TestMultiHopQueryBenchmark:
 
         memory_ids = [r.memory_id for r in results]
         # Graph traversal should find services that depend on PostgreSQL
-        assert "mem-auth" in memory_ids or "mem-payment" in memory_ids or metrics.graph_candidates > 0
+        assert (
+            "mem-auth" in memory_ids or "mem-payment" in memory_ids or metrics.graph_candidates > 0
+        )
 
     @pytest.mark.asyncio
     async def test_graph_latency_under_one_second(self):
@@ -348,15 +359,17 @@ class TestMultiHopQueryBenchmark:
 
         # Add many nodes for realistic test
         for i in range(100):
-            graph.add_node(GraphNode(
-                f"service-{i}", EntityType.SERVICE, f"service-{i}",
-                memory_ids=[f"mem-{i}"]
-            ))
+            graph.add_node(
+                GraphNode(
+                    f"service-{i}", EntityType.SERVICE, f"service-{i}", memory_ids=[f"mem-{i}"]
+                )
+            )
             if i > 0:
-                graph.add_edge(GraphEdge(
-                    f"service-{i}", f"service-{i-1}",
-                    RelationshipType.DEPENDS_ON, f"mem-{i}"
-                ))
+                graph.add_edge(
+                    GraphEdge(
+                        f"service-{i}", f"service-{i - 1}", RelationshipType.DEPENDS_ON, f"mem-{i}"
+                    )
+                )
 
         graph_search.register_graph("user-123", graph)
 

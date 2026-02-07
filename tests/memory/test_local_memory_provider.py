@@ -17,6 +17,17 @@ import pytest
 from datetime import datetime, timezone
 from typing import Optional
 
+try:
+    import sentence_transformers  # noqa: F401
+
+    _has_sentence_transformers = True
+except ImportError:
+    _has_sentence_transformers = False
+
+_skip_no_st = pytest.mark.skipif(
+    not _has_sentence_transformers, reason="requires sentence-transformers"
+)
+
 
 class TestLocalMemoryProviderExists:
     """TDD: Tests for LocalMemoryProvider class existence."""
@@ -318,9 +329,7 @@ class TestLocalMemoryProviderSearch:
         await provider.store(pref, {})
         await provider.store(fact, {})
 
-        result = await provider.search(
-            "user-123", {"memory_type": MemoryType.PREFERENCE}
-        )
+        result = await provider.search("user-123", {"memory_type": MemoryType.PREFERENCE})
         assert len(result) == 1
         assert result[0].memory_type == MemoryType.PREFERENCE
 
@@ -349,6 +358,7 @@ class TestProvidersModuleExports:
         assert LocalMemoryProvider is not None
 
 
+@_skip_no_st
 class TestLocalMemoryProviderHybridRetrieval:
     """Tests for LocalMemoryProvider with hybrid retrieval enabled.
 
@@ -507,9 +517,7 @@ class TestLocalMemoryProviderHybridRetrieval:
         for memory in sample_memories:
             await hybrid_provider.store(memory, {})
 
-        memories, metrics = await hybrid_provider.retrieve_with_metrics(
-            "database", "user-123"
-        )
+        memories, metrics = await hybrid_provider.retrieve_with_metrics("database", "user-123")
 
         assert isinstance(memories, list)
         assert isinstance(metrics, RetrievalMetrics)
@@ -565,6 +573,7 @@ class TestLocalMemoryProviderHybridRetrieval:
         assert results[0].content == valid.content
 
 
+@_skip_no_st
 class TestLocalMemoryProviderHybridIntegration:
     """Integration tests for hybrid retrieval with real components.
 
@@ -621,9 +630,7 @@ class TestLocalMemoryProviderHybridIntegration:
         ]
 
     @pytest.mark.asyncio
-    async def test_semantic_similarity_retrieval(
-        self, full_hybrid_provider, diverse_memories
-    ):
+    async def test_semantic_similarity_retrieval(self, full_hybrid_provider, diverse_memories):
         """Hybrid retrieval should find semantically similar content."""
         # Store all memories
         for memory in diverse_memories:
@@ -686,6 +693,7 @@ class TestLocalMemoryProviderHybridIntegration:
         assert results == []
 
 
+@_skip_no_st
 class TestLocalMemoryProviderGraphSupport:
     """Tests for Knowledge Graph integration in LocalMemoryProvider.
 
@@ -783,9 +791,7 @@ class TestLocalMemoryProviderGraphSupport:
             await graph_provider.store(memory, {})
 
         # Graph should be updated (check via retrieval metrics)
-        _, metrics = await graph_provider.retrieve_with_metrics(
-            "postgresql", "user-123"
-        )
+        _, metrics = await graph_provider.retrieve_with_metrics("postgresql", "user-123")
 
         # Graph candidates should be tracked
         assert hasattr(metrics, "graph_candidates")
