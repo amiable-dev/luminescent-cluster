@@ -54,9 +54,7 @@ class TimeRange:
     def __post_init__(self) -> None:
         """Validate time range."""
         if self.end is not None and self.end < self.start:
-            raise ValueError(
-                f"end ({self.end}) must not be before start ({self.start})"
-            )
+            raise ValueError(f"end ({self.end}) must not be before start ({self.start})")
 
     def contains(self, dt: datetime) -> bool:
         """Check if a datetime falls within this range.
@@ -132,9 +130,7 @@ class TimeRange:
         else:
             # First day of next quarter minus 1 second
             end_month = start_month + 3
-            end = datetime(year, end_month, 1, tzinfo=timezone.utc) - timedelta(
-                seconds=1
-            )
+            end = datetime(year, end_month, 1, tzinfo=timezone.utc) - timedelta(seconds=1)
 
         return cls(start=start, end=end)
 
@@ -305,14 +301,10 @@ class TemporalEvent:
             confidence=data.get("confidence"),
             supersedes=data.get("supersedes"),
             valid_from=(
-                datetime.fromisoformat(data["valid_from"])
-                if data.get("valid_from")
-                else None
+                datetime.fromisoformat(data["valid_from"]) if data.get("valid_from") else None
             ),
             valid_until=(
-                datetime.fromisoformat(data["valid_until"])
-                if data.get("valid_until")
-                else None
+                datetime.fromisoformat(data["valid_until"]) if data.get("valid_until") else None
             ),
             action_type=data.get("action_type"),
             action_target=data.get("action_target"),

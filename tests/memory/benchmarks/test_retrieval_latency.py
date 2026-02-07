@@ -42,9 +42,9 @@ class TestRetrievalLatency:
             memory = Memory(
                 user_id="benchmark-user",
                 content=f"Memory content {i} about various topics like Python, JavaScript, databases, APIs",
-                memory_type=MemoryType.FACT if i % 3 == 0 else (
-                    MemoryType.PREFERENCE if i % 3 == 1 else MemoryType.DECISION
-                ),
+                memory_type=MemoryType.FACT
+                if i % 3 == 0
+                else (MemoryType.PREFERENCE if i % 3 == 1 else MemoryType.DECISION),
                 confidence=0.8 + (i % 20) * 0.01,
                 source="benchmark",
                 raw_source=f"Original text {i}",
@@ -60,12 +60,14 @@ class TestRetrievalLatency:
     def ranker(self):
         """Create ranker for benchmarking."""
         from luminescent_cluster.memory.retrieval.ranker import MemoryRanker
+
         return MemoryRanker()
 
     @pytest.fixture
     async def scoped_retriever(self, populated_provider):
         """Create scoped retriever for benchmarking."""
         from luminescent_cluster.memory.retrieval.scoped import ScopedRetriever
+
         return ScopedRetriever(populated_provider)
 
     async def _measure_latency(self, operation, iterations: int = 50) -> List[float]:
@@ -86,6 +88,7 @@ class TestRetrievalLatency:
         GitHub Issue: #101
         ADR Reference: ADR-003 Phase 1c
         """
+
         async def retrieve_operation():
             await populated_provider.retrieve("Python databases", "benchmark-user", limit=5)
 
@@ -112,6 +115,7 @@ class TestRetrievalLatency:
         Exit Criteria: <200ms p95 latency
         GitHub Issue: #101
         """
+
         async def ranked_retrieve():
             results = await populated_provider.retrieve(
                 "Python JavaScript", "benchmark-user", limit=10
@@ -139,6 +143,7 @@ class TestRetrievalLatency:
         Exit Criteria: <200ms p95 latency
         GitHub Issue: #101
         """
+
         async def scoped_retrieve():
             await scoped_retriever.retrieve(
                 query="databases APIs",
@@ -168,6 +173,7 @@ class TestRetrievalLatency:
         Exit Criteria: <200ms p95 latency
         GitHub Issue: #101
         """
+
         async def cascading_retrieve():
             await scoped_retriever.retrieve(
                 query="Python project",
@@ -198,6 +204,7 @@ class TestRetrievalLatency:
         Exit Criteria: <200ms p95 latency
         GitHub Issue: #101
         """
+
         async def filtered_search():
             await populated_provider.search(
                 user_id="benchmark-user",
@@ -225,6 +232,7 @@ class TestRetrievalLatency:
 
         GitHub Issue: #101
         """
+
         async def concurrent_batch():
             tasks = [
                 populated_provider.retrieve("Python", "benchmark-user", limit=5),

@@ -147,7 +147,10 @@ class TestStorageModuleExports:
         GitHub Issue: #83
         ADR Reference: ADR-003 Phase 1a (Storage)
         """
-        from luminescent_cluster.memory.storage import USER_MEMORY_SCHEMA, CONVERSATION_MEMORY_SCHEMA
+        from luminescent_cluster.memory.storage import (
+            USER_MEMORY_SCHEMA,
+            CONVERSATION_MEMORY_SCHEMA,
+        )
 
         assert USER_MEMORY_SCHEMA is not None
         assert CONVERSATION_MEMORY_SCHEMA is not None

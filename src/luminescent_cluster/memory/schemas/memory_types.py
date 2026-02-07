@@ -76,9 +76,7 @@ class Memory(BaseModel):
         description="Extraction confidence score (0.0-1.0)",
     )
     source: str = Field(..., description="Where this memory came from")
-    raw_source: Optional[str] = Field(
-        default=None, description="Original text for re-extraction"
-    )
+    raw_source: Optional[str] = Field(default=None, description="Original text for re-extraction")
     extraction_version: int = Field(
         default=1, description="Version for re-processing on prompt updates"
     )
@@ -90,9 +88,7 @@ class Memory(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Last access time for decay scoring",
     )
-    expires_at: Optional[datetime] = Field(
-        default=None, description="TTL expiration time"
-    )
+    expires_at: Optional[datetime] = Field(default=None, description="TTL expiration time")
     metadata: dict[str, Any] = Field(
         default_factory=dict,
         description="Flexible metadata (scope, project_id, etc.)",

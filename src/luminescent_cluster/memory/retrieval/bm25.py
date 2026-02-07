@@ -137,11 +137,7 @@ class BM25Search:
             List of lowercase tokens.
         """
         tokens = self.TOKEN_PATTERN.findall(text.lower())
-        return [
-            t
-            for t in tokens
-            if len(t) >= self.min_term_length and t not in self.STOP_WORDS
-        ]
+        return [t for t in tokens if len(t) >= self.min_term_length and t not in self.STOP_WORDS]
 
     def index_memories(
         self,
@@ -410,11 +406,7 @@ class BM25Search:
         results = self.search(user_id, query, top_k)
         memories = self._memory_contents.get(user_id, {})
 
-        return [
-            (memories[mem_id], score)
-            for mem_id, score in results
-            if mem_id in memories
-        ]
+        return [(memories[mem_id], score) for mem_id, score in results if mem_id in memories]
 
     def get_memory(self, user_id: str, memory_id: str) -> Optional[Memory]:
         """Get a memory by ID.

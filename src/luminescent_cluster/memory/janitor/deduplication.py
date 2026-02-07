@@ -66,9 +66,7 @@ class Deduplicator:
 
         return len(intersection) / len(union) if union else 0.0
 
-    def find_duplicates(
-        self, memories: List[Memory]
-    ) -> List[Tuple[Memory, Memory, float]]:
+    def find_duplicates(self, memories: List[Memory]) -> List[Tuple[Memory, Memory, float]]:
         """Find duplicate memory pairs.
 
         Args:
@@ -88,9 +86,7 @@ class Deduplicator:
 
         return duplicates
 
-    def resolve_duplicates(
-        self, memories: List[Memory]
-    ) -> Tuple[List[Memory], List[Memory]]:
+    def resolve_duplicates(self, memories: List[Memory]) -> Tuple[List[Memory], List[Memory]]:
         """Resolve duplicates by keeping highest confidence.
 
         Args:
@@ -111,9 +107,7 @@ class Deduplicator:
 
         return to_keep, to_remove
 
-    async def run(
-        self, provider: Any, user_id: str, dry_run: bool = False
-    ) -> dict[str, Any]:
+    async def run(self, provider: Any, user_id: str, dry_run: bool = False) -> dict[str, Any]:
         """Run deduplication on all memories for a user.
 
         Args:
@@ -136,7 +130,11 @@ class Deduplicator:
         # Group memories by type for more efficient comparison
         by_type: dict[str, List[Memory]] = {}
         for memory in all_memories:
-            mem_type = memory.memory_type.value if hasattr(memory.memory_type, 'value') else str(memory.memory_type)
+            mem_type = (
+                memory.memory_type.value
+                if hasattr(memory.memory_type, "value")
+                else str(memory.memory_type)
+            )
             if mem_type not in by_type:
                 by_type[mem_type] = []
             by_type[mem_type].append(memory)
@@ -151,28 +149,32 @@ class Deduplicator:
             for m1, m2, similarity in duplicates:
                 # Keep higher confidence, invalidate lower
                 if m1.confidence >= m2.confidence:
-                    if hasattr(m2, 'id') and m2.id:
+                    if hasattr(m2, "id") and m2.id:
                         memories_to_invalidate.add(m2.id)
-                        would_invalidate.append({
-                            'id': m2.id,
-                            'content': m2.content[:50],
-                            'reason': f'Duplicate of higher confidence memory (similarity: {similarity:.2f})',
-                        })
+                        would_invalidate.append(
+                            {
+                                "id": m2.id,
+                                "content": m2.content[:50],
+                                "reason": f"Duplicate of higher confidence memory (similarity: {similarity:.2f})",
+                            }
+                        )
                 else:
-                    if hasattr(m1, 'id') and m1.id:
+                    if hasattr(m1, "id") and m1.id:
                         memories_to_invalidate.add(m1.id)
-                        would_invalidate.append({
-                            'id': m1.id,
-                            'content': m1.content[:50],
-                            'reason': f'Duplicate of higher confidence memory (similarity: {similarity:.2f})',
-                        })
+                        would_invalidate.append(
+                            {
+                                "id": m1.id,
+                                "content": m1.content[:50],
+                                "reason": f"Duplicate of higher confidence memory (similarity: {similarity:.2f})",
+                            }
+                        )
 
         if dry_run:
             return {
-                'processed': processed,
-                'dry_run': True,
-                'would_invalidate': would_invalidate,
-                'duplicates_found': len(memories_to_invalidate),
+                "processed": processed,
+                "dry_run": True,
+                "would_invalidate": would_invalidate,
+                "duplicates_found": len(memories_to_invalidate),
             }
 
         # Soft-delete (invalidate) duplicates instead of hard-delete
@@ -180,11 +182,11 @@ class Deduplicator:
         for memory_id in memories_to_invalidate:
             try:
                 # Use invalidate if available (preferred)
-                if hasattr(provider, 'invalidate'):
+                if hasattr(provider, "invalidate"):
                     await provider.invalidate(memory_id, reason="Duplicate detected by janitor")
                     invalidated += 1
                 # Fallback: use delete (hard delete) if no invalidate method
-                elif hasattr(provider, 'delete'):
+                elif hasattr(provider, "delete"):
                     await provider.delete(memory_id)
                     invalidated += 1
                 else:
@@ -193,9 +195,9 @@ class Deduplicator:
                 errors.append(f"Failed to invalidate {memory_id}: {str(e)}")
 
         return {
-            'processed': processed,
-            'invalidated': invalidated,
-            'removed': invalidated,  # For backward compatibility
-            'duplicates_found': len(memories_to_invalidate),
-            'errors': errors if errors else None,
+            "processed": processed,
+            "invalidated": invalidated,
+            "removed": invalidated,  # For backward compatibility
+            "duplicates_found": len(memories_to_invalidate),
+            "errors": errors if errors else None,
         }

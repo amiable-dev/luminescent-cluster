@@ -167,9 +167,13 @@ class PoolRegistry:
             max_shared_memories_per_pool: Maximum shared memories per pool.
         """
         self._pools: dict[str, SharedMemoryPool] = {}
-        self._memberships: dict[str, dict[str, PoolMembership]] = defaultdict(dict)  # pool_id -> agent_id -> membership
+        self._memberships: dict[str, dict[str, PoolMembership]] = defaultdict(
+            dict
+        )  # pool_id -> agent_id -> membership
         self._agent_pools: dict[str, set[str]] = defaultdict(set)  # agent_id -> set of pool_ids
-        self._shared_memories: dict[str, list[SharedMemoryRef]] = defaultdict(list)  # pool_id -> list of refs
+        self._shared_memories: dict[str, list[SharedMemoryRef]] = defaultdict(
+            list
+        )  # pool_id -> list of refs
         self._rlock = threading.RLock()
         self._max_pools = max_pools
         self._max_memberships_per_pool = max_memberships_per_pool
@@ -581,7 +585,11 @@ class PoolRegistry:
                     agent_id=agent_id,
                     action="share_memory",
                     outcome="denied",
-                    details={"pool_id": pool_id, "memory_id": memory_id, "reason": "insufficient_permission"},
+                    details={
+                        "pool_id": pool_id,
+                        "memory_id": memory_id,
+                        "reason": "insufficient_permission",
+                    },
                 )
                 return False
 
@@ -599,7 +607,9 @@ class PoolRegistry:
                         "limit": self._max_shared_memories_per_pool,
                     },
                 )
-                raise PoolCapacityError("shared_memories_per_pool", self._max_shared_memories_per_pool)
+                raise PoolCapacityError(
+                    "shared_memories_per_pool", self._max_shared_memories_per_pool
+                )
 
             ref = SharedMemoryRef(
                 memory_id=memory_id,

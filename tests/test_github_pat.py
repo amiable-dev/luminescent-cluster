@@ -81,12 +81,14 @@ class TestGitHubPATClientRequests:
     @pytest.fixture
     def mock_response(self):
         """Create mock response helper."""
+
         def _mock_response(data, status=200):
             mock = MagicMock()
             mock.read.return_value = json.dumps(data).encode("utf-8")
             mock.__enter__ = MagicMock(return_value=mock)
             mock.__exit__ = MagicMock(return_value=False)
             return mock
+
         return _mock_response
 
     def test_request_includes_auth_header(self, client, mock_response):
@@ -119,7 +121,7 @@ class TestGitHubPATClientRequests:
                 code=401,
                 msg="Unauthorized",
                 hdrs={},
-                fp=MagicMock()
+                fp=MagicMock(),
             )
             mock_urlopen.side_effect = mock_error
 
@@ -134,7 +136,7 @@ class TestGitHubPATClientRequests:
                 code=404,
                 msg="Not Found",
                 hdrs={},
-                fp=MagicMock()
+                fp=MagicMock(),
             )
             mock_urlopen.side_effect = mock_error
 
@@ -147,11 +149,7 @@ class TestGitHubPATClientRequests:
             mock_fp = MagicMock()
             mock_fp.read.return_value = b"API rate limit exceeded"
             mock_error = HTTPError(
-                url="https://api.github.com/test",
-                code=403,
-                msg="Forbidden",
-                hdrs={},
-                fp=mock_fp
+                url="https://api.github.com/test", code=403, msg="Forbidden", hdrs={}, fp=mock_fp
             )
             mock_urlopen.side_effect = mock_error
 
@@ -184,7 +182,13 @@ class TestGitHubPATClientRepositoryOperations:
     def test_list_contents_returns_files(self, client):
         """list_contents should return list of GitHubFile objects."""
         mock_data = [
-            {"path": "README.md", "name": "README.md", "sha": "abc123", "size": 100, "type": "file"},
+            {
+                "path": "README.md",
+                "name": "README.md",
+                "sha": "abc123",
+                "size": 100,
+                "type": "file",
+            },
             {"path": "src", "name": "src", "sha": "def456", "size": 0, "type": "dir"},
         ]
 
@@ -199,7 +203,13 @@ class TestGitHubPATClientRepositoryOperations:
 
     def test_list_contents_handles_single_file(self, client):
         """list_contents should handle single file response (dict instead of list)."""
-        mock_data = {"path": "README.md", "name": "README.md", "sha": "abc123", "size": 100, "type": "file"}
+        mock_data = {
+            "path": "README.md",
+            "name": "README.md",
+            "sha": "abc123",
+            "size": 100,
+            "type": "file",
+        }
 
         with patch.object(client, "_request", return_value=mock_data):
             result = client.list_contents("owner/repo", "README.md")
@@ -245,7 +255,7 @@ class TestGitHubPATClientFileOperations:
         content = "Hello, World!"
         encoded = base64.b64encode(content.encode()).decode()
         # Add newlines like GitHub does
-        encoded_with_newlines = "\n".join([encoded[i:i+60] for i in range(0, len(encoded), 60)])
+        encoded_with_newlines = "\n".join([encoded[i : i + 60] for i in range(0, len(encoded), 60)])
         mock_data = {
             "type": "file",
             "content": encoded_with_newlines,

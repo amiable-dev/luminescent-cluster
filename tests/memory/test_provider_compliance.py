@@ -32,6 +32,7 @@ class TestProtocolDefinition:
     def test_protocol_exists(self):
         """MemoryProvider protocol should be defined."""
         from luminescent_cluster.memory.protocols import MemoryProvider
+
         assert MemoryProvider is not None
 
     def test_protocol_is_runtime_checkable(self):
@@ -40,37 +41,42 @@ class TestProtocolDefinition:
         from luminescent_cluster.memory.protocols import MemoryProvider
 
         # Should have @runtime_checkable decorator
-        assert hasattr(MemoryProvider, '__protocol_attrs__') or \
-               isinstance(MemoryProvider, type)
+        assert hasattr(MemoryProvider, "__protocol_attrs__") or isinstance(MemoryProvider, type)
 
     def test_protocol_defines_store_method(self):
         """Protocol should define store method."""
         from luminescent_cluster.memory.protocols import MemoryProvider
-        assert hasattr(MemoryProvider, 'store')
+
+        assert hasattr(MemoryProvider, "store")
 
     def test_protocol_defines_retrieve_method(self):
         """Protocol should define retrieve method."""
         from luminescent_cluster.memory.protocols import MemoryProvider
-        assert hasattr(MemoryProvider, 'retrieve')
+
+        assert hasattr(MemoryProvider, "retrieve")
 
     def test_protocol_defines_get_by_id_method(self):
         """Protocol should define get_by_id method."""
         from luminescent_cluster.memory.protocols import MemoryProvider
-        assert hasattr(MemoryProvider, 'get_by_id')
+
+        assert hasattr(MemoryProvider, "get_by_id")
 
     def test_protocol_defines_delete_method(self):
         """Protocol should define delete method."""
         from luminescent_cluster.memory.protocols import MemoryProvider
-        assert hasattr(MemoryProvider, 'delete')
+
+        assert hasattr(MemoryProvider, "delete")
 
     def test_protocol_defines_search_method(self):
         """Protocol should define search method."""
         from luminescent_cluster.memory.protocols import MemoryProvider
-        assert hasattr(MemoryProvider, 'search')
+
+        assert hasattr(MemoryProvider, "search")
 
     def test_protocol_version_defined(self):
         """Protocol version should be defined."""
         from luminescent_cluster.memory.protocols import MEMORY_PROVIDER_VERSION
+
         assert MEMORY_PROVIDER_VERSION is not None
         assert isinstance(MEMORY_PROVIDER_VERSION, str)
 
@@ -268,14 +274,15 @@ class TestProtocolCompliance:
         provider = LocalMemoryProvider()
 
         # Check required methods exist
-        assert hasattr(provider, 'store')
-        assert hasattr(provider, 'retrieve')
-        assert hasattr(provider, 'get_by_id')
-        assert hasattr(provider, 'delete')
-        assert hasattr(provider, 'search')
+        assert hasattr(provider, "store")
+        assert hasattr(provider, "retrieve")
+        assert hasattr(provider, "get_by_id")
+        assert hasattr(provider, "delete")
+        assert hasattr(provider, "search")
 
         # Check methods are async
         import asyncio
+
         assert asyncio.iscoroutinefunction(provider.store)
         assert asyncio.iscoroutinefunction(provider.retrieve)
         assert asyncio.iscoroutinefunction(provider.get_by_id)

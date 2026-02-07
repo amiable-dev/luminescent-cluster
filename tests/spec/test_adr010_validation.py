@@ -230,9 +230,7 @@ def test_bar():
 """)
 
             cache = {}
-            exists, error = verify_test_reference(
-                "tests/test_foo.py::test_bar", tmpdir, cache
-            )
+            exists, error = verify_test_reference("tests/test_foo.py::test_bar", tmpdir, cache)
 
         assert exists is True
         assert error is None

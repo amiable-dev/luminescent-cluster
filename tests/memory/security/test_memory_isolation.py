@@ -110,9 +110,7 @@ class TestMemoryIsolation:
         GitHub Issue: #111
         """
         # Search all memory types for user-1
-        user1_results = await provider_with_users.search(
-            user_id="user-1", filters={}, limit=100
-        )
+        user1_results = await provider_with_users.search(user_id="user-1", filters={}, limit=100)
 
         for memory in user1_results:
             assert memory.user_id == "user-1", (
@@ -130,13 +128,11 @@ class TestMemoryIsolation:
         GitHub Issue: #111
         """
         # Get all user-2 memory IDs
-        user2_memories = await provider_with_users.search(
-            user_id="user-2", filters={}, limit=100
-        )
+        user2_memories = await provider_with_users.search(user_id="user-2", filters={}, limit=100)
 
         # Attempt to access user-2 memories - should work for valid access
         for memory in user2_memories:
-            if hasattr(memory, 'id') and memory.id:
+            if hasattr(memory, "id") and memory.id:
                 result = await provider_with_users.get_by_id(memory.id)
                 if result:
                     # If accessed, should be the correct memory
@@ -215,9 +211,7 @@ class TestMemoryIsolation:
 
         # Should not find user-2's memories even with matching content
         for memory in results:
-            assert memory.user_id == "user-1", (
-                f"Query leakage: user-1 found user-2 content"
-            )
+            assert memory.user_id == "user-1", f"Query leakage: user-1 found user-2 content"
 
     @pytest.mark.asyncio
     async def test_empty_result_for_nonexistent_user(self, provider_with_users):

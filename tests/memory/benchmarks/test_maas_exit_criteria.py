@@ -305,8 +305,7 @@ class TestConcurrentWriteBenchmark:
         # Run concurrent writers
         with ThreadPoolExecutor(max_workers=num_writers) as executor:
             futures = [
-                executor.submit(writer, agent_id, idx)
-                for idx, agent_id in enumerate(agent_ids)
+                executor.submit(writer, agent_id, idx) for idx, agent_id in enumerate(agent_ids)
             ]
             for future in as_completed(futures):
                 future.result()  # Raise any exceptions

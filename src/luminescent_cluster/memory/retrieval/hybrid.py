@@ -268,20 +268,14 @@ class HybridRetriever:
 
         # Build list of search coroutines
         search_tasks = [
-            asyncio.to_thread(
-                self.bm25.search, user_id, effective_query, bm25_top_k
-            ),
-            asyncio.to_thread(
-                self.vector.search, user_id, effective_query, vector_top_k
-            ),
+            asyncio.to_thread(self.bm25.search, user_id, effective_query, bm25_top_k),
+            asyncio.to_thread(self.vector.search, user_id, effective_query, vector_top_k),
         ]
 
         # Add graph search if available
         if self.graph is not None:
             search_tasks.append(
-                asyncio.to_thread(
-                    self.graph.search, user_id, effective_query, graph_top_k
-                )
+                asyncio.to_thread(self.graph.search, user_id, effective_query, graph_top_k)
             )
 
         # Run all searches in parallel
@@ -309,9 +303,7 @@ class HybridRetriever:
 
         # Fuse results using RRF with optional weights
         weights_differ = (
-            self.bm25_weight != 1.0 or
-            self.vector_weight != 1.0 or
-            self.graph_weight != 1.0
+            self.bm25_weight != 1.0 or self.vector_weight != 1.0 or self.graph_weight != 1.0
         )
         if weights_differ:
             weights = {
@@ -349,9 +341,7 @@ class HybridRetriever:
         metrics.stage2_time_ms = (time.perf_counter() - stage2_start) * 1000
 
         # Build final results with source tracking
-        results = self._build_results(
-            rerank_results, bm25_results, vector_results, graph_results
-        )
+        results = self._build_results(rerank_results, bm25_results, vector_results, graph_results)
 
         metrics.final_results = len(results)
         metrics.total_time_ms = (time.perf_counter() - start_time) * 1000
@@ -378,8 +368,12 @@ class HybridRetriever:
         """
         # Build lookup maps
         bm25_map = {mem_id: (rank + 1, score) for rank, (mem_id, score) in enumerate(bm25_results)}
-        vector_map = {mem_id: (rank + 1, score) for rank, (mem_id, score) in enumerate(vector_results)}
-        graph_map = {mem_id: (rank + 1, score) for rank, (mem_id, score) in enumerate(graph_results or [])}
+        vector_map = {
+            mem_id: (rank + 1, score) for rank, (mem_id, score) in enumerate(vector_results)
+        }
+        graph_map = {
+            mem_id: (rank + 1, score) for rank, (mem_id, score) in enumerate(graph_results or [])
+        }
 
         results: list[HybridResult] = []
         for rr in rerank_results:

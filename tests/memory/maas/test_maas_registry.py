@@ -589,9 +589,7 @@ class TestThreadSafety:
             except Exception as e:
                 errors.append(e)
 
-        threads = [
-            threading.Thread(target=reader) for _ in range(3)
-        ] + [
+        threads = [threading.Thread(target=reader) for _ in range(3)] + [
             threading.Thread(target=writer) for _ in range(2)
         ]
 

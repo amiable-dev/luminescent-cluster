@@ -169,9 +169,7 @@ class TestLLMProviderOpenAI:
                 "model": "gpt-4o-mini",
             }
 
-            response = await provider.chat(
-                messages=[{"role": "user", "content": "Hi"}]
-            )
+            response = await provider.chat(messages=[{"role": "user", "content": "Hi"}])
 
             assert response.content == "Hello!"
             assert response.tokens_used == 20
@@ -266,9 +264,7 @@ class TestLLMProviderOllama:
                 "model": "llama3.2",
             }
 
-            response = await provider.chat(
-                messages=[{"role": "user", "content": "Hi"}]
-            )
+            response = await provider.chat(messages=[{"role": "user", "content": "Hi"}])
 
             assert response.content == "Hello from Llama!"
             assert response.model == "llama3.2"
@@ -437,6 +433,7 @@ class TestCircuitBreaker:
 
         # Wait for recovery timeout
         import time
+
         time.sleep(0.15)
 
         # Should transition to HALF_OPEN on next check
@@ -449,6 +446,7 @@ class TestCircuitBreaker:
 
         breaker.record_failure()
         import time
+
         time.sleep(0.15)
 
         # Transition to HALF_OPEN
@@ -465,6 +463,7 @@ class TestCircuitBreaker:
 
         breaker.record_failure()
         import time
+
         time.sleep(0.15)
 
         # Transition to HALF_OPEN
@@ -603,7 +602,12 @@ class TestLLMProviderStreaming:
         with patch.object(provider, "_make_request") as mock_request:
             # Full response (batched, not true streaming)
             mock_request.return_value = {
-                "choices": [{"message": {"content": "This is a complete response."}, "finish_reason": "stop"}],
+                "choices": [
+                    {
+                        "message": {"content": "This is a complete response."},
+                        "finish_reason": "stop",
+                    }
+                ],
                 "usage": {"total_tokens": 20},
                 "model": "gpt-4o-mini",
             }

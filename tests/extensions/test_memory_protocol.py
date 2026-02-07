@@ -71,11 +71,20 @@ class TestMemoryProviderProtocolDefinition:
         # Test runtime checkability by verifying isinstance() works
         # This only succeeds if @runtime_checkable decorator is applied
         class MinimalProvider:
-            async def store(self, memory, context): pass
-            async def retrieve(self, query, user_id, limit=5): pass
-            async def get_by_id(self, memory_id): pass
-            async def delete(self, memory_id): pass
-            async def search(self, user_id, filters, limit=10): pass
+            async def store(self, memory, context):
+                pass
+
+            async def retrieve(self, query, user_id, limit=5):
+                pass
+
+            async def get_by_id(self, memory_id):
+                pass
+
+            async def delete(self, memory_id):
+                pass
+
+            async def search(self, user_id, filters, limit=10):
+                pass
 
         # isinstance() with Protocol raises TypeError if not @runtime_checkable
         assert isinstance(MinimalProvider(), MemoryProvider)
@@ -149,9 +158,7 @@ class TestMemoryProviderBehavior:
             async def store(self, memory: Memory, context: dict) -> str:
                 return "memory-123"
 
-            async def retrieve(
-                self, query: str, user_id: str, limit: int = 5
-            ) -> list[Memory]:
+            async def retrieve(self, query: str, user_id: str, limit: int = 5) -> list[Memory]:
                 return []
 
             async def get_by_id(self, memory_id: str) -> Optional[Memory]:
@@ -160,9 +167,7 @@ class TestMemoryProviderBehavior:
             async def delete(self, memory_id: str) -> bool:
                 return True
 
-            async def search(
-                self, user_id: str, filters: dict, limit: int = 10
-            ) -> list[Memory]:
+            async def search(self, user_id: str, filters: dict, limit: int = 10) -> list[Memory]:
                 return []
 
         provider = MockMemoryProvider()

@@ -123,7 +123,9 @@ class TestInitMemoryScript:
         """
         script_path = Path(__file__).parent.parent.parent / "scripts" / "init_memory.py"
         content = script_path.read_text()
-        assert content.startswith("#!/usr/bin/env python"), "Script should start with python shebang"
+        assert content.startswith("#!/usr/bin/env python"), (
+            "Script should start with python shebang"
+        )
 
     def test_init_memory_references_adr(self):
         """init_memory.py should reference ADR-002.

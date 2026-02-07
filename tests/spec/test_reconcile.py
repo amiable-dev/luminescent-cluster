@@ -191,9 +191,7 @@ class TestBaselineRatchet:
             "coverage": {"overall": 95.0},
         }
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(baseline_data, f)
             f.flush()
 
@@ -219,9 +217,7 @@ class TestBaselineRatchet:
             coverage={"overall": 97.8},
         )
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             save_baseline(baseline, Path(f.name))
 
             # Read back and verify
@@ -392,6 +388,7 @@ requirements:
         }
 
         import sys
+
         old_stdout = sys.stdout
         sys.stdout = StringIO()
 

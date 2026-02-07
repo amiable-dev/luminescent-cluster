@@ -24,6 +24,7 @@ from luminescent_cluster.extensions import ExtensionRegistry
 # Extension Helper Functions (will be added to MCP server)
 # ============================================================================
 
+
 def get_tenant_filter(context: dict) -> dict:
     """
     Get tenant filter from context if multi-tenancy is enabled.
@@ -106,9 +107,7 @@ def log_audit(
     registry = ExtensionRegistry.get()
     if registry.audit_logger:
         try:
-            registry.audit_logger.log_event(
-                event_type, actor, resource, action, outcome, details
-            )
+            registry.audit_logger.log_event(event_type, actor, resource, action, outcome, details)
         except Exception:
             # Don't fail the request if audit fails
             pass
@@ -117,6 +116,7 @@ def log_audit(
 # ============================================================================
 # Tests
 # ============================================================================
+
 
 class TestOSSMode:
     """Tests for OSS mode (no extensions registered)."""
@@ -308,9 +308,7 @@ class TestCloudMode:
     # ========================================
     # Full Cloud Mode Tests
     # ========================================
-    def test_full_cloud_mode(
-        self, mock_tenant_provider, mock_usage_tracker, mock_audit_logger
-    ):
+    def test_full_cloud_mode(self, mock_tenant_provider, mock_usage_tracker, mock_audit_logger):
         """Full cloud mode should use all three extensions."""
         registry = ExtensionRegistry.get()
         registry.tenant_provider = mock_tenant_provider

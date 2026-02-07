@@ -93,9 +93,7 @@ class EntityExtractor(Protocol):
         >>> assert isinstance(MyExtractor(), EntityExtractor)
     """
 
-    async def extract(
-        self, content: str, memory_id: Optional[str] = None
-    ) -> List[Entity]:
+    async def extract(self, content: str, memory_id: Optional[str] = None) -> List[Entity]:
         """Extract entities from text content.
 
         Args:

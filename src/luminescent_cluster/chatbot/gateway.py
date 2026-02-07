@@ -160,7 +160,7 @@ class InvocationPolicy:
 
         # Remove prefix
         if self.prefix and content.startswith(self.prefix):
-            content = content[len(self.prefix):].strip()
+            content = content[len(self.prefix) :].strip()
 
         return content.strip()
 
@@ -308,6 +308,7 @@ class ChatbotGateway:
             GatewayResponse if bot should respond, None otherwise
         """
         import time
+
         start_time = time.time()
 
         message = request.message

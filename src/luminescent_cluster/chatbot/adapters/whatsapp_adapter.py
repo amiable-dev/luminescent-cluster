@@ -502,38 +502,46 @@ class WhatsAppAdapter:
         elif msg_type == "image":
             image_data = msg_data.get("image", {})
             content = image_data.get("caption", "")
-            attachments.append({
-                "type": "image",
-                "media_id": image_data.get("id"),
-                "mime_type": image_data.get("mime_type"),
-            })
+            attachments.append(
+                {
+                    "type": "image",
+                    "media_id": image_data.get("id"),
+                    "mime_type": image_data.get("mime_type"),
+                }
+            )
 
         elif msg_type == "document":
             doc_data = msg_data.get("document", {})
             content = doc_data.get("caption", "")
-            attachments.append({
-                "type": "document",
-                "media_id": doc_data.get("id"),
-                "mime_type": doc_data.get("mime_type"),
-                "filename": doc_data.get("filename"),
-            })
+            attachments.append(
+                {
+                    "type": "document",
+                    "media_id": doc_data.get("id"),
+                    "mime_type": doc_data.get("mime_type"),
+                    "filename": doc_data.get("filename"),
+                }
+            )
 
         elif msg_type == "audio":
             audio_data = msg_data.get("audio", {})
-            attachments.append({
-                "type": "audio",
-                "media_id": audio_data.get("id"),
-                "mime_type": audio_data.get("mime_type"),
-            })
+            attachments.append(
+                {
+                    "type": "audio",
+                    "media_id": audio_data.get("id"),
+                    "mime_type": audio_data.get("mime_type"),
+                }
+            )
 
         elif msg_type == "video":
             video_data = msg_data.get("video", {})
             content = video_data.get("caption", "")
-            attachments.append({
-                "type": "video",
-                "media_id": video_data.get("id"),
-                "mime_type": video_data.get("mime_type"),
-            })
+            attachments.append(
+                {
+                    "type": "video",
+                    "media_id": video_data.get("id"),
+                    "mime_type": video_data.get("mime_type"),
+                }
+            )
 
         elif msg_type == "location":
             location_data = msg_data.get("location", {})
@@ -613,12 +621,14 @@ class WhatsAppAdapter:
                 value = change.get("value", {})
 
                 for status in value.get("statuses", []):
-                    statuses.append({
-                        "message_id": status.get("id"),
-                        "status": status.get("status"),
-                        "timestamp": status.get("timestamp"),
-                        "recipient_id": status.get("recipient_id"),
-                    })
+                    statuses.append(
+                        {
+                            "message_id": status.get("id"),
+                            "status": status.get("status"),
+                            "timestamp": status.get("timestamp"),
+                            "recipient_id": status.get("recipient_id"),
+                        }
+                    )
 
         return statuses
 

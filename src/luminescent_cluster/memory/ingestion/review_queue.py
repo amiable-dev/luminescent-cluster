@@ -164,9 +164,7 @@ class ReviewQueue:
         # SECURITY: Check total limit - reject instead of evicting to prevent
         # cross-tenant DoS (user A filling queue to evict user B's items)
         if len(self._pending) >= self.MAX_TOTAL_PENDING:
-            raise ValueError(
-                "Review queue is at capacity. Please try again later."
-            )
+            raise ValueError("Review queue is at capacity. Please try again later.")
 
         # Create pending memory
         queue_id = str(uuid.uuid4())

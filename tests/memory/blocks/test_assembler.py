@@ -109,10 +109,17 @@ class TestBlockBudgets:
         # Custom budget should be used
         assert assembler.block_budgets[BlockType.SYSTEM] == 250
         # Other budgets should use defaults (not KeyError)
-        assert assembler.block_budgets[BlockType.PROJECT] == DEFAULT_TOKEN_BUDGETS[BlockType.PROJECT]
+        assert (
+            assembler.block_budgets[BlockType.PROJECT] == DEFAULT_TOKEN_BUDGETS[BlockType.PROJECT]
+        )
         assert assembler.block_budgets[BlockType.TASK] == DEFAULT_TOKEN_BUDGETS[BlockType.TASK]
-        assert assembler.block_budgets[BlockType.HISTORY] == DEFAULT_TOKEN_BUDGETS[BlockType.HISTORY]
-        assert assembler.block_budgets[BlockType.KNOWLEDGE] == DEFAULT_TOKEN_BUDGETS[BlockType.KNOWLEDGE]
+        assert (
+            assembler.block_budgets[BlockType.HISTORY] == DEFAULT_TOKEN_BUDGETS[BlockType.HISTORY]
+        )
+        assert (
+            assembler.block_budgets[BlockType.KNOWLEDGE]
+            == DEFAULT_TOKEN_BUDGETS[BlockType.KNOWLEDGE]
+        )
 
 
 class TestBuildSystemBlock:
@@ -239,15 +246,11 @@ class TestBuildHistoryBlock:
         ]
 
     @pytest.mark.asyncio
-    async def test_build_history_block_returns_memory_block(
-        self, assembler, sample_messages
-    ):
+    async def test_build_history_block_returns_memory_block(self, assembler, sample_messages):
         """build_history_block should return a MemoryBlock."""
         from luminescent_cluster.memory.blocks.schemas import BlockType, MemoryBlock
 
-        result = await assembler.build_history_block(
-            conversation_history=sample_messages
-        )
+        result = await assembler.build_history_block(conversation_history=sample_messages)
 
         assert isinstance(result, MemoryBlock)
         assert result.block_type == BlockType.HISTORY
@@ -261,13 +264,9 @@ class TestBuildHistoryBlock:
         assert result.token_count == 0
 
     @pytest.mark.asyncio
-    async def test_build_history_block_uses_compressor(
-        self, assembler, sample_messages
-    ):
+    async def test_build_history_block_uses_compressor(self, assembler, sample_messages):
         """build_history_block should use HistoryCompressor."""
-        result = await assembler.build_history_block(
-            conversation_history=sample_messages
-        )
+        result = await assembler.build_history_block(conversation_history=sample_messages)
 
         # Should contain at least some content from messages
         assert len(result.content) > 0

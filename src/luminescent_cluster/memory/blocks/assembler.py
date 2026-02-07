@@ -350,9 +350,7 @@ class BlockAssembler:
             elif remaining_budget > self.XML_OVERHEAD_PER_BLOCK:
                 # Partial inclusion - reserve XML overhead, truncate content
                 content_budget = remaining_budget - self.XML_OVERHEAD_PER_BLOCK
-                truncated_content = self._truncate_preserving_format(
-                    block.content, content_budget
-                )
+                truncated_content = self._truncate_preserving_format(block.content, content_budget)
                 truncated_tokens = self._count_tokens(truncated_content)
 
                 if truncated_content:  # Only add if we have content after truncation
@@ -470,11 +468,7 @@ class BlockAssembler:
                 escaped_content = self._escape_xml_content(block.content)
                 # Use XML-style delimiters for security and clarity
                 block_name = block.block_type.value.upper()
-                section = (
-                    f"<{block_name}_CONTEXT>\n"
-                    f"{escaped_content}\n"
-                    f"</{block_name}_CONTEXT>"
-                )
+                section = f"<{block_name}_CONTEXT>\n{escaped_content}\n</{block_name}_CONTEXT>"
                 sections.append(section)
 
         return "\n\n".join(sections)

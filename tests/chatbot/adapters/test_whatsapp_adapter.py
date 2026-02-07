@@ -190,9 +190,7 @@ class TestWhatsAppAdapterConnection:
 
         adapter = WhatsAppAdapter(config)
 
-        with patch.object(
-            adapter, "_verify_api_access", side_effect=Exception("API error")
-        ):
+        with patch.object(adapter, "_verify_api_access", side_effect=Exception("API error")):
             with pytest.raises(Exception):
                 await adapter.connect()
 
@@ -218,7 +216,10 @@ class TestWhatsAppWebhookVerification:
     @pytest.fixture
     def adapter(self):
         """Create test WhatsApp adapter."""
-        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import (
+            WhatsAppConfig,
+            WhatsAppAdapter,
+        )
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -288,7 +289,10 @@ class TestWhatsAppMessageParsing:
     @pytest.fixture
     def adapter(self):
         """Create test WhatsApp adapter."""
-        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import (
+            WhatsAppConfig,
+            WhatsAppAdapter,
+        )
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -300,30 +304,38 @@ class TestWhatsAppMessageParsing:
         """Should parse text message to ChatMessage."""
         webhook_payload = {
             "object": "whatsapp_business_account",
-            "entry": [{
-                "id": "WHATSAPP_BUSINESS_ACCOUNT_ID",
-                "changes": [{
-                    "value": {
-                        "messaging_product": "whatsapp",
-                        "metadata": {
-                            "display_phone_number": "1234567890",
-                            "phone_number_id": "123456789",
-                        },
-                        "contacts": [{
-                            "profile": {"name": "John Doe"},
-                            "wa_id": "15551234567",
-                        }],
-                        "messages": [{
-                            "from": "15551234567",
-                            "id": "wamid.xxx",
-                            "timestamp": "1234567890",
-                            "type": "text",
-                            "text": {"body": "Hello, world!"},
-                        }],
-                    },
-                    "field": "messages",
-                }],
-            }],
+            "entry": [
+                {
+                    "id": "WHATSAPP_BUSINESS_ACCOUNT_ID",
+                    "changes": [
+                        {
+                            "value": {
+                                "messaging_product": "whatsapp",
+                                "metadata": {
+                                    "display_phone_number": "1234567890",
+                                    "phone_number_id": "123456789",
+                                },
+                                "contacts": [
+                                    {
+                                        "profile": {"name": "John Doe"},
+                                        "wa_id": "15551234567",
+                                    }
+                                ],
+                                "messages": [
+                                    {
+                                        "from": "15551234567",
+                                        "id": "wamid.xxx",
+                                        "timestamp": "1234567890",
+                                        "type": "text",
+                                        "text": {"body": "Hello, world!"},
+                                    }
+                                ],
+                            },
+                            "field": "messages",
+                        }
+                    ],
+                }
+            ],
         }
 
         messages = adapter.parse_webhook(webhook_payload)
@@ -340,27 +352,33 @@ class TestWhatsAppMessageParsing:
         """Should parse image message."""
         webhook_payload = {
             "object": "whatsapp_business_account",
-            "entry": [{
-                "changes": [{
-                    "value": {
-                        "metadata": {"phone_number_id": "123456789"},
-                        "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
-                        "messages": [{
-                            "from": "15551234567",
-                            "id": "wamid.img",
-                            "timestamp": "1234567890",
-                            "type": "image",
-                            "image": {
-                                "id": "media_id_123",
-                                "mime_type": "image/jpeg",
-                                "sha256": "abc123",
-                                "caption": "Check this out!",
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "metadata": {"phone_number_id": "123456789"},
+                                "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
+                                "messages": [
+                                    {
+                                        "from": "15551234567",
+                                        "id": "wamid.img",
+                                        "timestamp": "1234567890",
+                                        "type": "image",
+                                        "image": {
+                                            "id": "media_id_123",
+                                            "mime_type": "image/jpeg",
+                                            "sha256": "abc123",
+                                            "caption": "Check this out!",
+                                        },
+                                    }
+                                ],
                             },
-                        }],
-                    },
-                    "field": "messages",
-                }],
-            }],
+                            "field": "messages",
+                        }
+                    ],
+                }
+            ],
         }
 
         messages = adapter.parse_webhook(webhook_payload)
@@ -376,26 +394,32 @@ class TestWhatsAppMessageParsing:
         """Should parse document message."""
         webhook_payload = {
             "object": "whatsapp_business_account",
-            "entry": [{
-                "changes": [{
-                    "value": {
-                        "metadata": {"phone_number_id": "123456789"},
-                        "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
-                        "messages": [{
-                            "from": "15551234567",
-                            "id": "wamid.doc",
-                            "timestamp": "1234567890",
-                            "type": "document",
-                            "document": {
-                                "id": "doc_media_id",
-                                "mime_type": "application/pdf",
-                                "filename": "report.pdf",
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "metadata": {"phone_number_id": "123456789"},
+                                "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
+                                "messages": [
+                                    {
+                                        "from": "15551234567",
+                                        "id": "wamid.doc",
+                                        "timestamp": "1234567890",
+                                        "type": "document",
+                                        "document": {
+                                            "id": "doc_media_id",
+                                            "mime_type": "application/pdf",
+                                            "filename": "report.pdf",
+                                        },
+                                    }
+                                ],
                             },
-                        }],
-                    },
-                    "field": "messages",
-                }],
-            }],
+                            "field": "messages",
+                        }
+                    ],
+                }
+            ],
         }
 
         messages = adapter.parse_webhook(webhook_payload)
@@ -410,27 +434,33 @@ class TestWhatsAppMessageParsing:
         """Should parse location message."""
         webhook_payload = {
             "object": "whatsapp_business_account",
-            "entry": [{
-                "changes": [{
-                    "value": {
-                        "metadata": {"phone_number_id": "123456789"},
-                        "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
-                        "messages": [{
-                            "from": "15551234567",
-                            "id": "wamid.loc",
-                            "timestamp": "1234567890",
-                            "type": "location",
-                            "location": {
-                                "latitude": 37.7749,
-                                "longitude": -122.4194,
-                                "name": "San Francisco",
-                                "address": "San Francisco, CA",
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "metadata": {"phone_number_id": "123456789"},
+                                "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
+                                "messages": [
+                                    {
+                                        "from": "15551234567",
+                                        "id": "wamid.loc",
+                                        "timestamp": "1234567890",
+                                        "type": "location",
+                                        "location": {
+                                            "latitude": 37.7749,
+                                            "longitude": -122.4194,
+                                            "name": "San Francisco",
+                                            "address": "San Francisco, CA",
+                                        },
+                                    }
+                                ],
                             },
-                        }],
-                    },
-                    "field": "messages",
-                }],
-            }],
+                            "field": "messages",
+                        }
+                    ],
+                }
+            ],
         }
 
         messages = adapter.parse_webhook(webhook_payload)
@@ -444,25 +474,35 @@ class TestWhatsAppMessageParsing:
         """Should parse contact message."""
         webhook_payload = {
             "object": "whatsapp_business_account",
-            "entry": [{
-                "changes": [{
-                    "value": {
-                        "metadata": {"phone_number_id": "123456789"},
-                        "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
-                        "messages": [{
-                            "from": "15551234567",
-                            "id": "wamid.contact",
-                            "timestamp": "1234567890",
-                            "type": "contacts",
-                            "contacts": [{
-                                "name": {"formatted_name": "Jane Smith"},
-                                "phones": [{"phone": "+15559876543", "type": "CELL"}],
-                            }],
-                        }],
-                    },
-                    "field": "messages",
-                }],
-            }],
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "metadata": {"phone_number_id": "123456789"},
+                                "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
+                                "messages": [
+                                    {
+                                        "from": "15551234567",
+                                        "id": "wamid.contact",
+                                        "timestamp": "1234567890",
+                                        "type": "contacts",
+                                        "contacts": [
+                                            {
+                                                "name": {"formatted_name": "Jane Smith"},
+                                                "phones": [
+                                                    {"phone": "+15559876543", "type": "CELL"}
+                                                ],
+                                            }
+                                        ],
+                                    }
+                                ],
+                            },
+                            "field": "messages",
+                        }
+                    ],
+                }
+            ],
         }
 
         messages = adapter.parse_webhook(webhook_payload)
@@ -475,28 +515,34 @@ class TestWhatsAppMessageParsing:
         """Should parse interactive message reply."""
         webhook_payload = {
             "object": "whatsapp_business_account",
-            "entry": [{
-                "changes": [{
-                    "value": {
-                        "metadata": {"phone_number_id": "123456789"},
-                        "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
-                        "messages": [{
-                            "from": "15551234567",
-                            "id": "wamid.interactive",
-                            "timestamp": "1234567890",
-                            "type": "interactive",
-                            "interactive": {
-                                "type": "button_reply",
-                                "button_reply": {
-                                    "id": "btn_yes",
-                                    "title": "Yes",
-                                },
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "metadata": {"phone_number_id": "123456789"},
+                                "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
+                                "messages": [
+                                    {
+                                        "from": "15551234567",
+                                        "id": "wamid.interactive",
+                                        "timestamp": "1234567890",
+                                        "type": "interactive",
+                                        "interactive": {
+                                            "type": "button_reply",
+                                            "button_reply": {
+                                                "id": "btn_yes",
+                                                "title": "Yes",
+                                            },
+                                        },
+                                    }
+                                ],
                             },
-                        }],
-                    },
-                    "field": "messages",
-                }],
-            }],
+                            "field": "messages",
+                        }
+                    ],
+                }
+            ],
         }
 
         messages = adapter.parse_webhook(webhook_payload)
@@ -511,29 +557,35 @@ class TestWhatsAppMessageParsing:
         """Should parse list selection reply."""
         webhook_payload = {
             "object": "whatsapp_business_account",
-            "entry": [{
-                "changes": [{
-                    "value": {
-                        "metadata": {"phone_number_id": "123456789"},
-                        "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
-                        "messages": [{
-                            "from": "15551234567",
-                            "id": "wamid.list",
-                            "timestamp": "1234567890",
-                            "type": "interactive",
-                            "interactive": {
-                                "type": "list_reply",
-                                "list_reply": {
-                                    "id": "item_1",
-                                    "title": "Option 1",
-                                    "description": "First option",
-                                },
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "metadata": {"phone_number_id": "123456789"},
+                                "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
+                                "messages": [
+                                    {
+                                        "from": "15551234567",
+                                        "id": "wamid.list",
+                                        "timestamp": "1234567890",
+                                        "type": "interactive",
+                                        "interactive": {
+                                            "type": "list_reply",
+                                            "list_reply": {
+                                                "id": "item_1",
+                                                "title": "Option 1",
+                                                "description": "First option",
+                                            },
+                                        },
+                                    }
+                                ],
                             },
-                        }],
-                    },
-                    "field": "messages",
-                }],
-            }],
+                            "field": "messages",
+                        }
+                    ],
+                }
+            ],
         }
 
         messages = adapter.parse_webhook(webhook_payload)
@@ -547,20 +599,26 @@ class TestWhatsAppMessageParsing:
         """Should parse message status updates."""
         webhook_payload = {
             "object": "whatsapp_business_account",
-            "entry": [{
-                "changes": [{
-                    "value": {
-                        "metadata": {"phone_number_id": "123456789"},
-                        "statuses": [{
-                            "id": "wamid.xxx",
-                            "status": "delivered",
-                            "timestamp": "1234567890",
-                            "recipient_id": "15551234567",
-                        }],
-                    },
-                    "field": "messages",
-                }],
-            }],
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "metadata": {"phone_number_id": "123456789"},
+                                "statuses": [
+                                    {
+                                        "id": "wamid.xxx",
+                                        "status": "delivered",
+                                        "timestamp": "1234567890",
+                                        "recipient_id": "15551234567",
+                                    }
+                                ],
+                            },
+                            "field": "messages",
+                        }
+                    ],
+                }
+            ],
         }
 
         statuses = adapter.parse_status_updates(webhook_payload)
@@ -581,7 +639,10 @@ class TestWhatsApp24HourWindow:
     @pytest.fixture
     def adapter(self):
         """Create test WhatsApp adapter."""
-        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import (
+            WhatsAppConfig,
+            WhatsAppAdapter,
+        )
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -595,22 +656,28 @@ class TestWhatsApp24HourWindow:
         """Should track last message time from user."""
         webhook_payload = {
             "object": "whatsapp_business_account",
-            "entry": [{
-                "changes": [{
-                    "value": {
-                        "metadata": {"phone_number_id": "123456789"},
-                        "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
-                        "messages": [{
-                            "from": "15551234567",
-                            "id": "wamid.xxx",
-                            "timestamp": "1234567890",
-                            "type": "text",
-                            "text": {"body": "Hello"},
-                        }],
-                    },
-                    "field": "messages",
-                }],
-            }],
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "metadata": {"phone_number_id": "123456789"},
+                                "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
+                                "messages": [
+                                    {
+                                        "from": "15551234567",
+                                        "id": "wamid.xxx",
+                                        "timestamp": "1234567890",
+                                        "type": "text",
+                                        "text": {"body": "Hello"},
+                                    }
+                                ],
+                            },
+                            "field": "messages",
+                        }
+                    ],
+                }
+            ],
         }
 
         adapter.parse_webhook(webhook_payload)
@@ -653,7 +720,10 @@ class TestWhatsAppMessageSending:
     @pytest.fixture
     def adapter(self):
         """Create connected test adapter."""
-        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import (
+            WhatsAppConfig,
+            WhatsAppAdapter,
+        )
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -686,7 +756,10 @@ class TestWhatsAppMessageSending:
     @pytest.mark.asyncio
     async def test_send_message_requires_connection(self):
         """Should require connection to send message."""
-        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import (
+            WhatsAppConfig,
+            WhatsAppAdapter,
+        )
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -725,7 +798,10 @@ class TestWhatsAppInteractiveMessages:
     @pytest.fixture
     def adapter(self):
         """Create connected test adapter."""
-        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import (
+            WhatsAppConfig,
+            WhatsAppAdapter,
+        )
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -847,7 +923,10 @@ class TestWhatsAppTemplateMessages:
     @pytest.fixture
     def adapter(self):
         """Create connected test adapter."""
-        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import (
+            WhatsAppConfig,
+            WhatsAppAdapter,
+        )
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -927,7 +1006,10 @@ class TestWhatsAppMediaHandling:
     @pytest.fixture
     def adapter(self):
         """Create connected test adapter."""
-        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import (
+            WhatsAppConfig,
+            WhatsAppAdapter,
+        )
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -953,9 +1035,7 @@ class TestWhatsAppMediaHandling:
     @pytest.mark.asyncio
     async def test_send_image_message(self, adapter):
         """Should send image message."""
-        adapter._api_client.send_media = AsyncMock(
-            return_value={"messages": [{"id": "wamid.img"}]}
-        )
+        adapter._api_client.send_media = AsyncMock(return_value={"messages": [{"id": "wamid.img"}]})
 
         await adapter.send_media(
             recipient="15551234567",
@@ -971,9 +1051,7 @@ class TestWhatsAppMediaHandling:
     @pytest.mark.asyncio
     async def test_send_document_message(self, adapter):
         """Should send document message."""
-        adapter._api_client.send_media = AsyncMock(
-            return_value={"messages": [{"id": "wamid.doc"}]}
-        )
+        adapter._api_client.send_media = AsyncMock(return_value={"messages": [{"id": "wamid.doc"}]})
 
         await adapter.send_media(
             recipient="15551234567",
@@ -998,7 +1076,10 @@ class TestWhatsAppEventHandling:
     @pytest.fixture
     def adapter(self):
         """Create test adapter."""
-        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import (
+            WhatsAppConfig,
+            WhatsAppAdapter,
+        )
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -1020,22 +1101,28 @@ class TestWhatsAppEventHandling:
 
         webhook_payload = {
             "object": "whatsapp_business_account",
-            "entry": [{
-                "changes": [{
-                    "value": {
-                        "metadata": {"phone_number_id": "123456789"},
-                        "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
-                        "messages": [{
-                            "from": "15551234567",
-                            "id": "wamid.test",
-                            "timestamp": "1234567890",
-                            "type": "text",
-                            "text": {"body": "Test message"},
-                        }],
-                    },
-                    "field": "messages",
-                }],
-            }],
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "metadata": {"phone_number_id": "123456789"},
+                                "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
+                                "messages": [
+                                    {
+                                        "from": "15551234567",
+                                        "id": "wamid.test",
+                                        "timestamp": "1234567890",
+                                        "type": "text",
+                                        "text": {"body": "Test message"},
+                                    }
+                                ],
+                            },
+                            "field": "messages",
+                        }
+                    ],
+                }
+            ],
         }
 
         await adapter.handle_webhook(webhook_payload)
@@ -1055,20 +1142,26 @@ class TestWhatsAppEventHandling:
 
         webhook_payload = {
             "object": "whatsapp_business_account",
-            "entry": [{
-                "changes": [{
-                    "value": {
-                        "metadata": {"phone_number_id": "123456789"},
-                        "statuses": [{
-                            "id": "wamid.xxx",
-                            "status": "read",
-                            "timestamp": "1234567890",
-                            "recipient_id": "15551234567",
-                        }],
-                    },
-                    "field": "messages",
-                }],
-            }],
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "metadata": {"phone_number_id": "123456789"},
+                                "statuses": [
+                                    {
+                                        "id": "wamid.xxx",
+                                        "status": "read",
+                                        "timestamp": "1234567890",
+                                        "recipient_id": "15551234567",
+                                    }
+                                ],
+                            },
+                            "field": "messages",
+                        }
+                    ],
+                }
+            ],
         }
 
         await adapter.handle_webhook(webhook_payload)
@@ -1088,7 +1181,10 @@ class TestWhatsAppGatewayIntegration:
     @pytest.fixture
     def adapter(self):
         """Create test adapter."""
-        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import WhatsAppConfig, WhatsAppAdapter
+        from luminescent_cluster.chatbot.adapters.whatsapp_adapter import (
+            WhatsAppConfig,
+            WhatsAppAdapter,
+        )
 
         config = WhatsAppConfig(
             access_token="EAAxxxxxxx",
@@ -1101,22 +1197,28 @@ class TestWhatsAppGatewayIntegration:
         """Should create GatewayRequest from WhatsApp message."""
         webhook_payload = {
             "object": "whatsapp_business_account",
-            "entry": [{
-                "changes": [{
-                    "value": {
-                        "metadata": {"phone_number_id": "123456789"},
-                        "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
-                        "messages": [{
-                            "from": "15551234567",
-                            "id": "wamid.gateway",
-                            "timestamp": "1234567890",
-                            "type": "text",
-                            "text": {"body": "Hello gateway"},
-                        }],
-                    },
-                    "field": "messages",
-                }],
-            }],
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "metadata": {"phone_number_id": "123456789"},
+                                "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
+                                "messages": [
+                                    {
+                                        "from": "15551234567",
+                                        "id": "wamid.gateway",
+                                        "timestamp": "1234567890",
+                                        "type": "text",
+                                        "text": {"body": "Hello gateway"},
+                                    }
+                                ],
+                            },
+                            "field": "messages",
+                        }
+                    ],
+                }
+            ],
         }
 
         messages = adapter.parse_webhook(webhook_payload)
@@ -1133,22 +1235,28 @@ class TestWhatsAppGatewayIntegration:
 
         webhook_payload = {
             "object": "whatsapp_business_account",
-            "entry": [{
-                "changes": [{
-                    "value": {
-                        "metadata": {"phone_number_id": "123456789"},
-                        "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
-                        "messages": [{
-                            "from": "15551234567",
-                            "id": "wamid.window",
-                            "timestamp": "1234567890",
-                            "type": "text",
-                            "text": {"body": "Test"},
-                        }],
-                    },
-                    "field": "messages",
-                }],
-            }],
+            "entry": [
+                {
+                    "changes": [
+                        {
+                            "value": {
+                                "metadata": {"phone_number_id": "123456789"},
+                                "contacts": [{"profile": {"name": "User"}, "wa_id": "15551234567"}],
+                                "messages": [
+                                    {
+                                        "from": "15551234567",
+                                        "id": "wamid.window",
+                                        "timestamp": "1234567890",
+                                        "type": "text",
+                                        "text": {"body": "Test"},
+                                    }
+                                ],
+                            },
+                            "field": "messages",
+                        }
+                    ],
+                }
+            ],
         }
 
         messages = adapter.parse_webhook(webhook_payload)

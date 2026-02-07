@@ -300,9 +300,7 @@ class TestFallbackReranker:
         for result in results:
             assert result.score == result.original_score
 
-    def test_rerank_empty_candidates(
-        self, fallback_reranker: FallbackReranker
-    ) -> None:
+    def test_rerank_empty_candidates(self, fallback_reranker: FallbackReranker) -> None:
         """Test reranking empty candidates."""
         results = fallback_reranker.rerank("query", [], top_k=10)
         assert results == []
@@ -326,18 +324,14 @@ class TestFallbackReranker:
         sample_candidates: list[tuple[str, Memory, float]],
     ) -> None:
         """Test rerank_with_memories returns (Memory, score) tuples."""
-        results = fallback_reranker.rerank_with_memories(
-            "query", sample_candidates, top_k=4
-        )
+        results = fallback_reranker.rerank_with_memories("query", sample_candidates, top_k=4)
 
         assert len(results) == 4
         for memory, score in results:
             assert isinstance(memory, Memory)
             assert isinstance(score, float)
 
-    def test_is_loaded_always_true(
-        self, fallback_reranker: FallbackReranker
-    ) -> None:
+    def test_is_loaded_always_true(self, fallback_reranker: FallbackReranker) -> None:
         """Test fallback is always 'loaded'."""
         assert fallback_reranker.is_loaded()
 
@@ -357,9 +351,7 @@ class TestGetReranker:
 
     def test_get_reranker_custom_model(self) -> None:
         """Test getting CrossEncoderReranker with custom model."""
-        reranker = get_reranker(
-            use_cross_encoder=True, model_name="custom-model"
-        )
+        reranker = get_reranker(use_cross_encoder=True, model_name="custom-model")
         assert isinstance(reranker, CrossEncoderReranker)
         assert reranker.model_name == "custom-model"
 

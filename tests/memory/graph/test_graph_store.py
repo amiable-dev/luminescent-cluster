@@ -455,13 +455,18 @@ class TestKnowledgeGraphSerialization:
         from luminescent_cluster.memory.graph.graph_store import KnowledgeGraph
 
         original = KnowledgeGraph(user_id="user-123")
-        original.add_node(GraphNode(
-            "auth", EntityType.SERVICE, "auth-service",
-            memory_ids=["m1", "m2"], metadata={"team": "backend"}
-        ))
-        original.add_edge(GraphEdge(
-            "auth", "pg", RelationshipType.DEPENDS_ON, "m1", confidence=0.9
-        ))
+        original.add_node(
+            GraphNode(
+                "auth",
+                EntityType.SERVICE,
+                "auth-service",
+                memory_ids=["m1", "m2"],
+                metadata={"team": "backend"},
+            )
+        )
+        original.add_edge(
+            GraphEdge("auth", "pg", RelationshipType.DEPENDS_ON, "m1", confidence=0.9)
+        )
 
         data = original.to_dict()
         restored = KnowledgeGraph.from_dict(data)

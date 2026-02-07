@@ -275,8 +275,7 @@ class ResponseFilterPolicy:
     def __post_init__(self):
         """Compile regex patterns for performance."""
         self._compiled_patterns = [
-            re.compile(pattern, re.IGNORECASE)
-            for pattern in self.sensitive_patterns
+            re.compile(pattern, re.IGNORECASE) for pattern in self.sensitive_patterns
         ]
 
     def filter_response(
@@ -302,9 +301,7 @@ class ResponseFilterPolicy:
 
         # Check for sensitive patterns in public channels
         if self._contains_sensitive_data(response):
-            logger.warning(
-                f"Sensitive data detected in public channel response, redacting"
-            )
+            logger.warning(f"Sensitive data detected in public channel response, redacting")
             return self.redaction_message
 
         return response

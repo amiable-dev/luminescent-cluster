@@ -160,9 +160,7 @@ class IngestionValidator:
                 similarity_score = dedup_result.similarity_score
 
                 if is_duplicate:
-                    checks_failed.append(
-                        f"duplicate_detected: {dedup_result.existing_memory_id}"
-                    )
+                    checks_failed.append(f"duplicate_detected: {dedup_result.existing_memory_id}")
                     conflicting_memory_id = dedup_result.existing_memory_id
                 else:
                     checks_passed.append("unique_content")

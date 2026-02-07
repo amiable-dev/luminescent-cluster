@@ -49,11 +49,13 @@ class TestGatewayUsageTracking:
     def mock_llm_provider(self):
         """Create a mock LLM provider."""
         provider = MagicMock()
-        provider.chat = AsyncMock(return_value=MagicMock(
-            content="Test response",
-            tokens_used=150,
-            model="test-model",
-        ))
+        provider.chat = AsyncMock(
+            return_value=MagicMock(
+                content="Test response",
+                tokens_used=150,
+                model="test-model",
+            )
+        )
         return provider
 
     @pytest.fixture
@@ -91,9 +93,7 @@ class TestGatewayUsageTracking:
         )
 
     @pytest.mark.asyncio
-    async def test_gateway_tracks_usage_after_llm_response(
-        self, gateway, test_message
-    ):
+    async def test_gateway_tracks_usage_after_llm_response(self, gateway, test_message):
         """Gateway calls usage_tracker.track() after successful LLM response."""
         registry = ExtensionRegistry.get()
         mock_tracker = MagicMock()
@@ -111,9 +111,7 @@ class TestGatewayUsageTracking:
         mock_tracker.track.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_gateway_tracks_correct_operation_type(
-        self, gateway, test_message
-    ):
+    async def test_gateway_tracks_correct_operation_type(self, gateway, test_message):
         """Gateway tracks 'chatbot_response' operation type."""
         registry = ExtensionRegistry.get()
         mock_tracker = MagicMock()
@@ -128,13 +126,13 @@ class TestGatewayUsageTracking:
         await gateway.process(request)
 
         call_args = mock_tracker.track.call_args
-        assert call_args.kwargs.get("operation") == "chatbot_response" or \
-               call_args.args[0] == "chatbot_response"
+        assert (
+            call_args.kwargs.get("operation") == "chatbot_response"
+            or call_args.args[0] == "chatbot_response"
+        )
 
     @pytest.mark.asyncio
-    async def test_gateway_tracks_token_count(
-        self, gateway, test_message, mock_llm_provider
-    ):
+    async def test_gateway_tracks_token_count(self, gateway, test_message, mock_llm_provider):
         """Gateway tracks correct token count from LLM response."""
         registry = ExtensionRegistry.get()
         mock_tracker = MagicMock()
@@ -153,9 +151,7 @@ class TestGatewayUsageTracking:
         assert tokens == 150  # matches mock_llm_provider
 
     @pytest.mark.asyncio
-    async def test_gateway_tracks_metadata(
-        self, gateway, test_message
-    ):
+    async def test_gateway_tracks_metadata(self, gateway, test_message):
         """Gateway includes relevant metadata in usage tracking."""
         registry = ExtensionRegistry.get()
         mock_tracker = MagicMock()
@@ -197,9 +193,7 @@ class TestGatewayUsageTracking:
         assert response.content == "Test response"
 
     @pytest.mark.asyncio
-    async def test_gateway_handles_tracker_exception_gracefully(
-        self, gateway, test_message
-    ):
+    async def test_gateway_handles_tracker_exception_gracefully(self, gateway, test_message):
         """Gateway handles usage tracker exceptions without crashing."""
         registry = ExtensionRegistry.get()
         mock_tracker = MagicMock()

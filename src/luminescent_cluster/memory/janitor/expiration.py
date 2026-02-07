@@ -68,7 +68,7 @@ class ExpirationCleaner:
         # Find and remove expired memories
         for memory in all_memories:
             if self.is_expired(memory):
-                if hasattr(memory, 'id') and memory.id:
+                if hasattr(memory, "id") and memory.id:
                     try:
                         await provider.delete(memory.id)
                         removed += 1
@@ -76,6 +76,6 @@ class ExpirationCleaner:
                         pass
 
         return {
-            'processed': processed,
-            'removed': removed,
+            "processed": processed,
+            "removed": removed,
         }

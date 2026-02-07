@@ -73,14 +73,10 @@ class TestChatbotAuthProviderProtocol:
                     "permissions": ["read", "write"],
                 }
 
-            def resolve_tenant(
-                self, platform: str, workspace_id: str
-            ) -> str | None:
+            def resolve_tenant(self, platform: str, workspace_id: str) -> str | None:
                 return "tenant-123"
 
-            def get_user_identity(
-                self, platform: str, platform_user_id: str
-            ) -> dict | None:
+            def get_user_identity(self, platform: str, platform_user_id: str) -> dict | None:
                 return {"user_id": "user-456", "email": "test@example.com"}
 
         provider = MockProvider()
@@ -101,15 +97,11 @@ class TestChatbotAuthProviderProtocol:
             ) -> dict:
                 return {"authenticated": True, "tenant_id": "tenant-123", "user_id": "user-456"}
 
-            def resolve_tenant(
-                self, platform: str, workspace_id: str
-            ) -> str | None:
+            def resolve_tenant(self, platform: str, workspace_id: str) -> str | None:
                 # Discord guild -> tenant mapping
                 return "acme-corp" if workspace_id == "guild-acme" else None
 
-            def get_user_identity(
-                self, platform: str, platform_user_id: str
-            ) -> dict | None:
+            def get_user_identity(self, platform: str, platform_user_id: str) -> dict | None:
                 return None
 
         provider = MockProvider()
@@ -129,14 +121,10 @@ class TestChatbotAuthProviderProtocol:
             ) -> dict:
                 return {"authenticated": True, "tenant_id": "tenant-123", "user_id": "user-456"}
 
-            def resolve_tenant(
-                self, platform: str, workspace_id: str
-            ) -> str | None:
+            def resolve_tenant(self, platform: str, workspace_id: str) -> str | None:
                 return None
 
-            def get_user_identity(
-                self, platform: str, platform_user_id: str
-            ) -> dict | None:
+            def get_user_identity(self, platform: str, platform_user_id: str) -> dict | None:
                 if platform == "slack" and platform_user_id == "U12345":
                     return {
                         "user_id": "internal-user-789",
@@ -295,9 +283,7 @@ class TestChatbotRateLimiterProtocol:
                 return {"requests_remaining": 10, "tokens_remaining": 10000 - used}
 
         limiter = MockLimiter()
-        limiter.record_request(
-            user_id="user-123", tokens_used=500, workspace_id="ws-789"
-        )
+        limiter.record_request(user_id="user-123", tokens_used=500, workspace_id="ws-789")
         quota = limiter.get_remaining_quota(user_id="user-123", workspace_id="ws-789")
         assert quota["tokens_remaining"] == 9500
 
@@ -504,9 +490,7 @@ class TestProtocolTyping:
             def resolve_tenant(self, platform: str, workspace_id: str) -> str | None:
                 return None
 
-            def get_user_identity(
-                self, platform: str, platform_user_id: str
-            ) -> dict | None:
+            def get_user_identity(self, platform: str, platform_user_id: str) -> dict | None:
                 return None
 
         provider = MyAuthProvider()
@@ -534,9 +518,7 @@ class TestProtocolTyping:
             ) -> None:
                 pass
 
-            def get_remaining_quota(
-                self, user_id: str, workspace_id: str | None = None
-            ) -> dict:
+            def get_remaining_quota(self, user_id: str, workspace_id: str | None = None) -> dict:
                 return {}
 
         limiter = MyRateLimiter()

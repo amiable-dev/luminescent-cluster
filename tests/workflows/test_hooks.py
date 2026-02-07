@@ -160,7 +160,9 @@ class TestHookContent:
         """
         hook_path = Path(__file__).parent.parent.parent / ".agent" / "hooks" / "post-rewrite"
         content = hook_path.read_text()
-        assert "rm" in content and "last_ingest_sha" in content, "Hook should remove last_ingest_sha"
+        assert "rm" in content and "last_ingest_sha" in content, (
+            "Hook should remove last_ingest_sha"
+        )
 
 
 class TestConfigFileExists:

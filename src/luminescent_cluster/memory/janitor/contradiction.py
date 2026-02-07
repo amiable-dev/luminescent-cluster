@@ -18,11 +18,11 @@ from luminescent_cluster.memory.schemas import Memory
 
 # Keywords that indicate potential contradictions
 CONTRADICTION_INDICATORS = {
-    'prefer': ['prefer', 'like', 'want', 'use'],
-    'database': ['postgresql', 'mysql', 'mongodb', 'sqlite', 'redis'],
-    'framework': ['django', 'fastapi', 'flask', 'express', 'react', 'vue'],
-    'language': ['python', 'javascript', 'typescript', 'rust', 'go'],
-    'formatting': ['tabs', 'spaces', 'indent'],
+    "prefer": ["prefer", "like", "want", "use"],
+    "database": ["postgresql", "mysql", "mongodb", "sqlite", "redis"],
+    "framework": ["django", "fastapi", "flask", "express", "react", "vue"],
+    "language": ["python", "javascript", "typescript", "rust", "go"],
+    "formatting": ["tabs", "spaces", "indent"],
 }
 
 
@@ -108,25 +108,23 @@ class ContradictionHandler:
             Dictionary with contradiction details for review.
         """
         return {
-            'reason': 'Potential contradiction detected',
-            'memories': [
+            "reason": "Potential contradiction detected",
+            "memories": [
                 {
-                    'content': m1.content,
-                    'created_at': m1.created_at.isoformat(),
-                    'confidence': m1.confidence,
+                    "content": m1.content,
+                    "created_at": m1.created_at.isoformat(),
+                    "confidence": m1.confidence,
                 },
                 {
-                    'content': m2.content,
-                    'created_at': m2.created_at.isoformat(),
-                    'confidence': m2.confidence,
+                    "content": m2.content,
+                    "created_at": m2.created_at.isoformat(),
+                    "confidence": m2.confidence,
                 },
             ],
-            'suggested_resolution': 'newer_wins',
+            "suggested_resolution": "newer_wins",
         }
 
-    async def run(
-        self, provider: Any, user_id: str, dry_run: bool = False
-    ) -> Dict[str, Any]:
+    async def run(self, provider: Any, user_id: str, dry_run: bool = False) -> Dict[str, Any]:
         """Run contradiction resolution on all memories for a user.
 
         Args:
@@ -152,7 +150,11 @@ class ContradictionHandler:
         # Group by type for comparison
         by_type: Dict[str, List[Memory]] = {}
         for memory in all_memories:
-            mem_type = memory.memory_type.value if hasattr(memory.memory_type, 'value') else str(memory.memory_type)
+            mem_type = (
+                memory.memory_type.value
+                if hasattr(memory.memory_type, "value")
+                else str(memory.memory_type)
+            )
             if mem_type not in by_type:
                 by_type[mem_type] = []
             by_type[mem_type].append(memory)
@@ -169,13 +171,15 @@ class ContradictionHandler:
                         winner = self.resolve(memories[i], memories[j])
                         loser = memories[j] if winner == memories[i] else memories[i]
 
-                        if hasattr(loser, 'id') and loser.id:
+                        if hasattr(loser, "id") and loser.id:
                             memories_to_invalidate.add(loser.id)
-                            would_invalidate.append({
-                                'id': loser.id,
-                                'content': loser.content[:50],
-                                'reason': f'Contradiction resolved: newer wins (winner: {winner.content[:30]}...)',
-                            })
+                            would_invalidate.append(
+                                {
+                                    "id": loser.id,
+                                    "content": loser.content[:50],
+                                    "reason": f"Contradiction resolved: newer wins (winner: {winner.content[:30]}...)",
+                                }
+                            )
 
                         # Flag for review if high confidence contradiction
                         if memories[i].confidence > 0.8 and memories[j].confidence > 0.8:
@@ -183,11 +187,11 @@ class ContradictionHandler:
 
         if dry_run:
             return {
-                'processed': processed,
-                'dry_run': True,
-                'would_invalidate': would_invalidate,
-                'would_resolve': len(memories_to_invalidate),
-                'flagged_for_review': flagged,
+                "processed": processed,
+                "dry_run": True,
+                "would_invalidate": would_invalidate,
+                "would_resolve": len(memories_to_invalidate),
+                "flagged_for_review": flagged,
             }
 
         # Soft-delete (invalidate) contradicting memories instead of hard-delete
@@ -195,11 +199,13 @@ class ContradictionHandler:
         for memory_id in memories_to_invalidate:
             try:
                 # Use invalidate if available (preferred)
-                if hasattr(provider, 'invalidate'):
-                    await provider.invalidate(memory_id, reason="Contradiction resolved by janitor (newer wins)")
+                if hasattr(provider, "invalidate"):
+                    await provider.invalidate(
+                        memory_id, reason="Contradiction resolved by janitor (newer wins)"
+                    )
                     invalidated += 1
                 # Fallback: use delete (hard delete) if no invalidate method
-                elif hasattr(provider, 'delete'):
+                elif hasattr(provider, "delete"):
                     await provider.delete(memory_id)
                     invalidated += 1
                 else:
@@ -208,9 +214,9 @@ class ContradictionHandler:
                 errors.append(f"Failed to invalidate {memory_id}: {str(e)}")
 
         return {
-            'processed': processed,
-            'invalidated': invalidated,
-            'resolved': invalidated,  # For backward compatibility
-            'flagged_for_review': flagged,
-            'errors': errors if errors else None,
+            "processed": processed,
+            "invalidated": invalidated,
+            "resolved": invalidated,  # For backward compatibility
+            "flagged_for_review": flagged,
+            "errors": errors if errors else None,
         }

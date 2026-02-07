@@ -125,9 +125,7 @@ class TestTemporalQueryParsing:
         timeline = Timeline(user_id="user-123")
         search = TemporalSearch(timeline=timeline)
 
-        result = search.parse_temporal_query(
-            "What changed in auth-service last month?"
-        )
+        result = search.parse_temporal_query("What changed in auth-service last month?")
 
         assert result.entity_id == "auth-service"
 
@@ -216,9 +214,7 @@ class TestTemporalSearchExecution:
             timeline.add_event(e)
 
         search = TemporalSearch(timeline=timeline)
-        results = search.search(
-            "What was the auth-service status before incident-123?"
-        )
+        results = search.search("What was the auth-service status before incident-123?")
 
         # Should return pre-incident status
         assert len(results) >= 1

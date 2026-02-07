@@ -46,6 +46,7 @@ def _lazy_import_pixeltable():
     global pxt
     if pxt is None:
         import pixeltable as _pxt
+
         pxt = _pxt
     return pxt
 
@@ -111,14 +112,16 @@ def _get_embedding_indices() -> List[Dict[str, Any]]:
         kb = get_knowledge_base()
         indices = []
 
-        if hasattr(kb, '_tbl_version') and hasattr(kb._tbl_version, 'embedding_indices'):
+        if hasattr(kb, "_tbl_version") and hasattr(kb._tbl_version, "embedding_indices"):
             for idx in kb._tbl_version.embedding_indices:
-                indices.append({
-                    "name": idx.name if hasattr(idx, 'name') else str(idx),
-                    "column": idx.column.name if hasattr(idx, 'column') else "content",
-                })
+                indices.append(
+                    {
+                        "name": idx.name if hasattr(idx, "name") else str(idx),
+                        "column": idx.column.name if hasattr(idx, "column") else "content",
+                    }
+                )
         else:
-            if hasattr(kb, 'content') and hasattr(kb.content, 'similarity'):
+            if hasattr(kb, "content") and hasattr(kb.content, "similarity"):
                 indices.append({"name": "default_idx", "column": "content"})
 
         return indices
@@ -147,37 +150,45 @@ def check_health() -> Dict[str, Any]:
     except Exception as e:
         return {
             "healthy": False,
-            "issues": [{
-                "type": "table_not_found",
-                "message": f"Could not access org_knowledge table: {e}",
-            }],
+            "issues": [
+                {
+                    "type": "table_not_found",
+                    "message": f"Could not access org_knowledge table: {e}",
+                }
+            ],
         }
 
     # Check for missing computed columns
-    existing_columns = set(kb.columns.keys()) if hasattr(kb, 'columns') else set()
+    existing_columns = set(kb.columns.keys()) if hasattr(kb, "columns") else set()
     for col_name in REQUIRED_COMPUTED_COLUMNS:
         if col_name not in existing_columns:
-            issues.append({
-                "type": "missing_computed_column",
-                "message": f"Missing computed column: {col_name}",
-                "column": col_name,
-            })
+            issues.append(
+                {
+                    "type": "missing_computed_column",
+                    "message": f"Missing computed column: {col_name}",
+                    "column": col_name,
+                }
+            )
 
     # Check for embedding indices
     indices = _get_embedding_indices()
     content_indices = [idx for idx in indices if idx.get("column") == "content"]
 
     if len(content_indices) == 0:
-        issues.append({
-            "type": "missing_embedding_index",
-            "message": "No embedding index found on 'content' column",
-        })
+        issues.append(
+            {
+                "type": "missing_embedding_index",
+                "message": "No embedding index found on 'content' column",
+            }
+        )
     elif len(content_indices) > 1:
-        issues.append({
-            "type": "duplicate_index",
-            "message": f"Multiple embedding indices on 'content': {[i['name'] for i in content_indices]}",
-            "indices": content_indices,
-        })
+        issues.append(
+            {
+                "type": "duplicate_index",
+                "message": f"Multiple embedding indices on 'content': {[i['name'] for i in content_indices]}",
+                "indices": content_indices,
+            }
+        )
 
     # Check version marker
     version_issue = _check_version_marker()
@@ -209,6 +220,7 @@ def check_health_cli():
 # UDF Implementation Functions (for testing)
 # ========================================
 
+
 def is_architecture_decision_impl(path: str, content: str) -> bool:
     """
     Detect if this is an architectural decision record.
@@ -220,10 +232,10 @@ def is_architecture_decision_impl(path: str, content: str) -> bool:
     path_lower = path.lower()
     content_lower = content.lower()
 
-    if '/adr/' in path_lower:
+    if "/adr/" in path_lower:
         return True
 
-    if re.search(r'#+ *adr[- ]?\d+', content_lower):
+    if re.search(r"#+ *adr[- ]?\d+", content_lower):
         return True
 
     return False
@@ -251,14 +263,8 @@ generate_summary = generate_summary_impl
 
 def main():
     """CLI entry point."""
-    parser = argparse.ArgumentParser(
-        description="Pixeltable Database Health Check Utility"
-    )
-    parser.add_argument(
-        "--check",
-        action="store_true",
-        help="Check database health"
-    )
+    parser = argparse.ArgumentParser(description="Pixeltable Database Health Check Utility")
+    parser.add_argument("--check", action="store_true", help="Check database health")
 
     args = parser.parse_args()
 

@@ -246,9 +246,7 @@ class TestExtractionPrecision:
 
         # Note: We're measuring type accuracy here, not extraction rate
         # The actual precision for this test set may vary
-        assert precision >= 0.5, (
-            f"Type accuracy {precision:.2%} is too low"
-        )
+        assert precision >= 0.5, f"Type accuracy {precision:.2%} is too low"
 
     @pytest.mark.asyncio
     async def test_confidence_scores_correlate_with_quality(self, extractor):
@@ -271,9 +269,7 @@ class TestExtractionPrecision:
             print(f"  Explicit statement: {explicit_conf:.2f}")
             print(f"  Vague statement: {vague_conf:.2f}")
 
-            assert explicit_conf >= vague_conf, (
-                "Explicit statements should have higher confidence"
-            )
+            assert explicit_conf >= vague_conf, "Explicit statements should have higher confidence"
         elif explicit_results:
             # Vague statement correctly produced no extraction
             print("\nVague statement correctly produced no extraction")

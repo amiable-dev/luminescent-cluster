@@ -169,9 +169,7 @@ class ScopedRetriever:
 
         return scope_memories[:limit]
 
-    def _build_scope_filters(
-        self, scope: str, project_id: Optional[str]
-    ) -> dict[str, Any]:
+    def _build_scope_filters(self, scope: str, project_id: Optional[str]) -> dict[str, Any]:
         """Build filter dictionary for a scope.
 
         Args:

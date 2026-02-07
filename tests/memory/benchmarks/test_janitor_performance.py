@@ -50,9 +50,9 @@ class TestJanitorPerformance:
             memory = Memory(
                 user_id="benchmark-user",
                 content=f"Memory content {i % 100} about topic {i // 100}",  # Some duplicates
-                memory_type=MemoryType.FACT if i % 3 == 0 else (
-                    MemoryType.PREFERENCE if i % 3 == 1 else MemoryType.DECISION
-                ),
+                memory_type=MemoryType.FACT
+                if i % 3 == 0
+                else (MemoryType.PREFERENCE if i % 3 == 1 else MemoryType.DECISION),
                 confidence=0.7 + (i % 30) * 0.01,
                 source="benchmark",
                 raw_source=f"Original text {i}",

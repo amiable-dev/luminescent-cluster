@@ -30,19 +30,24 @@ def create_git_mock(file_content):
     Note: git show uses text=False (binary mode) so returns bytes,
     while other commands use text=True so return strings.
     """
+
     def mock_run(cmd, **kwargs):
         result = MagicMock()
         result.returncode = 0
 
         if "show" in cmd:
             # git show <commit>:<path> - returns bytes (text=False)
-            result.stdout = file_content.encode("utf-8") if isinstance(file_content, str) else file_content
+            result.stdout = (
+                file_content.encode("utf-8") if isinstance(file_content, str) else file_content
+            )
         elif "cat-file" in cmd and "-t" in cmd:
             # git cat-file -t <commit>:<path> - returns object type (text=True)
             result.stdout = "blob"
         elif "cat-file" in cmd and "-s" in cmd:
             # git cat-file -s <commit>:<path> - returns string (text=True)
-            content_bytes = file_content.encode("utf-8") if isinstance(file_content, str) else file_content
+            content_bytes = (
+                file_content.encode("utf-8") if isinstance(file_content, str) else file_content
+            )
             result.stdout = str(len(content_bytes))
         elif "branch" in cmd and "--show-current" in cmd:
             result.stdout = "main"
@@ -50,6 +55,7 @@ def create_git_mock(file_content):
             result.stdout = ""
 
         return result
+
     return mock_run
 
 
@@ -74,16 +80,19 @@ class TestIngestFileFunction:
 
         file_content = sample_markdown_file.read_text()
 
-        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
+        with (
+            patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb,
+            patch(
+                "luminescent_cluster.workflows.ingestion.subprocess.run",
+                side_effect=create_git_mock(file_content),
+            ),
+        ):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
 
             result = ingest_file(
-                str(sample_markdown_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
+                str(sample_markdown_file), commit_sha="abc1234", project_root=temp_project_dir
             )
 
         assert isinstance(result, dict)
@@ -98,16 +107,19 @@ class TestIngestFileFunction:
 
         file_content = sample_markdown_file.read_text()
 
-        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
+        with (
+            patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb,
+            patch(
+                "luminescent_cluster.workflows.ingestion.subprocess.run",
+                side_effect=create_git_mock(file_content),
+            ),
+        ):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
 
             result = ingest_file(
-                str(sample_markdown_file),
-                commit_sha="abc123def456",
-                project_root=temp_project_dir
+                str(sample_markdown_file), commit_sha="abc123def456", project_root=temp_project_dir
             )
 
         assert result["success"] is True
@@ -130,16 +142,19 @@ class TestIngestFileContent:
 
         file_content = sample_markdown_file.read_text()
 
-        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
+        with (
+            patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb,
+            patch(
+                "luminescent_cluster.workflows.ingestion.subprocess.run",
+                side_effect=create_git_mock(file_content),
+            ),
+        ):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
 
             ingest_file(
-                str(sample_markdown_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
+                str(sample_markdown_file), commit_sha="abc1234", project_root=temp_project_dir
             )
 
         # Should have called insert with content
@@ -156,16 +171,19 @@ class TestIngestFileContent:
 
         file_content = sample_markdown_file.read_text()
 
-        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
+        with (
+            patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb,
+            patch(
+                "luminescent_cluster.workflows.ingestion.subprocess.run",
+                side_effect=create_git_mock(file_content),
+            ),
+        ):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
 
             ingest_file(
-                str(sample_markdown_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
+                str(sample_markdown_file), commit_sha="abc1234", project_root=temp_project_dir
             )
 
         call_args = mock_kb.insert.call_args[0][0][0]
@@ -186,16 +204,19 @@ class TestIngestFileMetadata:
 
         file_content = sample_markdown_file.read_text()
 
-        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
+        with (
+            patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb,
+            patch(
+                "luminescent_cluster.workflows.ingestion.subprocess.run",
+                side_effect=create_git_mock(file_content),
+            ),
+        ):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
 
             ingest_file(
-                str(sample_markdown_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
+                str(sample_markdown_file), commit_sha="abc1234", project_root=temp_project_dir
             )
 
         call_args = mock_kb.insert.call_args[0][0][0]
@@ -212,16 +233,19 @@ class TestIngestFileMetadata:
 
         file_content = sample_markdown_file.read_text()
 
-        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
+        with (
+            patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb,
+            patch(
+                "luminescent_cluster.workflows.ingestion.subprocess.run",
+                side_effect=create_git_mock(file_content),
+            ),
+        ):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
 
             ingest_file(
-                str(sample_markdown_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
+                str(sample_markdown_file), commit_sha="abc1234", project_root=temp_project_dir
             )
 
         call_args = mock_kb.insert.call_args[0][0][0]
@@ -236,23 +260,28 @@ class TestIngestFileMetadata:
 
         file_content = sample_markdown_file.read_text()
 
-        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(file_content)):
+        with (
+            patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb,
+            patch(
+                "luminescent_cluster.workflows.ingestion.subprocess.run",
+                side_effect=create_git_mock(file_content),
+            ),
+        ):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
 
             ingest_file(
-                str(sample_markdown_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
+                str(sample_markdown_file), commit_sha="abc1234", project_root=temp_project_dir
             )
 
         call_args = mock_kb.insert.call_args[0][0][0]
         # Should have created_at timestamp
         assert "created_at" in call_args
 
-    def test_ingest_file_sets_correct_type(self, temp_project_dir, sample_markdown_file, sample_adr_file):
+    def test_ingest_file_sets_correct_type(
+        self, temp_project_dir, sample_markdown_file, sample_adr_file
+    ):
         """ingest_file should set correct type based on content/path.
 
         ADR Reference: ADR-002 Phase 1 (Core Infrastructure)
@@ -262,34 +291,38 @@ class TestIngestFileMetadata:
         md_content = sample_markdown_file.read_text()
         adr_content = sample_adr_file.read_text()
 
-        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(md_content)):
+        with (
+            patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb,
+            patch(
+                "luminescent_cluster.workflows.ingestion.subprocess.run",
+                side_effect=create_git_mock(md_content),
+            ),
+        ):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
 
             # Regular markdown should be 'documentation'
             ingest_file(
-                str(sample_markdown_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
+                str(sample_markdown_file), commit_sha="abc1234", project_root=temp_project_dir
             )
 
             call_args = mock_kb.insert.call_args[0][0][0]
             assert call_args["type"] == "documentation"
 
         # ADR file should be 'decision'
-        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(adr_content)):
+        with (
+            patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb,
+            patch(
+                "luminescent_cluster.workflows.ingestion.subprocess.run",
+                side_effect=create_git_mock(adr_content),
+            ),
+        ):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
 
-            ingest_file(
-                str(sample_adr_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
-            )
+            ingest_file(str(sample_adr_file), commit_sha="abc1234", project_root=temp_project_dir)
 
             call_args = mock_kb.insert.call_args[0][0][0]
             assert call_args["type"] == "decision"
@@ -308,8 +341,13 @@ class TestIngestFileIdempotency:
         content = sample_markdown_file.read_text()
         content_hash = hashlib.sha256(content.encode()).hexdigest()
 
-        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(content)):
+        with (
+            patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb,
+            patch(
+                "luminescent_cluster.workflows.ingestion.subprocess.run",
+                side_effect=create_git_mock(content),
+            ),
+        ):
             mock_kb = MagicMock()
             # Simulate existing entry with same hash
             mock_kb.where.return_value.select.return_value.collect.return_value = [
@@ -318,9 +356,7 @@ class TestIngestFileIdempotency:
             mock_get_kb.return_value = mock_kb
 
             result = ingest_file(
-                str(sample_markdown_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
+                str(sample_markdown_file), commit_sha="abc1234", project_root=temp_project_dir
             )
 
         assert result["success"] is True
@@ -337,8 +373,13 @@ class TestIngestFileIdempotency:
 
         content = sample_markdown_file.read_text()
 
-        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(content)):
+        with (
+            patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb,
+            patch(
+                "luminescent_cluster.workflows.ingestion.subprocess.run",
+                side_effect=create_git_mock(content),
+            ),
+        ):
             mock_kb = MagicMock()
             # Simulate existing entry with different hash
             mock_kb.where.return_value.select.return_value.collect.return_value = [
@@ -347,9 +388,7 @@ class TestIngestFileIdempotency:
             mock_get_kb.return_value = mock_kb
 
             result = ingest_file(
-                str(sample_markdown_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
+                str(sample_markdown_file), commit_sha="abc1234", project_root=temp_project_dir
             )
 
         assert result["success"] is True
@@ -375,16 +414,16 @@ class TestIngestFileSecurity:
             mock_get_kb.return_value = mock_kb
 
             result = ingest_file(
-                str(outside_path),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
+                str(outside_path), commit_sha="abc1234", project_root=temp_project_dir
             )
 
         assert result["success"] is False
         assert "outside" in result.get("reason", "").lower()
         mock_kb.insert.assert_not_called()
 
-    def test_ingest_file_reads_from_git_not_working_tree(self, temp_project_dir, sample_markdown_file):
+    def test_ingest_file_reads_from_git_not_working_tree(
+        self, temp_project_dir, sample_markdown_file
+    ):
         """ingest_file should read from git object database, not working tree.
 
         ADR Reference: ADR-002 Security - Provenance Integrity (Council Review)
@@ -400,16 +439,19 @@ class TestIngestFileSecurity:
         # Create git mock that returns specific content
         git_content = "# Content from Git\n\nThis is what git show returns."
 
-        with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb, \
-             patch("luminescent_cluster.workflows.ingestion.subprocess.run", side_effect=create_git_mock(git_content)):
+        with (
+            patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb,
+            patch(
+                "luminescent_cluster.workflows.ingestion.subprocess.run",
+                side_effect=create_git_mock(git_content),
+            ),
+        ):
             mock_kb = MagicMock()
             mock_kb.where.return_value.select.return_value.collect.return_value = []
             mock_get_kb.return_value = mock_kb
 
             result = ingest_file(
-                str(sample_markdown_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
+                str(sample_markdown_file), commit_sha="abc1234", project_root=temp_project_dir
             )
 
         # Should succeed with git content
@@ -444,7 +486,7 @@ class TestIngestFileSecurity:
                 str(api_key_file),
                 commit_sha="abc1234",
                 project_root=temp_project_dir,
-                config=config
+                config=config,
             )
 
         assert result["success"] is False
@@ -463,9 +505,7 @@ class TestIngestFileSecurity:
             mock_get_kb.return_value = mock_kb
 
             result = ingest_file(
-                str(sample_secret_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
+                str(sample_secret_file), commit_sha="abc1234", project_root=temp_project_dir
             )
 
         assert result["success"] is False
@@ -488,11 +528,7 @@ class TestIngestFileSecurity:
             mock_kb = MagicMock()
             mock_get_kb.return_value = mock_kb
 
-            result = ingest_file(
-                str(key_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
-            )
+            result = ingest_file(str(key_file), commit_sha="abc1234", project_root=temp_project_dir)
 
         assert result["success"] is False
         mock_kb.insert.assert_not_called()
@@ -511,11 +547,7 @@ class TestIngestFileSecurity:
             mock_kb = MagicMock()
             mock_get_kb.return_value = mock_kb
 
-            result = ingest_file(
-                str(pwd_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
-            )
+            result = ingest_file(str(pwd_file), commit_sha="abc1234", project_root=temp_project_dir)
 
         assert result["success"] is False
         mock_kb.insert.assert_not_called()
@@ -538,7 +570,7 @@ class TestIngestFileErrorHandling:
             result = ingest_file(
                 str(temp_project_dir / "nonexistent.md"),
                 commit_sha="abc1234",
-                project_root=temp_project_dir
+                project_root=temp_project_dir,
             )
 
         assert result["success"] is False
@@ -552,16 +584,14 @@ class TestIngestFileErrorHandling:
         from luminescent_cluster.workflows.ingestion import ingest_file
 
         binary_file = temp_project_dir / "image.png"
-        binary_file.write_bytes(b'\x89PNG\r\n\x1a\n' + b'\x00' * 100)
+        binary_file.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 100)
 
         with patch("luminescent_cluster.workflows.ingestion.get_knowledge_base") as mock_get_kb:
             mock_kb = MagicMock()
             mock_get_kb.return_value = mock_kb
 
             result = ingest_file(
-                str(binary_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
+                str(binary_file), commit_sha="abc1234", project_root=temp_project_dir
             )
 
         # Should skip binary files
@@ -584,9 +614,7 @@ class TestIngestFileErrorHandling:
             mock_get_kb.return_value = mock_kb
 
             result = ingest_file(
-                str(large_file),
-                commit_sha="abc1234",
-                project_root=temp_project_dir
+                str(large_file), commit_sha="abc1234", project_root=temp_project_dir
             )
 
         # Should skip large files

@@ -54,6 +54,7 @@ import json
 @dataclass
 class GitLabFile:
     """Represents a file from GitLab."""
+
     path: str
     name: str
     id: str  # GitLab uses 'id' for blob SHA
@@ -64,6 +65,7 @@ class GitLabFile:
 @dataclass
 class GitLabCommit:
     """Represents a commit from GitLab."""
+
     id: str
     short_id: str
     title: str
@@ -75,6 +77,7 @@ class GitLabCommit:
 @dataclass
 class GitLabMergeRequest:
     """Represents a merge request from GitLab."""
+
     iid: int  # GitLab uses iid for project-scoped ID
     title: str
     state: str
@@ -88,21 +91,25 @@ class GitLabMergeRequest:
 
 class GitLabPATError(Exception):
     """Base exception for GitLab PAT errors."""
+
     pass
 
 
 class GitLabAuthError(GitLabPATError):
     """Authentication failed (invalid or expired PAT)."""
+
     pass
 
 
 class GitLabRateLimitError(GitLabPATError):
     """Rate limit exceeded."""
+
     pass
 
 
 class GitLabNotFoundError(GitLabPATError):
     """Resource not found."""
+
     pass
 
 
@@ -139,11 +146,7 @@ class GitLabPATClient:
 
     DEFAULT_BASE_URL = "https://gitlab.com"
 
-    def __init__(
-        self,
-        token: Optional[str] = None,
-        base_url: Optional[str] = None
-    ):
+    def __init__(self, token: Optional[str] = None, base_url: Optional[str] = None):
         """
         Initialize GitLab client.
 
@@ -232,11 +235,7 @@ class GitLabPATClient:
         return self._request(f"/projects/{encoded}")
 
     def list_repository_tree(
-        self,
-        project: str,
-        path: str = "",
-        ref: Optional[str] = None,
-        recursive: bool = False
+        self, project: str, path: str = "", ref: Optional[str] = None, recursive: bool = False
     ) -> List[GitLabFile]:
         """
         List contents of repository tree.
@@ -275,12 +274,7 @@ class GitLabPATClient:
             for item in data
         ]
 
-    def get_file_content(
-        self,
-        project: str,
-        path: str,
-        ref: Optional[str] = None
-    ) -> str:
+    def get_file_content(self, project: str, path: str, ref: Optional[str] = None) -> str:
         """
         Get content of a specific file.
 
@@ -312,11 +306,7 @@ class GitLabPATClient:
             return content
 
     def get_commits(
-        self,
-        project: str,
-        path: Optional[str] = None,
-        ref: Optional[str] = None,
-        limit: int = 10
+        self, project: str, path: Optional[str] = None, ref: Optional[str] = None, limit: int = 10
     ) -> List[GitLabCommit]:
         """
         Get commit history.
@@ -353,10 +343,7 @@ class GitLabPATClient:
         ]
 
     def get_merge_requests(
-        self,
-        project: str,
-        state: str = "opened",
-        limit: int = 10
+        self, project: str, state: str = "opened", limit: int = 10
     ) -> List[GitLabMergeRequest]:
         """
         Get merge requests for a project.
@@ -406,10 +393,7 @@ class GitLabPATClient:
             return False
 
     def get_all_files(
-        self,
-        project: str,
-        ref: Optional[str] = None,
-        extensions: Optional[Set[str]] = None
+        self, project: str, ref: Optional[str] = None, extensions: Optional[Set[str]] = None
     ) -> List[GitLabFile]:
         """
         Get all files in repository recursively.

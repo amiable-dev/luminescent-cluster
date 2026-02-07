@@ -139,7 +139,10 @@ class LocalMemoryProvider:
 
     def _init_hybrid_retriever(self) -> None:
         """Initialize the hybrid retriever lazily."""
-        from luminescent_cluster.memory.retrieval.hybrid import HybridRetriever, create_hybrid_retriever
+        from luminescent_cluster.memory.retrieval.hybrid import (
+            HybridRetriever,
+            create_hybrid_retriever,
+        )
 
         if self._use_graph:
             # Initialize graph search component
@@ -156,6 +159,7 @@ class LocalMemoryProvider:
 
             if self._use_query_rewriter:
                 from luminescent_cluster.memory.retrieval.query_rewriter import QueryRewriter
+
                 self._hybrid_retriever.query_rewriter = QueryRewriter()
         else:
             self._hybrid_retriever = create_hybrid_retriever(
@@ -220,9 +224,7 @@ class LocalMemoryProvider:
         if self._graph_search is not None:
             self._graph_search.register_graph(user_id, graph)
 
-    async def retrieve(
-        self, query: str, user_id: str, limit: int = 5
-    ) -> list[Memory]:
+    async def retrieve(self, query: str, user_id: str, limit: int = 5) -> list[Memory]:
         """Retrieve memories matching a query for a user.
 
         When caching is enabled, checks cache first and returns
@@ -268,9 +270,7 @@ class LocalMemoryProvider:
 
         return results
 
-    async def _retrieve_hybrid(
-        self, query: str, user_id: str, limit: int
-    ) -> list[Memory]:
+    async def _retrieve_hybrid(self, query: str, user_id: str, limit: int) -> list[Memory]:
         """Retrieve using two-stage hybrid retrieval.
 
         Args:
@@ -305,9 +305,7 @@ class LocalMemoryProvider:
 
         return valid_results
 
-    def _retrieve_simple(
-        self, query: str, user_id: str, limit: int
-    ) -> list[Memory]:
+    def _retrieve_simple(self, query: str, user_id: str, limit: int) -> list[Memory]:
         """Retrieve using simple substring matching.
 
         Args:
@@ -388,9 +386,7 @@ class LocalMemoryProvider:
 
         return True
 
-    async def search(
-        self, user_id: str, filters: dict, limit: int = 10
-    ) -> list[Memory]:
+    async def search(self, user_id: str, filters: dict, limit: int = 10) -> list[Memory]:
         """Search memories with filters.
 
         Supports filtering by:
@@ -443,9 +439,7 @@ class LocalMemoryProvider:
 
         return results
 
-    async def update(
-        self, memory_id: str, updates: dict[str, Any]
-    ) -> Optional[Memory]:
+    async def update(self, memory_id: str, updates: dict[str, Any]) -> Optional[Memory]:
         """Update a memory's fields.
 
         Args:
@@ -462,12 +456,14 @@ class LocalMemoryProvider:
 
         # Track update in metadata
         update_history = memory.metadata.get("update_history", [])
-        update_history.append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "fields": list(updates.keys()),
-            "previous_content": memory.content if "content" in updates else None,
-            "previous_source": memory.source if "source" in updates else None,
-        })
+        update_history.append(
+            {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "fields": list(updates.keys()),
+                "previous_content": memory.content if "content" in updates else None,
+                "previous_source": memory.source if "source" in updates else None,
+            }
+        )
 
         # Create updated memory
         new_data = memory.model_dump()

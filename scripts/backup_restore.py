@@ -59,6 +59,7 @@ def _lazy_import_pixeltable():
     global pxt
     if pxt is None:
         import pixeltable as _pxt
+
         pxt = _pxt
     return pxt
 
@@ -68,6 +69,7 @@ def _lazy_import_pandas():
     global pd
     if pd is None:
         import pandas as _pd
+
         pd = _pd
     return pd
 
@@ -141,7 +143,9 @@ def export_data(export_dir: Path) -> Dict[str, Any]:
 
         if row_count == 0:
             # Create empty parquet file
-            empty_df = pd.DataFrame(columns=["type", "path", "content", "title", "created_at", "metadata"])
+            empty_df = pd.DataFrame(
+                columns=["type", "path", "content", "title", "created_at", "metadata"]
+            )
             empty_df.to_parquet(export_path, index=False)
         else:
             # Convert to DataFrame and save
@@ -202,9 +206,7 @@ def recreate_table() -> Dict[str, Any]:
         # Add embedding index
         from pixeltable.functions.huggingface import sentence_transformer
 
-        embed_model = sentence_transformer.using(
-            model_id="sentence-transformers/all-MiniLM-L6-v2"
-        )
+        embed_model = sentence_transformer.using(model_id="sentence-transformers/all-MiniLM-L6-v2")
 
         kb.add_embedding_index("content", string_embed=embed_model)
         print("  Added embedding index")
@@ -352,9 +354,7 @@ def update_version_marker() -> Dict[str, Any]:
         }
 
 
-def full_backup_restore(
-    confirm: bool = False, export_dir: Optional[Path] = None
-) -> Dict[str, Any]:
+def full_backup_restore(confirm: bool = False, export_dir: Optional[Path] = None) -> Dict[str, Any]:
     """
     Run the full backup and restore workflow.
 

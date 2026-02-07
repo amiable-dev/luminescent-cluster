@@ -349,17 +349,13 @@ class RecallHealthMonitor:
             )
 
         # Pass filter_name through for proper baseline handling
-        result = self.measure_recall_at_k(
-            queries, k, filter_fn=filter_fn, filter_name=filter_name
-        )
+        result = self.measure_recall_at_k(queries, k, filter_fn=filter_fn, filter_name=filter_name)
 
         # Use sanitized filter name to avoid storing PII in baseline files
         # The sanitized name is safe for filenames and won't contain sensitive data
         sanitized_filter_name = None
         if filter_name:
-            sanitized_filter_name = self._baseline_store._sanitize_filter_name(
-                filter_name
-            )
+            sanitized_filter_name = self._baseline_store._sanitize_filter_name(filter_name)
 
         baseline = RecallBaseline(
             recall_at_k=result.recall_at_k,
@@ -399,7 +395,5 @@ class RecallHealthMonitor:
             "p25_recall": sorted(recalls)[len(recalls) // 4],
             "p50_recall": sorted(recalls)[len(recalls) // 2],
             "p75_recall": sorted(recalls)[3 * len(recalls) // 4],
-            "queries_below_threshold": sum(
-                1 for r in recalls if r < self.ABSOLUTE_THRESHOLD
-            ),
+            "queries_below_threshold": sum(1 for r in recalls if r < self.ABSOLUTE_THRESHOLD),
         }

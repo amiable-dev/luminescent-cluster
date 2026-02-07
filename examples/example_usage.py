@@ -17,7 +17,7 @@ from pixeltable_setup import (
     ingest_incident,
     search_knowledge,
     get_adrs,
-    snapshot_knowledge_base
+    snapshot_knowledge_base,
 )
 from datetime import datetime
 
@@ -27,11 +27,11 @@ def example_1_setup():
     print("=" * 60)
     print("Example 1: Setting up knowledge base")
     print("=" * 60)
-    
+
     # Initialize tables
     kb = setup_knowledge_base()
     meetings = setup_meetings_table()
-    
+
     print("\n✓ Knowledge base initialized")
     return kb
 
@@ -41,12 +41,12 @@ def example_2_ingest_code(kb):
     print("\n" + "=" * 60)
     print("Example 2: Ingesting codebase")
     print("=" * 60)
-    
+
     # Ingest current directory as example
     current_dir = Path(__file__).parent.parent
-    
-    ingest_codebase(kb, str(current_dir), 'context-aware-system')
-    
+
+    ingest_codebase(kb, str(current_dir), "context-aware-system")
+
     print("\n✓ Codebase ingested")
 
 
@@ -55,16 +55,12 @@ def example_3_add_adr(kb):
     print("\n" + "=" * 60)
     print("Example 3: Adding ADR")
     print("=" * 60)
-    
+
     # Create a sample ADR
-    adr_path = Path(__file__).parent / 'sample_adr.md'
-    
+    adr_path = Path(__file__).parent / "sample_adr.md"
+
     if adr_path.exists():
-        ingest_adr(
-            kb,
-            str(adr_path),
-            'ADR 001: Tiered Memory Architecture'
-        )
+        ingest_adr(kb, str(adr_path), "ADR 001: Tiered Memory Architecture")
         print("\n✓ ADR added")
     else:
         print("\n⚠ Sample ADR not found, skipping")
@@ -75,10 +71,10 @@ def example_4_add_incident(kb):
     print("\n" + "=" * 60)
     print("Example 4: Adding incident report")
     print("=" * 60)
-    
+
     incident = {
-        'title': 'Context Window Overflow - Oct 2024',
-        'description': '''
+        "title": "Context Window Overflow - Oct 2024",
+        "description": """
         ## Incident Summary
         AI assistant failed to provide accurate responses due to context window overflow.
         
@@ -98,14 +94,14 @@ def example_4_add_incident(kb):
         - Monitor token usage metrics
         - Default new tools to deferred loading
         - Alert when context exceeds 50K tokens
-        ''',
-        'date': datetime(2024, 10, 15, 14, 30),
-        'service': 'ai-assistant',
-        'severity': 'high',
-        'resolved': True,
-        'root_cause': 'All tools loaded upfront without Tool Search Tool'
+        """,
+        "date": datetime(2024, 10, 15, 14, 30),
+        "service": "ai-assistant",
+        "severity": "high",
+        "resolved": True,
+        "root_cause": "All tools loaded upfront without Tool Search Tool",
     }
-    
+
     ingest_incident(kb, incident)
     print("\n✓ Incident added")
 
@@ -115,14 +111,10 @@ def example_5_search(kb):
     print("\n" + "=" * 60)
     print("Example 5: Searching knowledge base")
     print("=" * 60)
-    
+
     # Semantic search
-    results = search_knowledge(
-        kb,
-        query="How do we manage context and memory?",
-        limit=3
-    )
-    
+    results = search_knowledge(kb, query="How do we manage context and memory?", limit=3)
+
     print(f"\nFound {len(results)} results for 'context and memory':")
     for i, result in enumerate(results, 1):
         print(f"\n{i}. {result.get('title', 'Untitled')}")
@@ -136,9 +128,9 @@ def example_6_get_adrs(kb):
     print("\n" + "=" * 60)
     print("Example 6: Querying ADRs")
     print("=" * 60)
-    
+
     adrs = get_adrs(kb, topic="architecture")
-    
+
     print(f"\nFound {len(adrs)} ADRs related to 'architecture':")
     for i, adr in enumerate(adrs, 1):
         print(f"\n{i}. {adr.get('title')}")
@@ -151,12 +143,9 @@ def example_7_snapshot(kb):
     print("\n" + "=" * 60)
     print("Example 7: Creating snapshot")
     print("=" * 60)
-    
-    snapshot_knowledge_base(
-        name='example-snapshot',
-        tags=['demo', 'v1.0']
-    )
-    
+
+    snapshot_knowledge_base(name="example-snapshot", tags=["demo", "v1.0"])
+
     print("\n✓ Snapshot created: example-snapshot")
 
 
@@ -165,7 +154,7 @@ def example_8_programmatic_query():
     print("\n" + "=" * 60)
     print("Example 8: Programmatic Tool Calling (Conceptual)")
     print("=" * 60)
-    
+
     print("""
 When Claude uses Programmatic Tool Calling, it writes orchestration code like:
 
@@ -215,34 +204,34 @@ def run_all_examples():
     print("\n" + "=" * 60)
     print("CONTEXT-AWARE AI SYSTEM - USAGE EXAMPLES")
     print("=" * 60)
-    
+
     # Example 1: Setup
     kb = example_1_setup()
-    
+
     # Example 2: Ingest code
     example_2_ingest_code(kb)
-    
+
     # Example 3: Add ADR
     example_3_add_adr(kb)
-    
+
     # Example 4: Add incident
     example_4_add_incident(kb)
-    
+
     # Example 5: Search
     example_5_search(kb)
-    
+
     # Example 6: Get ADRs
     example_6_get_adrs(kb)
-    
+
     # Example 7: Snapshot
     example_7_snapshot(kb)
-    
+
     # Example 8: Programmatic concept
     example_8_programmatic_query()
 
     # Example 9: Graceful Fallback (RAG)
     example_9_rag_fallback(kb)
-    
+
     print("\n" + "=" * 60)
     print("✓ All examples completed!")
     print("=" * 60)
@@ -253,29 +242,29 @@ def example_9_rag_fallback(kb):
     print("\n" + "=" * 60)
     print("Example 9: Graceful Fallback (RAG Pattern)")
     print("=" * 60)
-    
+
     print("Demonstrating how to use the system with models that DON'T support tools.")
     print("Strategy: Pre-fetch context -> Construct Prompt -> Send to LLM\n")
-    
+
     # 1. User Query
     user_query = "What caused the context window overflow incident?"
     print(f"User Query: {user_query}\n")
-    
+
     # 2. Application Logic: Retrieve Context (The "R" in RAG)
     print("... Retrieving relevant context (Application Layer) ...")
     context_items = search_knowledge(kb, query=user_query, limit=2)
-    
+
     # 3. Construct Prompt (The "A" in RAG)
     context_str = ""
     for item in context_items:
         context_str += f"""
 ---
-Title: {item['title']}
-Type: {item['type']}
-Content: {item.get('summary', 'No summary')}
+Title: {item["title"]}
+Type: {item["type"]}
+Content: {item.get("summary", "No summary")}
 ---
 """
-    
+
     final_prompt = f"""
 Context information is below.
 ---------------------
@@ -284,7 +273,7 @@ Context information is below.
 Given the context information and not prior knowledge, answer the query.
 Query: {user_query}
 """
-    
+
     print("\nGenerated Prompt for LLM:")
     print("-" * 40)
     print(final_prompt.strip())

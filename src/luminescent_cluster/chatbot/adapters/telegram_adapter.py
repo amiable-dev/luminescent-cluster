@@ -65,7 +65,16 @@ class TelegramConfig:
     bot_token: str
     webhook_url: Optional[str] = None
     use_webhook: bool = False
-    allowed_updates: List[str] = field(default_factory=lambda: ["message", "edited_message", "channel_post", "inline_query", "callback_query", "chosen_inline_result"])
+    allowed_updates: List[str] = field(
+        default_factory=lambda: [
+            "message",
+            "edited_message",
+            "channel_post",
+            "inline_query",
+            "callback_query",
+            "chosen_inline_result",
+        ]
+    )
 
 
 # =============================================================================
@@ -214,12 +223,7 @@ class InlineKeyboard:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to Telegram API format."""
-        return {
-            "inline_keyboard": [
-                [btn.to_dict() for btn in row]
-                for row in self.buttons
-            ]
-        }
+        return {"inline_keyboard": [[btn.to_dict() for btn in row] for row in self.buttons]}
 
 
 # =============================================================================
@@ -483,7 +487,7 @@ class TelegramAdapter:
             entity_type = entity.get("type")
             offset = entity.get("offset", 0)
             length = entity.get("length", 0)
-            entity_text = text[offset:offset + length]
+            entity_text = text[offset : offset + length]
 
             if entity_type == "mention":
                 mentions.append(entity_text)
@@ -531,33 +535,39 @@ class TelegramAdapter:
         if "photo" in message_data:
             photos = message_data["photo"]
             largest = max(photos, key=lambda p: p.get("width", 0) * p.get("height", 0))
-            attachments.append({
-                "type": "photo",
-                "file_id": largest.get("file_id"),
-                "width": largest.get("width"),
-                "height": largest.get("height"),
-            })
+            attachments.append(
+                {
+                    "type": "photo",
+                    "file_id": largest.get("file_id"),
+                    "width": largest.get("width"),
+                    "height": largest.get("height"),
+                }
+            )
 
         # Document
         if "document" in message_data:
             doc = message_data["document"]
-            attachments.append({
-                "type": "document",
-                "file_id": doc.get("file_id"),
-                "filename": doc.get("file_name"),
-                "content_type": doc.get("mime_type"),
-                "size": doc.get("file_size"),
-            })
+            attachments.append(
+                {
+                    "type": "document",
+                    "file_id": doc.get("file_id"),
+                    "filename": doc.get("file_name"),
+                    "content_type": doc.get("mime_type"),
+                    "size": doc.get("file_size"),
+                }
+            )
 
         # Sticker
         if "sticker" in message_data:
             sticker = message_data["sticker"]
-            attachments.append({
-                "type": "sticker",
-                "file_id": sticker.get("file_id"),
-                "emoji": sticker.get("emoji"),
-                "set_name": sticker.get("set_name"),
-            })
+            attachments.append(
+                {
+                    "type": "sticker",
+                    "file_id": sticker.get("file_id"),
+                    "emoji": sticker.get("emoji"),
+                    "set_name": sticker.get("set_name"),
+                }
+            )
 
         # Convert timestamp
         try:
@@ -710,7 +720,9 @@ class TelegramAdapter:
         """
         # Handle message updates
         if "message" in update or "edited_message" in update or "channel_post" in update:
-            message_data = update.get("message") or update.get("edited_message") or update.get("channel_post")
+            message_data = (
+                update.get("message") or update.get("edited_message") or update.get("channel_post")
+            )
 
             # Ignore own messages
             from_user = message_data.get("from", {})
@@ -723,7 +735,9 @@ class TelegramAdapter:
             if chat_msg.metadata.get("is_command"):
                 command = chat_msg.metadata.get("command", "").lstrip("/")
                 if command in self._command_handlers:
-                    await self._command_handlers[command](update, chat_msg.metadata.get("command_args", ""))
+                    await self._command_handlers[command](
+                        update, chat_msg.metadata.get("command_args", "")
+                    )
                     return
 
             # Invoke message callback

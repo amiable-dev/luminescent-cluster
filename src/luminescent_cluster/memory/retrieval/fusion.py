@@ -161,9 +161,7 @@ class RRFFusion:
 
         # Build results sorted by RRF score
         results = []
-        for item_id, rrf_score in sorted(
-            rrf_scores.items(), key=lambda x: x[1], reverse=True
-        ):
+        for item_id, rrf_score in sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True):
             results.append(
                 FusedResult(
                     item=item_id,
@@ -288,8 +286,7 @@ class RRFFusion:
             return [(item_id, 1.0) for item_id, _ in results]
 
         return [
-            (item_id, (score - min_score) / (max_score - min_score))
-            for item_id, score in results
+            (item_id, (score - min_score) / (max_score - min_score)) for item_id, score in results
         ]
 
     @staticmethod

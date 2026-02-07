@@ -139,9 +139,7 @@ def main():
         description="Bootstrap knowledge base for fresh clone (ADR-002)"
     )
     parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Re-ingest even if KB appears to be initialized"
+        "--force", action="store_true", help="Re-ingest even if KB appears to be initialized"
     )
 
     args = parser.parse_args()

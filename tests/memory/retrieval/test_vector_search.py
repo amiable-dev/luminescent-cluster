@@ -162,9 +162,7 @@ class TestVectorSearchEmbedding:
 
         np.testing.assert_array_almost_equal(emb1, emb2)
 
-    def test_different_texts_different_embeddings(
-        self, vector_search: VectorSearch
-    ) -> None:
+    def test_different_texts_different_embeddings(self, vector_search: VectorSearch) -> None:
         """Test different texts produce different embeddings."""
         emb1 = vector_search.embed_single("Hello world")
         emb2 = vector_search.embed_single("Goodbye universe")
@@ -205,9 +203,7 @@ class TestVectorSearchIndexing:
         stats = vector_search.index_stats("user-1")
         assert stats["total_docs"] == 0
 
-    def test_add_memory(
-        self, vector_search: VectorSearch, sample_memories: list[Memory]
-    ) -> None:
+    def test_add_memory(self, vector_search: VectorSearch, sample_memories: list[Memory]) -> None:
         """Test adding a single memory."""
         vector_search.index_memories("user-1", sample_memories[:2])
         assert vector_search.index_stats("user-1")["total_docs"] == 2
@@ -246,9 +242,7 @@ class TestVectorSearchIndexing:
         removed = vector_search.remove_memory("user-1", "nonexistent")
         assert removed is False
 
-    def test_clear_index(
-        self, vector_search: VectorSearch, sample_memories: list[Memory]
-    ) -> None:
+    def test_clear_index(self, vector_search: VectorSearch, sample_memories: list[Memory]) -> None:
         """Test clearing an index."""
         vector_search.index_memories("user-1", sample_memories)
         assert vector_search.has_index("user-1")
@@ -260,9 +254,7 @@ class TestVectorSearchIndexing:
 class TestVectorSearchSearch:
     """Tests for vector search."""
 
-    def test_search_basic(
-        self, vector_search: VectorSearch, sample_memories: list[Memory]
-    ) -> None:
+    def test_search_basic(self, vector_search: VectorSearch, sample_memories: list[Memory]) -> None:
         """Test basic search."""
         vector_search.index_memories("user-1", sample_memories)
 
@@ -323,9 +315,7 @@ class TestVectorSearchWithMemories:
             assert isinstance(memory, Memory)
             assert isinstance(score, float)
 
-    def test_get_memory(
-        self, vector_search: VectorSearch, sample_memories: list[Memory]
-    ) -> None:
+    def test_get_memory(self, vector_search: VectorSearch, sample_memories: list[Memory]) -> None:
         """Test get_memory retrieves indexed memory."""
         vector_search.index_memories("user-1", sample_memories)
 

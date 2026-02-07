@@ -233,7 +233,11 @@ class TestHandoffLifecycle:
 
     def test_accept_handoff(self):
         """Verify handoff can be accepted."""
-        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager, HandoffStatus
+        from luminescent_cluster.memory.maas.handoff import (
+            HandoffContext,
+            HandoffManager,
+            HandoffStatus,
+        )
 
         manager = HandoffManager.get()
 
@@ -270,7 +274,11 @@ class TestHandoffLifecycle:
 
     def test_reject_handoff(self):
         """Verify handoff can be rejected."""
-        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager, HandoffStatus
+        from luminescent_cluster.memory.maas.handoff import (
+            HandoffContext,
+            HandoffManager,
+            HandoffStatus,
+        )
 
         manager = HandoffManager.get()
 
@@ -290,7 +298,11 @@ class TestHandoffLifecycle:
 
     def test_complete_handoff(self):
         """Verify handoff can be completed."""
-        from luminescent_cluster.memory.maas.handoff import HandoffContext, HandoffManager, HandoffStatus
+        from luminescent_cluster.memory.maas.handoff import (
+            HandoffContext,
+            HandoffManager,
+            HandoffStatus,
+        )
 
         manager = HandoffManager.get()
 

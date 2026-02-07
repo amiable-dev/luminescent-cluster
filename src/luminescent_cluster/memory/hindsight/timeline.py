@@ -37,9 +37,7 @@ class Timeline:
 
     # Internal storage
     _events: dict[str, TemporalEvent] = field(default_factory=dict)
-    _events_by_entity: dict[str, list[str]] = field(
-        default_factory=lambda: defaultdict(list)
-    )
+    _events_by_entity: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
     _events_by_network: dict[NetworkType, list[str]] = field(
         default_factory=lambda: defaultdict(list)
     )
@@ -119,11 +117,7 @@ class Timeline:
         Returns:
             List of events within the time range, sorted chronologically
         """
-        results = [
-            event
-            for event in self._events.values()
-            if time_range.contains(event.timestamp)
-        ]
+        results = [event for event in self._events.values() if time_range.contains(event.timestamp)]
 
         # Sort by timestamp
         results.sort(key=lambda e: e.timestamp)
@@ -238,8 +232,7 @@ class Timeline:
         candidates = [
             e
             for e in entity_events
-            if e.timestamp <= at_time
-            and (e.valid_from is None or e.valid_from <= at_time)
+            if e.timestamp <= at_time and (e.valid_from is None or e.valid_from <= at_time)
         ]
 
         if not candidates:

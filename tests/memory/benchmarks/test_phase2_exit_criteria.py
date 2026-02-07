@@ -86,7 +86,7 @@ class TestPhase2ExitCriteria:
 
         # Verify 30% efficiency target is met
         assert result["meets_target"] is True, (
-            f"Expected 30% efficiency improvement, got {result['efficiency_improvement']*100:.1f}%"
+            f"Expected 30% efficiency improvement, got {result['efficiency_improvement'] * 100:.1f}%"
         )
         assert result["efficiency_improvement"] >= 0.30
 
@@ -126,9 +126,7 @@ class TestPhase2ExitCriteria:
 
         # Verify every retrieved memory has provenance
         for memory, score in ranked:
-            assert memory.provenance is not None, (
-                f"Memory {memory.content} missing provenance"
-            )
+            assert memory.provenance is not None, f"Memory {memory.content} missing provenance"
             assert memory.provenance.source_id is not None
             assert memory.provenance.source_type == "memory"
             assert memory.provenance.retrieval_score == score
@@ -189,9 +187,7 @@ class TestBlockAssemblerIntegration:
         )
 
         total_tokens = sum(block.token_count for block in blocks)
-        assert total_tokens <= 5000, (
-            f"Total tokens ({total_tokens}) exceeds budget (5000)"
-        )
+        assert total_tokens <= 5000, f"Total tokens ({total_tokens}) exceeds budget (5000)"
 
     @pytest.mark.asyncio
     async def test_assemble_produces_all_block_types(self):
@@ -239,9 +235,7 @@ class TestHistoryCompressionEfficiency:
         compressor = HistoryCompressor(max_tokens=500)
 
         # Calculate original token count
-        original_text = "\n".join(
-            f"{msg.role}: {msg.content}" for msg in messages
-        )
+        original_text = "\n".join(f"{msg.role}: {msg.content}" for msg in messages)
         original_tokens = compressor.count_tokens(original_text)
 
         # Compress

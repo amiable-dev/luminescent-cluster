@@ -563,9 +563,7 @@ class TestConcreteImplementations:
             def get_tenant_filter(self, tenant_id: str) -> dict:
                 return {"tenant_id": {"$eq": tenant_id}}
 
-            def validate_tenant_access(
-                self, tenant_id: str, user_id: str, resource: str
-            ) -> bool:
+            def validate_tenant_access(self, tenant_id: str, user_id: str, resource: str) -> bool:
                 return True  # Allow all in test
 
         registry = ExtensionRegistry.get()
@@ -590,11 +588,13 @@ class TestConcreteImplementations:
                 self.quotas = {}  # tenant_id -> remaining tokens
 
             def track(self, operation: str, tokens: int, metadata: dict) -> None:
-                self.events.append({
-                    "operation": operation,
-                    "tokens": tokens,
-                    "metadata": metadata,
-                })
+                self.events.append(
+                    {
+                        "operation": operation,
+                        "tokens": tokens,
+                        "metadata": metadata,
+                    }
+                )
 
             def check_quota(self, tenant_id: str, operation: str) -> tuple[bool, Optional[str]]:
                 remaining = self.quotas.get(tenant_id, 1000000)  # Default 1M
@@ -608,7 +608,9 @@ class TestConcreteImplementations:
                 start_date: Optional[datetime] = None,
                 end_date: Optional[datetime] = None,
             ) -> dict:
-                tenant_events = [e for e in self.events if e["metadata"].get("tenant_id") == tenant_id]
+                tenant_events = [
+                    e for e in self.events if e["metadata"].get("tenant_id") == tenant_id
+                ]
                 return {
                     "total_tokens": sum(e["tokens"] for e in tenant_events),
                     "total_queries": len(tenant_events),
@@ -620,12 +622,8 @@ class TestConcreteImplementations:
         registry.usage_tracker = tracker
 
         # Test the implementation
-        registry.usage_tracker.track(
-            "query", 100, {"tenant_id": "test-tenant"}
-        )
-        registry.usage_tracker.track(
-            "query", 50, {"tenant_id": "test-tenant"}
-        )
+        registry.usage_tracker.track("query", 100, {"tenant_id": "test-tenant"})
+        registry.usage_tracker.track("query", 50, {"tenant_id": "test-tenant"})
 
         summary = registry.usage_tracker.get_usage_summary("test-tenant")
         assert summary["total_tokens"] == 150
@@ -805,9 +803,7 @@ class TestChatbotProtocolUsage:
         registry.chatbot_auth_provider = mock_auth_provider
 
         result = registry.chatbot_auth_provider.authenticate_platform_user(
-            platform="discord",
-            platform_user_id="123456789",
-            workspace_id="guild-acme"
+            platform="discord", platform_user_id="123456789", workspace_id="guild-acme"
         )
 
         assert result["authenticated"] is True
@@ -834,9 +830,7 @@ class TestChatbotProtocolUsage:
         registry.chatbot_rate_limiter = mock_rate_limiter
 
         allowed, reason = registry.chatbot_rate_limiter.check_rate_limit(
-            user_id="user-123",
-            channel_id="channel-456",
-            workspace_id="ws-789"
+            user_id="user-123", channel_id="channel-456", workspace_id="ws-789"
         )
 
         assert allowed is True
@@ -846,14 +840,12 @@ class TestChatbotProtocolUsage:
         """ChatbotRateLimiter should return reason when limit exceeded."""
         mock_rate_limiter.check_rate_limit.return_value = (
             False,
-            "Rate limit exceeded: 10 requests per minute"
+            "Rate limit exceeded: 10 requests per minute",
         )
         registry = ExtensionRegistry.get()
         registry.chatbot_rate_limiter = mock_rate_limiter
 
-        allowed, reason = registry.chatbot_rate_limiter.check_rate_limit(
-            user_id="user-123"
-        )
+        allowed, reason = registry.chatbot_rate_limiter.check_rate_limit(user_id="user-123")
 
         assert allowed is False
         assert "Rate limit exceeded" in reason
@@ -867,9 +859,7 @@ class TestChatbotProtocolUsage:
         registry.chatbot_access_controller = mock_access_controller
 
         allowed, reason = registry.chatbot_access_controller.check_channel_access(
-            user_id="user-123",
-            channel_id="general",
-            workspace_id="ws-789"
+            user_id="user-123", channel_id="general", workspace_id="ws-789"
         )
 
         assert allowed is True
@@ -880,9 +870,7 @@ class TestChatbotProtocolUsage:
         registry.chatbot_access_controller = mock_access_controller
 
         allowed, reason = registry.chatbot_access_controller.check_command_access(
-            user_id="user-123",
-            command="/help",
-            workspace_id="ws-789"
+            user_id="user-123", command="/help", workspace_id="ws-789"
         )
 
         assert allowed is True
@@ -898,9 +886,7 @@ class TestChatbotProtocolUsage:
         def handle_chatbot_message(platform: str, user_id: str, message: str):
             # Check rate limit if available
             if registry.chatbot_rate_limiter:
-                allowed, reason = registry.chatbot_rate_limiter.check_rate_limit(
-                    user_id=user_id
-                )
+                allowed, reason = registry.chatbot_rate_limiter.check_rate_limit(user_id=user_id)
                 if not allowed:
                     return {"error": reason}
 
@@ -908,9 +894,7 @@ class TestChatbotProtocolUsage:
             tenant_id = None
             if registry.chatbot_auth_provider:
                 result = registry.chatbot_auth_provider.authenticate_platform_user(
-                    platform=platform,
-                    platform_user_id=user_id,
-                    workspace_id="default"
+                    platform=platform, platform_user_id=user_id, workspace_id="default"
                 )
                 if result["authenticated"]:
                     tenant_id = result["tenant_id"]
@@ -919,7 +903,7 @@ class TestChatbotProtocolUsage:
             return {
                 "status": "ok",
                 "tenant_id": tenant_id,  # None in OSS
-                "response": f"Processed: {message}"
+                "response": f"Processed: {message}",
             }
 
         # Execute in OSS mode (no extensions)

@@ -85,12 +85,14 @@ class TestGitLabPATClientRequests:
     @pytest.fixture
     def mock_response(self):
         """Create mock response helper."""
+
         def _mock_response(data, status=200):
             mock = MagicMock()
             mock.read.return_value = json.dumps(data).encode("utf-8")
             mock.__enter__ = MagicMock(return_value=mock)
             mock.__exit__ = MagicMock(return_value=False)
             return mock
+
         return _mock_response
 
     def test_request_includes_private_token_header(self, client, mock_response):
@@ -122,7 +124,7 @@ class TestGitLabPATClientRequests:
                 code=401,
                 msg="Unauthorized",
                 hdrs={},
-                fp=MagicMock()
+                fp=MagicMock(),
             )
             mock_urlopen.side_effect = mock_error
 
@@ -137,7 +139,7 @@ class TestGitLabPATClientRequests:
                 code=404,
                 msg="Not Found",
                 hdrs={},
-                fp=MagicMock()
+                fp=MagicMock(),
             )
             mock_urlopen.side_effect = mock_error
 
@@ -152,7 +154,7 @@ class TestGitLabPATClientRequests:
                 code=429,
                 msg="Too Many Requests",
                 hdrs={},
-                fp=MagicMock()
+                fp=MagicMock(),
             )
             mock_urlopen.side_effect = mock_error
 

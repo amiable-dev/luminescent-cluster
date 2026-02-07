@@ -100,8 +100,7 @@ class ProvenanceService:
         """
         if len(value) > self.MAX_STRING_ID_LENGTH:
             raise ValueError(
-                f"{field_name} length ({len(value)}) exceeds limit "
-                f"({self.MAX_STRING_ID_LENGTH})"
+                f"{field_name} length ({len(value)}) exceeds limit ({self.MAX_STRING_ID_LENGTH})"
             )
 
     def _validate_metadata_bounds(self, metadata: dict[str, Any]) -> None:
@@ -125,8 +124,7 @@ class ProvenanceService:
         # Check key count before serialization (prevents deep recursion attack)
         if len(metadata) > self.MAX_METADATA_KEYS:
             raise ValueError(
-                f"Metadata key count ({len(metadata)}) exceeds limit "
-                f"({self.MAX_METADATA_KEYS})"
+                f"Metadata key count ({len(metadata)}) exceeds limit ({self.MAX_METADATA_KEYS})"
             )
 
         # Recursively validate all elements with early termination (Council Round 17 fix)
@@ -165,8 +163,7 @@ class ProvenanceService:
         # Check depth limit immediately
         if depth > self.MAX_METADATA_DEPTH:
             raise ValueError(
-                f"Metadata nesting depth ({depth}) exceeds limit "
-                f"({self.MAX_METADATA_DEPTH})"
+                f"Metadata nesting depth ({depth}) exceeds limit ({self.MAX_METADATA_DEPTH})"
             )
 
         # Increment and check element count immediately (Council Round 17 fix)
@@ -174,8 +171,7 @@ class ProvenanceService:
         counter[0] += 1
         if counter[0] > self.MAX_METADATA_ELEMENTS:
             raise ValueError(
-                f"Metadata total element count exceeds limit "
-                f"({self.MAX_METADATA_ELEMENTS})"
+                f"Metadata total element count exceeds limit ({self.MAX_METADATA_ELEMENTS})"
             )
 
         if isinstance(obj, dict):
@@ -252,13 +248,9 @@ class ProvenanceService:
         """
         # Validate confidence score (Council Round 18 fix)
         if not isinstance(confidence, (int, float)):
-            raise ValueError(
-                f"confidence must be a number, got {type(confidence).__name__}"
-            )
+            raise ValueError(f"confidence must be a number, got {type(confidence).__name__}")
         if not 0.0 <= confidence <= 1.0:
-            raise ValueError(
-                f"confidence must be in range [0.0, 1.0], got {confidence}"
-            )
+            raise ValueError(f"confidence must be in range [0.0, 1.0], got {confidence}")
 
         # Validate string identifier lengths (Council Round 13 fix - DoS prevention)
         self._validate_string_id(source_id, "source_id")
@@ -268,6 +260,7 @@ class ProvenanceService:
         # Deep copy prevents callers from mutating metadata after validation
         import copy
         import json
+
         safe_metadata: Optional[dict[str, Any]] = None
         if metadata is not None:
             self._validate_metadata_bounds(metadata)
@@ -430,9 +423,7 @@ class ProvenanceService:
                 f"retrieval_score must be a number, got {type(retrieval_score).__name__}"
             )
         if not 0.0 <= retrieval_score <= 1.0:
-            raise ValueError(
-                f"retrieval_score must be in range [0.0, 1.0], got {retrieval_score}"
-            )
+            raise ValueError(f"retrieval_score must be in range [0.0, 1.0], got {retrieval_score}")
 
         # Validate string identifier lengths (Council Round 13 fix)
         self._validate_string_id(memory_id, "memory_id")
@@ -468,7 +459,7 @@ class ProvenanceService:
         if len(self._retrieval_history[memory_id]) > self.MAX_RETRIEVAL_HISTORY_PER_MEMORY:
             # Keep most recent events, drop oldest
             self._retrieval_history[memory_id] = self._retrieval_history[memory_id][
-                -self.MAX_RETRIEVAL_HISTORY_PER_MEMORY:
+                -self.MAX_RETRIEVAL_HISTORY_PER_MEMORY :
             ]
 
     async def get_retrieval_history(

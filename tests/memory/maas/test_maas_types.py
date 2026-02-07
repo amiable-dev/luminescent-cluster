@@ -240,7 +240,11 @@ class TestDefaultCapabilities:
 
     def test_claude_code_defaults(self):
         """Verify Claude Code agents get appropriate defaults."""
-        from luminescent_cluster.memory.maas.types import AgentCapability, AgentType, get_default_capabilities
+        from luminescent_cluster.memory.maas.types import (
+            AgentCapability,
+            AgentType,
+            get_default_capabilities,
+        )
 
         caps = get_default_capabilities(AgentType.CLAUDE_CODE)
 
@@ -252,7 +256,11 @@ class TestDefaultCapabilities:
 
     def test_gpt_agent_defaults(self):
         """Verify GPT agents get appropriate defaults."""
-        from luminescent_cluster.memory.maas.types import AgentCapability, AgentType, get_default_capabilities
+        from luminescent_cluster.memory.maas.types import (
+            AgentCapability,
+            AgentType,
+            get_default_capabilities,
+        )
 
         caps = get_default_capabilities(AgentType.GPT_AGENT)
 
@@ -264,7 +272,11 @@ class TestDefaultCapabilities:
 
     def test_custom_pipeline_defaults(self):
         """Verify custom pipelines get restricted defaults."""
-        from luminescent_cluster.memory.maas.types import AgentCapability, AgentType, get_default_capabilities
+        from luminescent_cluster.memory.maas.types import (
+            AgentCapability,
+            AgentType,
+            get_default_capabilities,
+        )
 
         caps = get_default_capabilities(AgentType.CUSTOM_PIPELINE)
 
@@ -276,7 +288,11 @@ class TestDefaultCapabilities:
 
     def test_human_defaults(self):
         """Verify human agents get full capabilities."""
-        from luminescent_cluster.memory.maas.types import AgentCapability, AgentType, get_default_capabilities
+        from luminescent_cluster.memory.maas.types import (
+            AgentCapability,
+            AgentType,
+            get_default_capabilities,
+        )
 
         caps = get_default_capabilities(AgentType.HUMAN)
 

@@ -28,6 +28,7 @@ class TestJanitorFramework:
         """Create janitor for testing."""
         from luminescent_cluster.memory.janitor.runner import JanitorRunner
         from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+
         provider = LocalMemoryProvider()
         return JanitorRunner(provider)
 
@@ -37,25 +38,25 @@ class TestJanitorFramework:
 
     def test_janitor_has_required_tasks(self, janitor):
         """Janitor should have all required cleanup tasks."""
-        assert hasattr(janitor, 'run_deduplication')
-        assert hasattr(janitor, 'run_contradiction_resolution')
-        assert hasattr(janitor, 'run_expiration_cleanup')
+        assert hasattr(janitor, "run_deduplication")
+        assert hasattr(janitor, "run_contradiction_resolution")
+        assert hasattr(janitor, "run_expiration_cleanup")
 
     @pytest.mark.asyncio
     async def test_run_all_tasks(self, janitor):
         """Should run all cleanup tasks."""
         result = await janitor.run_all()
-        assert 'deduplication' in result
-        assert 'contradiction' in result
-        assert 'expiration' in result
+        assert "deduplication" in result
+        assert "contradiction" in result
+        assert "expiration" in result
 
     @pytest.mark.asyncio
     async def test_run_returns_statistics(self, janitor):
         """Run should return cleanup statistics."""
         result = await janitor.run_all()
-        assert 'total_processed' in result
-        assert 'total_removed' in result
-        assert 'duration_ms' in result
+        assert "total_processed" in result
+        assert "total_removed" in result
+        assert "duration_ms" in result
 
 
 class TestDeduplication:
@@ -65,12 +66,14 @@ class TestDeduplication:
     def deduplicator(self):
         """Create deduplicator for testing."""
         from luminescent_cluster.memory.janitor.deduplication import Deduplicator
+
         return Deduplicator()
 
     @pytest.fixture
     async def populated_provider(self):
         """Provider with duplicate memories."""
         from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+
         provider = LocalMemoryProvider()
         now = datetime.now(timezone.utc)
 
@@ -123,6 +126,7 @@ class TestDeduplication:
     def test_custom_similarity_threshold(self):
         """Should accept custom similarity threshold."""
         from luminescent_cluster.memory.janitor.deduplication import Deduplicator
+
         dedup = Deduplicator(similarity_threshold=0.9)
         assert dedup.similarity_threshold == 0.9
 
@@ -222,11 +226,12 @@ class TestDeduplication:
     async def test_deduplication_run(self, populated_provider):
         """Should deduplicate memories in provider."""
         from luminescent_cluster.memory.janitor.deduplication import Deduplicator
+
         dedup = Deduplicator(similarity_threshold=0.7)
 
         result = await dedup.run(populated_provider, "user-1")
-        assert 'processed' in result
-        assert 'removed' in result
+        assert "processed" in result
+        assert "removed" in result
 
 
 class TestContradictionHandling:
@@ -236,12 +241,14 @@ class TestContradictionHandling:
     def handler(self):
         """Create contradiction handler for testing."""
         from luminescent_cluster.memory.janitor.contradiction import ContradictionHandler
+
         return ContradictionHandler()
 
     @pytest.fixture
     async def contradicting_provider(self):
         """Provider with contradicting memories."""
         from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+
         provider = LocalMemoryProvider()
         now = datetime.now(timezone.utc)
 
@@ -365,18 +372,19 @@ class TestContradictionHandling:
         )
 
         flagged = handler.flag_for_review(m1, m2)
-        assert 'reason' in flagged
-        assert 'memories' in flagged
+        assert "reason" in flagged
+        assert "memories" in flagged
 
     @pytest.mark.asyncio
     async def test_contradiction_run(self, contradicting_provider):
         """Should resolve contradictions in provider."""
         from luminescent_cluster.memory.janitor.contradiction import ContradictionHandler
+
         handler = ContradictionHandler()
 
         result = await handler.run(contradicting_provider, "user-1")
-        assert 'processed' in result
-        assert 'resolved' in result
+        assert "processed" in result
+        assert "resolved" in result
 
 
 class TestExpirationCleanup:
@@ -386,12 +394,14 @@ class TestExpirationCleanup:
     def cleaner(self):
         """Create expiration cleaner for testing."""
         from luminescent_cluster.memory.janitor.expiration import ExpirationCleaner
+
         return ExpirationCleaner()
 
     @pytest.fixture
     async def expired_provider(self):
         """Provider with expired memories."""
         from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+
         provider = LocalMemoryProvider()
         now = datetime.now(timezone.utc)
 
@@ -487,16 +497,18 @@ class TestExpirationCleanup:
     async def test_expiration_cleanup_run(self, expired_provider):
         """Should remove expired memories from provider."""
         from luminescent_cluster.memory.janitor.expiration import ExpirationCleaner
+
         cleaner = ExpirationCleaner()
 
         result = await cleaner.run(expired_provider, "user-1")
-        assert 'processed' in result
-        assert 'removed' in result
+        assert "processed" in result
+        assert "removed" in result
 
     @pytest.mark.asyncio
     async def test_cleanup_preserves_valid_memories(self, expired_provider):
         """Cleanup should preserve non-expired memories."""
         from luminescent_cluster.memory.janitor.expiration import ExpirationCleaner
+
         cleaner = ExpirationCleaner()
 
         await cleaner.run(expired_provider, "user-1")
@@ -513,6 +525,7 @@ class TestJanitorScheduler:
     def scheduler(self):
         """Create scheduler for testing."""
         from luminescent_cluster.memory.janitor.scheduler import JanitorScheduler
+
         return JanitorScheduler()
 
     def test_scheduler_initialization(self, scheduler):
@@ -522,12 +535,14 @@ class TestJanitorScheduler:
     def test_custom_schedule_interval(self):
         """Should accept custom schedule interval."""
         from luminescent_cluster.memory.janitor.scheduler import JanitorScheduler
+
         scheduler = JanitorScheduler(schedule_interval_hours=12)
         assert scheduler.schedule_interval_hours == 12
 
     def test_should_run_check(self, scheduler):
         """Should determine if janitor should run."""
         from datetime import datetime, timezone
+
         now = datetime.now(timezone.utc)
         should_run = scheduler.should_run(last_run=now - timedelta(hours=48))
         assert should_run is True
@@ -538,6 +553,7 @@ class TestJanitorScheduler:
     def test_get_next_run_time(self, scheduler):
         """Should calculate next scheduled run time."""
         from datetime import datetime, timezone
+
         now = datetime.now(timezone.utc)
         next_run = scheduler.get_next_run(last_run=now)
         assert next_run > now
@@ -556,6 +572,7 @@ class TestJanitorSoftDelete:
     async def provider_with_duplicates(self):
         """Provider with duplicate memories for testing."""
         from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+
         provider = LocalMemoryProvider()
         now = datetime.now(timezone.utc)
 
@@ -600,7 +617,7 @@ class TestJanitorSoftDelete:
 
         # dry_run should be supported
         result = await dedup.run(provider, "user-1", dry_run=True)
-        assert 'dry_run' in result or 'would_remove' in result or result.get('removed', 0) == 0
+        assert "dry_run" in result or "would_remove" in result or result.get("removed", 0) == 0
 
     @pytest.mark.asyncio
     async def test_deduplicator_soft_delete_default(self, provider_with_duplicates):
@@ -616,7 +633,7 @@ class TestJanitorSoftDelete:
         # Memories should still exist (soft-deleted, not hard-deleted)
         # The count may be same if using invalidation
         # Or check that invalidated memories are marked
-        assert result.get('removed', 0) >= 0 or result.get('invalidated', 0) >= 0
+        assert result.get("removed", 0) >= 0 or result.get("invalidated", 0) >= 0
 
     @pytest.mark.asyncio
     async def test_contradiction_handler_has_dry_run_mode(self):
@@ -628,7 +645,7 @@ class TestJanitorSoftDelete:
         provider = LocalMemoryProvider()
 
         result = await handler.run(provider, "user-1", dry_run=True)
-        assert 'dry_run' in result or 'would_resolve' in result or result.get('resolved', 0) == 0
+        assert "dry_run" in result or "would_resolve" in result or result.get("resolved", 0) == 0
 
     @pytest.mark.asyncio
     async def test_contradiction_handler_soft_delete_default(self):
@@ -641,31 +658,37 @@ class TestJanitorSoftDelete:
         now = datetime.now(timezone.utc)
 
         # Create contradicting memories
-        await provider.store(Memory(
-            user_id="user-1",
-            content="Prefers tabs over spaces",
-            memory_type=MemoryType.PREFERENCE,
-            confidence=0.9,
-            source="test",
-            raw_source="test",
-            extraction_version=1,
-            created_at=now - timedelta(days=1),
-            last_accessed_at=now,
-        ), {})
+        await provider.store(
+            Memory(
+                user_id="user-1",
+                content="Prefers tabs over spaces",
+                memory_type=MemoryType.PREFERENCE,
+                confidence=0.9,
+                source="test",
+                raw_source="test",
+                extraction_version=1,
+                created_at=now - timedelta(days=1),
+                last_accessed_at=now,
+            ),
+            {},
+        )
 
-        await provider.store(Memory(
-            user_id="user-1",
-            content="Prefers spaces over tabs",
-            memory_type=MemoryType.PREFERENCE,
-            confidence=0.9,
-            source="test",
-            raw_source="test",
-            extraction_version=1,
-            created_at=now,
-            last_accessed_at=now,
-        ), {})
+        await provider.store(
+            Memory(
+                user_id="user-1",
+                content="Prefers spaces over tabs",
+                memory_type=MemoryType.PREFERENCE,
+                confidence=0.9,
+                source="test",
+                raw_source="test",
+                extraction_version=1,
+                created_at=now,
+                last_accessed_at=now,
+            ),
+            {},
+        )
 
         result = await handler.run(provider, "user-1")
 
         # Should resolve without hard-deleting
-        assert result.get('resolved', 0) >= 0 or result.get('invalidated', 0) >= 0
+        assert result.get("resolved", 0) >= 0 or result.get("invalidated", 0) >= 0

@@ -229,13 +229,15 @@ class KnowledgeGraph:
 
         edges = []
         for _, target_id, data in self._graph.out_edges(node_id, data=True):
-            edges.append(GraphEdge(
-                source_id=node_id,
-                target_id=target_id,
-                relationship=RelationshipType(data["relationship"]),
-                confidence=data["confidence"],
-                memory_id=data["memory_id"],
-            ))
+            edges.append(
+                GraphEdge(
+                    source_id=node_id,
+                    target_id=target_id,
+                    relationship=RelationshipType(data["relationship"]),
+                    confidence=data["confidence"],
+                    memory_id=data["memory_id"],
+                )
+            )
         return edges
 
     def get_edges_to(self, node_id: str) -> list[GraphEdge]:
@@ -252,13 +254,15 @@ class KnowledgeGraph:
 
         edges = []
         for source_id, _, data in self._graph.in_edges(node_id, data=True):
-            edges.append(GraphEdge(
-                source_id=source_id,
-                target_id=node_id,
-                relationship=RelationshipType(data["relationship"]),
-                confidence=data["confidence"],
-                memory_id=data["memory_id"],
-            ))
+            edges.append(
+                GraphEdge(
+                    source_id=source_id,
+                    target_id=node_id,
+                    relationship=RelationshipType(data["relationship"]),
+                    confidence=data["confidence"],
+                    memory_id=data["memory_id"],
+                )
+            )
         return edges
 
     def get_neighbors(
@@ -324,23 +328,27 @@ class KnowledgeGraph:
         nodes = []
         for node_id in self._graph.nodes():
             data = self._graph.nodes[node_id]
-            nodes.append({
-                "id": node_id,
-                "entity_type": data["entity_type"],
-                "name": data["name"],
-                "memory_ids": data.get("memory_ids", []),
-                "metadata": data.get("metadata", {}),
-            })
+            nodes.append(
+                {
+                    "id": node_id,
+                    "entity_type": data["entity_type"],
+                    "name": data["name"],
+                    "memory_ids": data.get("memory_ids", []),
+                    "metadata": data.get("metadata", {}),
+                }
+            )
 
         edges = []
         for source_id, target_id, data in self._graph.edges(data=True):
-            edges.append({
-                "source_id": source_id,
-                "target_id": target_id,
-                "relationship": data["relationship"],
-                "confidence": data["confidence"],
-                "memory_id": data["memory_id"],
-            })
+            edges.append(
+                {
+                    "source_id": source_id,
+                    "target_id": target_id,
+                    "relationship": data["relationship"],
+                    "confidence": data["confidence"],
+                    "memory_id": data["memory_id"],
+                }
+            )
 
         return {
             "user_id": self.user_id,
@@ -361,21 +369,25 @@ class KnowledgeGraph:
         graph = cls(user_id=data["user_id"])
 
         for node_data in data.get("nodes", []):
-            graph.add_node(GraphNode(
-                id=node_data["id"],
-                entity_type=EntityType(node_data["entity_type"]),
-                name=node_data["name"],
-                memory_ids=node_data.get("memory_ids", []),
-                metadata=node_data.get("metadata", {}),
-            ))
+            graph.add_node(
+                GraphNode(
+                    id=node_data["id"],
+                    entity_type=EntityType(node_data["entity_type"]),
+                    name=node_data["name"],
+                    memory_ids=node_data.get("memory_ids", []),
+                    metadata=node_data.get("metadata", {}),
+                )
+            )
 
         for edge_data in data.get("edges", []):
-            graph.add_edge(GraphEdge(
-                source_id=edge_data["source_id"],
-                target_id=edge_data["target_id"],
-                relationship=RelationshipType(edge_data["relationship"]),
-                confidence=edge_data["confidence"],
-                memory_id=edge_data["memory_id"],
-            ))
+            graph.add_edge(
+                GraphEdge(
+                    source_id=edge_data["source_id"],
+                    target_id=edge_data["target_id"],
+                    relationship=RelationshipType(edge_data["relationship"]),
+                    confidence=edge_data["confidence"],
+                    memory_id=edge_data["memory_id"],
+                )
+            )
 
         return graph

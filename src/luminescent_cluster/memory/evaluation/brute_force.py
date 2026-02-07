@@ -237,9 +237,7 @@ class BruteForceSearcher:
         filtered_results = []
         for i, doc in enumerate(self._documents):
             if filter_fn(doc):
-                similarity = float(
-                    np.dot(self._embeddings[i], query_embedding.T).flatten()[0]
-                )
+                similarity = float(np.dot(self._embeddings[i], query_embedding.T).flatten()[0])
                 filtered_results.append(
                     BruteForceResult(
                         document_id=doc.id,

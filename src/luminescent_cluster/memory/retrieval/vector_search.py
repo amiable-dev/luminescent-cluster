@@ -365,11 +365,7 @@ class VectorSearch:
         results = self.search(user_id, query, top_k)
         memories = self._memory_contents.get(user_id, {})
 
-        return [
-            (memories[mem_id], score)
-            for mem_id, score in results
-            if mem_id in memories
-        ]
+        return [(memories[mem_id], score) for mem_id, score in results if mem_id in memories]
 
     def search_by_embedding(
         self,
@@ -424,9 +420,7 @@ class VectorSearch:
         """
         return self._memory_contents.get(user_id, {}).get(memory_id)
 
-    def get_embedding(
-        self, user_id: str, memory_id: str
-    ) -> Optional[NDArray[np.float32]]:
+    def get_embedding(self, user_id: str, memory_id: str) -> Optional[NDArray[np.float32]]:
         """Get the embedding for a memory.
 
         Args:
@@ -490,9 +484,7 @@ class VectorSearch:
         index = self._indexes[user_id]
         return {
             "total_docs": len(index.doc_ids),
-            "embedding_dim": (
-                index.embeddings.shape[1] if index.embeddings is not None else 0
-            ),
+            "embedding_dim": (index.embeddings.shape[1] if index.embeddings is not None else 0),
             "model_loaded": self._model is not None,
         }
 

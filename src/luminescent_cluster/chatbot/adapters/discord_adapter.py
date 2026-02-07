@@ -354,13 +354,15 @@ class DiscordAdapter:
         # Extract attachments
         attachments = []
         for att in discord_msg.attachments:
-            attachments.append({
-                "id": str(att.id),
-                "filename": att.filename,
-                "url": att.url,
-                "content_type": getattr(att, "content_type", None),
-                "size": getattr(att, "size", None),
-            })
+            attachments.append(
+                {
+                    "id": str(att.id),
+                    "filename": att.filename,
+                    "url": att.url,
+                    "content_type": getattr(att, "content_type", None),
+                    "size": getattr(att, "size", None),
+                }
+            )
 
         # Determine if DM
         is_dm = getattr(discord_msg, "guild", None) is None
@@ -388,8 +390,7 @@ class DiscordAdapter:
         # Extract role mentions
         if hasattr(discord_msg, "role_mentions") and discord_msg.role_mentions:
             metadata["role_mentions"] = [
-                {"id": str(r.id), "name": r.name}
-                for r in discord_msg.role_mentions
+                {"id": str(r.id), "name": r.name} for r in discord_msg.role_mentions
             ]
 
         return ChatMessage(
@@ -511,10 +512,14 @@ class DiscordAdapter:
                 self._discord_client.tree.add_command(cmd)
             else:
                 # Mock path
-                self._discord_client.tree = type("Tree", (), {
-                    "add_command": lambda x: None,
-                    "sync": lambda: None,
-                })()
+                self._discord_client.tree = type(
+                    "Tree",
+                    (),
+                    {
+                        "add_command": lambda x: None,
+                        "sync": lambda: None,
+                    },
+                )()
                 self._discord_client.tree.add_command(cmd)
 
         # Sync commands
@@ -542,7 +547,9 @@ class DiscordAdapter:
             user_id=str(interaction.user.id),
             username=interaction.user.name,
             channel_id=str(interaction.channel_id),
-            guild_id=str(interaction.guild_id) if hasattr(interaction, "guild_id") and interaction.guild_id else None,
+            guild_id=str(interaction.guild_id)
+            if hasattr(interaction, "guild_id") and interaction.guild_id
+            else None,
         )
 
     async def respond_to_interaction(
@@ -634,11 +641,15 @@ class _MockDiscordClient:
 
     def __init__(self):
         self.user = None
-        self.tree = type("Tree", (), {
-            "add_command": lambda self, x: None,
-            "sync": lambda self: None,
-            "command": lambda self: lambda f: f,
-        })()
+        self.tree = type(
+            "Tree",
+            (),
+            {
+                "add_command": lambda self, x: None,
+                "sync": lambda self: None,
+                "command": lambda self: lambda f: f,
+            },
+        )()
 
     async def start(self, token: str) -> None:
         """Mock start."""
@@ -654,8 +665,12 @@ class _MockDiscordClient:
 
     async def fetch_channel(self, channel_id: int) -> Any:
         """Mock fetch channel."""
-        return type("Channel", (), {
-            "id": channel_id,
-            "send": lambda **kwargs: type("Message", (), {"id": 999})(),
-            "fetch_message": lambda msg_id: type("Message", (), {"id": msg_id})(),
-        })()
+        return type(
+            "Channel",
+            (),
+            {
+                "id": channel_id,
+                "send": lambda **kwargs: type("Message", (), {"id": 999})(),
+                "fetch_message": lambda msg_id: type("Message", (), {"id": msg_id})(),
+            },
+        )()

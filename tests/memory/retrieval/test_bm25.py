@@ -123,9 +123,7 @@ class TestBM25SearchTokenization:
 class TestBM25SearchIndexing:
     """Tests for BM25 indexing."""
 
-    def test_index_memories(
-        self, bm25_search: BM25Search, sample_memories: list[Memory]
-    ) -> None:
+    def test_index_memories(self, bm25_search: BM25Search, sample_memories: list[Memory]) -> None:
         """Test indexing memories."""
         bm25_search.index_memories("user-1", sample_memories)
 
@@ -154,9 +152,7 @@ class TestBM25SearchIndexing:
         stats = bm25_search.index_stats("user-1")
         assert stats["total_docs"] == 0
 
-    def test_add_memory(
-        self, bm25_search: BM25Search, sample_memories: list[Memory]
-    ) -> None:
+    def test_add_memory(self, bm25_search: BM25Search, sample_memories: list[Memory]) -> None:
         """Test adding a single memory."""
         # Start with some memories
         bm25_search.index_memories("user-1", sample_memories[:2])
@@ -177,9 +173,7 @@ class TestBM25SearchIndexing:
         assert bm25_search.has_index("new-user")
         assert bm25_search.index_stats("new-user")["total_docs"] == 1
 
-    def test_remove_memory(
-        self, bm25_search: BM25Search, sample_memories: list[Memory]
-    ) -> None:
+    def test_remove_memory(self, bm25_search: BM25Search, sample_memories: list[Memory]) -> None:
         """Test removing a memory."""
         bm25_search.index_memories("user-1", sample_memories)
         initial_count = bm25_search.index_stats("user-1")["total_docs"]
@@ -202,9 +196,7 @@ class TestBM25SearchIndexing:
         removed = bm25_search.remove_memory("nonexistent", "mem-1")
         assert removed is False
 
-    def test_clear_index(
-        self, bm25_search: BM25Search, sample_memories: list[Memory]
-    ) -> None:
+    def test_clear_index(self, bm25_search: BM25Search, sample_memories: list[Memory]) -> None:
         """Test clearing an index."""
         bm25_search.index_memories("user-1", sample_memories)
         assert bm25_search.has_index("user-1")
@@ -216,9 +208,7 @@ class TestBM25SearchIndexing:
 class TestBM25SearchScoring:
     """Tests for BM25 scoring."""
 
-    def test_search_basic(
-        self, bm25_search: BM25Search, sample_memories: list[Memory]
-    ) -> None:
+    def test_search_basic(self, bm25_search: BM25Search, sample_memories: list[Memory]) -> None:
         """Test basic search."""
         bm25_search.index_memories("user-1", sample_memories)
 
@@ -276,9 +266,7 @@ class TestBM25SearchScoring:
 
         assert len(results) <= 2
 
-    def test_search_no_match(
-        self, bm25_search: BM25Search, sample_memories: list[Memory]
-    ) -> None:
+    def test_search_no_match(self, bm25_search: BM25Search, sample_memories: list[Memory]) -> None:
         """Test search with no matches."""
         bm25_search.index_memories("user-1", sample_memories)
 
@@ -327,9 +315,7 @@ class TestBM25SearchWithMemories:
             assert isinstance(score, float)
             assert score > 0
 
-    def test_get_memory(
-        self, bm25_search: BM25Search, sample_memories: list[Memory]
-    ) -> None:
+    def test_get_memory(self, bm25_search: BM25Search, sample_memories: list[Memory]) -> None:
         """Test get_memory retrieves indexed memory."""
         bm25_search.index_memories("user-1", sample_memories)
 
@@ -350,9 +336,7 @@ class TestBM25SearchWithMemories:
 class TestBM25IDFCalculation:
     """Tests for IDF calculation."""
 
-    def test_idf_rare_term(
-        self, bm25_search: BM25Search, sample_memories: list[Memory]
-    ) -> None:
+    def test_idf_rare_term(self, bm25_search: BM25Search, sample_memories: list[Memory]) -> None:
         """Test rare terms have higher IDF."""
         bm25_search.index_memories("user-1", sample_memories)
 

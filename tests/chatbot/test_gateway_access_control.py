@@ -69,11 +69,13 @@ class MockAccessController:
         workspace_id: str,
     ) -> tuple[bool, Optional[str]]:
         """Record call and return configured response."""
-        self.check_channel_calls.append({
-            "user_id": user_id,
-            "channel_id": channel_id,
-            "workspace_id": workspace_id,
-        })
+        self.check_channel_calls.append(
+            {
+                "user_id": user_id,
+                "channel_id": channel_id,
+                "workspace_id": workspace_id,
+            }
+        )
         return self.channel_allowed, self.channel_reason
 
     def check_command_access(
@@ -83,11 +85,13 @@ class MockAccessController:
         workspace_id: str,
     ) -> tuple[bool, Optional[str]]:
         """Record call and return configured response."""
-        self.check_command_calls.append({
-            "user_id": user_id,
-            "command": command,
-            "workspace_id": workspace_id,
-        })
+        self.check_command_calls.append(
+            {
+                "user_id": user_id,
+                "command": command,
+                "workspace_id": workspace_id,
+            }
+        )
         return self.command_allowed, self.command_reason
 
     def get_allowed_channels(

@@ -85,9 +85,7 @@ class TestGoldenDatasetCategories:
         ADR Reference: ADR-003 Phase 0 (Golden Dataset)
         Category: "What database do we use?"
         """
-        factual = [
-            q for q in golden_dataset["questions"] if q["category"] == "factual_recall"
-        ]
+        factual = [q for q in golden_dataset["questions"] if q["category"] == "factual_recall"]
         assert len(factual) == 20, f"Expected 20 factual_recall, got {len(factual)}"
 
     def test_has_preference_recall_questions(self, golden_dataset: dict):
@@ -97,11 +95,7 @@ class TestGoldenDatasetCategories:
         ADR Reference: ADR-003 Phase 0 (Golden Dataset)
         Category: "Should I use tabs or spaces?"
         """
-        prefs = [
-            q
-            for q in golden_dataset["questions"]
-            if q["category"] == "preference_recall"
-        ]
+        prefs = [q for q in golden_dataset["questions"] if q["category"] == "preference_recall"]
         assert len(prefs) == 10, f"Expected 10 preference_recall, got {len(prefs)}"
 
     def test_has_decision_recall_questions(self, golden_dataset: dict):
@@ -111,11 +105,7 @@ class TestGoldenDatasetCategories:
         ADR Reference: ADR-003 Phase 0 (Golden Dataset)
         Category: "Why did we reject MongoDB?"
         """
-        decisions = [
-            q
-            for q in golden_dataset["questions"]
-            if q["category"] == "decision_recall"
-        ]
+        decisions = [q for q in golden_dataset["questions"] if q["category"] == "decision_recall"]
         assert len(decisions) == 10, f"Expected 10 decision_recall, got {len(decisions)}"
 
     def test_has_temporal_query_questions(self, golden_dataset: dict):
@@ -125,9 +115,7 @@ class TestGoldenDatasetCategories:
         ADR Reference: ADR-003 Phase 0 (Golden Dataset)
         Category: "What did we discuss about caching?"
         """
-        temporal = [
-            q for q in golden_dataset["questions"] if q["category"] == "temporal_query"
-        ]
+        temporal = [q for q in golden_dataset["questions"] if q["category"] == "temporal_query"]
         assert len(temporal) == 5, f"Expected 5 temporal_query, got {len(temporal)}"
 
     def test_has_cross_context_questions(self, golden_dataset: dict):
@@ -137,9 +125,7 @@ class TestGoldenDatasetCategories:
         ADR Reference: ADR-003 Phase 0 (Golden Dataset)
         Category: "What projects use auth-service?"
         """
-        cross = [
-            q for q in golden_dataset["questions"] if q["category"] == "cross_context"
-        ]
+        cross = [q for q in golden_dataset["questions"] if q["category"] == "cross_context"]
         assert len(cross) == 5, f"Expected 5 cross_context, got {len(cross)}"
 
 

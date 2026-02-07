@@ -421,7 +421,11 @@ class HandoffManager:
                     agent_id=agent_id,
                     action="accept_handoff",
                     outcome="failed",
-                    details={"reason": "invalid_status", "handoff_id": handoff_id, "status": str(handoff.status)},
+                    details={
+                        "reason": "invalid_status",
+                        "handoff_id": handoff_id,
+                        "status": str(handoff.status),
+                    },
                 )
                 return False
 
@@ -505,7 +509,11 @@ class HandoffManager:
                     agent_id=agent_id,
                     action="reject_handoff",
                     outcome="failed",
-                    details={"reason": "invalid_status", "handoff_id": handoff_id, "status": str(handoff.status)},
+                    details={
+                        "reason": "invalid_status",
+                        "handoff_id": handoff_id,
+                        "status": str(handoff.status),
+                    },
                 )
                 return False
 
@@ -579,7 +587,11 @@ class HandoffManager:
                     agent_id=agent_id,
                     action="complete_handoff",
                     outcome="failed",
-                    details={"reason": "invalid_status", "handoff_id": handoff_id, "status": str(handoff.status)},
+                    details={
+                        "reason": "invalid_status",
+                        "handoff_id": handoff_id,
+                        "status": str(handoff.status),
+                    },
                 )
                 return False
 
@@ -700,8 +712,7 @@ class HandoffManager:
             }
 
             to_remove = [
-                hid for hid, handoff in self._handoffs.items()
-                if handoff.status in terminal_states
+                hid for hid, handoff in self._handoffs.items() if handoff.status in terminal_states
             ]
 
             for hid in to_remove:

@@ -104,9 +104,7 @@ class MockEntityExtractor:
         ['auth-service', 'PostgreSQL']
     """
 
-    async def extract(
-        self, content: str, memory_id: Optional[str] = None
-    ) -> List[Entity]:
+    async def extract(self, content: str, memory_id: Optional[str] = None) -> List[Entity]:
         """Extract entities from text content.
 
         Args:
@@ -138,9 +136,7 @@ class MockEntityExtractor:
 
         return entities
 
-    def _extract_services(
-        self, content: str, memory_id: Optional[str]
-    ) -> List[Entity]:
+    def _extract_services(self, content: str, memory_id: Optional[str]) -> List[Entity]:
         """Extract SERVICE entities from content."""
         entities = []
         content_lower = content.lower()
@@ -160,9 +156,7 @@ class MockEntityExtractor:
 
         return entities
 
-    def _extract_dependencies(
-        self, content: str, memory_id: Optional[str]
-    ) -> List[Entity]:
+    def _extract_dependencies(self, content: str, memory_id: Optional[str]) -> List[Entity]:
         """Extract DEPENDENCY entities from content."""
         entities = []
 
@@ -182,9 +176,7 @@ class MockEntityExtractor:
 
         return entities
 
-    def _extract_apis(
-        self, content: str, memory_id: Optional[str]
-    ) -> List[Entity]:
+    def _extract_apis(self, content: str, memory_id: Optional[str]) -> List[Entity]:
         """Extract API entities from content."""
         entities = []
 
@@ -204,9 +196,7 @@ class MockEntityExtractor:
 
         return entities
 
-    def _extract_patterns(
-        self, content: str, memory_id: Optional[str]
-    ) -> List[Entity]:
+    def _extract_patterns(self, content: str, memory_id: Optional[str]) -> List[Entity]:
         """Extract PATTERN entities from content."""
         entities = []
 
@@ -225,9 +215,7 @@ class MockEntityExtractor:
 
         return entities
 
-    def _extract_frameworks(
-        self, content: str, memory_id: Optional[str]
-    ) -> List[Entity]:
+    def _extract_frameworks(self, content: str, memory_id: Optional[str]) -> List[Entity]:
         """Extract FRAMEWORK entities from content."""
         entities = []
 
@@ -246,9 +234,7 @@ class MockEntityExtractor:
 
         return entities
 
-    def _extract_configs(
-        self, content: str, memory_id: Optional[str]
-    ) -> List[Entity]:
+    def _extract_configs(self, content: str, memory_id: Optional[str]) -> List[Entity]:
         """Extract CONFIG entities from content."""
         entities = []
 

@@ -115,22 +115,22 @@ class JanitorRunner:
 
         # Combine results
         total_processed = (
-            dedup_result.get('processed', 0)
-            + contradiction_result.get('processed', 0)
-            + expiration_result.get('processed', 0)
+            dedup_result.get("processed", 0)
+            + contradiction_result.get("processed", 0)
+            + expiration_result.get("processed", 0)
         )
 
         total_removed = (
-            dedup_result.get('removed', 0)
-            + contradiction_result.get('resolved', 0)
-            + expiration_result.get('removed', 0)
+            dedup_result.get("removed", 0)
+            + contradiction_result.get("resolved", 0)
+            + expiration_result.get("removed", 0)
         )
 
         return {
-            'deduplication': dedup_result,
-            'contradiction': contradiction_result,
-            'expiration': expiration_result,
-            'total_processed': total_processed,
-            'total_removed': total_removed,
-            'duration_ms': duration_ms,
+            "deduplication": dedup_result,
+            "contradiction": contradiction_result,
+            "expiration": expiration_result,
+            "total_processed": total_processed,
+            "total_removed": total_removed,
+            "duration_ms": duration_ms,
         }

@@ -285,7 +285,9 @@ class TestMessageSending:
                 return "test"
 
             def get_connection_state(self) -> ConnectionState:
-                return ConnectionState.CONNECTED if self._connected else ConnectionState.DISCONNECTED
+                return (
+                    ConnectionState.CONNECTED if self._connected else ConnectionState.DISCONNECTED
+                )
 
             async def connect(self) -> None:
                 self._connected = True

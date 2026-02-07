@@ -109,11 +109,7 @@ class HedgeDetector:
 
     # All hedge words/phrases combined
     HEDGE_WORDS: list[str] = (
-        MODAL_HEDGES
-        + EPISTEMIC_HEDGES
-        + PERSONAL_UNCERTAINTY
-        + APPROXIMATION
-        + CONDITIONAL
+        MODAL_HEDGES + EPISTEMIC_HEDGES + PERSONAL_UNCERTAINTY + APPROXIMATION + CONDITIONAL
     )
 
     # Strong assertion markers (informational only, do NOT override hedge detection)

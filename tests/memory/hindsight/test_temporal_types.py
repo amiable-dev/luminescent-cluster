@@ -278,7 +278,11 @@ class TestTemporalMemory:
 
     def test_temporal_memory_state_change(self):
         """TemporalMemory should track state changes over time."""
-        from luminescent_cluster.memory.hindsight.types import TemporalMemory, NetworkType, StateChange
+        from luminescent_cluster.memory.hindsight.types import (
+            TemporalMemory,
+            NetworkType,
+            StateChange,
+        )
         from luminescent_cluster.memory.schemas import Memory
 
         base = Memory(

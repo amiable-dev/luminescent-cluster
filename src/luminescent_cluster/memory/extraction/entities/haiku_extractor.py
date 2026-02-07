@@ -60,9 +60,7 @@ class HaikuEntityExtractor:
         self.max_tokens = max_tokens
         self._api_key = api_key
 
-    async def extract(
-        self, content: str, memory_id: Optional[str] = None
-    ) -> List[Entity]:
+    async def extract(self, content: str, memory_id: Optional[str] = None) -> List[Entity]:
         """Extract entities from text using Claude Haiku.
 
         Args:

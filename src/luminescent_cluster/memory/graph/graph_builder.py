@@ -91,12 +91,14 @@ class GraphBuilder:
             entity_type = EntityType(entity_data["type"])
             confidence = entity_data.get("confidence", 1.0)
 
-            parsed_entities.append({
-                "id": entity_id,
-                "name": entity_data["name"],
-                "type": entity_type,
-                "confidence": confidence,
-            })
+            parsed_entities.append(
+                {
+                    "id": entity_id,
+                    "name": entity_data["name"],
+                    "type": entity_type,
+                    "confidence": confidence,
+                }
+            )
 
             # Create or update pending node
             if entity_id not in self._pending_nodes:
@@ -112,9 +114,7 @@ class GraphBuilder:
                     self._pending_nodes[entity_id]["memory_ids"].append(memory_id)
 
         # Infer relationships between entities
-        self._infer_relationships(
-            parsed_entities, memory.content, memory_id
-        )
+        self._infer_relationships(parsed_entities, memory.content, memory_id)
 
     def _normalize_id(self, name: str) -> str:
         """Normalize entity name to a node ID.
@@ -161,36 +161,51 @@ class GraphBuilder:
                     content_lower, RelationshipType.DEPENDS_ON
                 )
                 self._add_pending_edge(
-                    service["id"], dep["id"], rel_type, memory_id,
-                    min(service["confidence"], dep["confidence"])
+                    service["id"],
+                    dep["id"],
+                    rel_type,
+                    memory_id,
+                    min(service["confidence"], dep["confidence"]),
                 )
 
             # Service → Framework (USES)
             for fw in frameworks:
                 self._add_pending_edge(
-                    service["id"], fw["id"], RelationshipType.USES, memory_id,
-                    min(service["confidence"], fw["confidence"])
+                    service["id"],
+                    fw["id"],
+                    RelationshipType.USES,
+                    memory_id,
+                    min(service["confidence"], fw["confidence"]),
                 )
 
             # Service → API (CALLS)
             for api in apis:
                 self._add_pending_edge(
-                    service["id"], api["id"], RelationshipType.CALLS, memory_id,
-                    min(service["confidence"], api["confidence"])
+                    service["id"],
+                    api["id"],
+                    RelationshipType.CALLS,
+                    memory_id,
+                    min(service["confidence"], api["confidence"]),
                 )
 
             # Service → Pattern (IMPLEMENTS)
             for pattern in patterns:
                 self._add_pending_edge(
-                    service["id"], pattern["id"], RelationshipType.IMPLEMENTS, memory_id,
-                    min(service["confidence"], pattern["confidence"])
+                    service["id"],
+                    pattern["id"],
+                    RelationshipType.IMPLEMENTS,
+                    memory_id,
+                    min(service["confidence"], pattern["confidence"]),
                 )
 
             # Service → Config (CONFIGURES)
             for config in configs:
                 self._add_pending_edge(
-                    service["id"], config["id"], RelationshipType.CONFIGURES, memory_id,
-                    min(service["confidence"], config["confidence"])
+                    service["id"],
+                    config["id"],
+                    RelationshipType.CONFIGURES,
+                    memory_id,
+                    min(service["confidence"], config["confidence"]),
                 )
 
     def _detect_relationship_type(
@@ -239,13 +254,15 @@ class GraphBuilder:
             memory_id: Source memory ID.
             confidence: Confidence score.
         """
-        self._pending_edges.append({
-            "source_id": source_id,
-            "target_id": target_id,
-            "relationship": relationship,
-            "memory_id": memory_id,
-            "confidence": confidence,
-        })
+        self._pending_edges.append(
+            {
+                "source_id": source_id,
+                "target_id": target_id,
+                "relationship": relationship,
+                "memory_id": memory_id,
+                "confidence": confidence,
+            }
+        )
 
     def build(self) -> KnowledgeGraph:
         """Build and return the knowledge graph.
@@ -255,22 +272,26 @@ class GraphBuilder:
         """
         # Add all pending nodes
         for node_data in self._pending_nodes.values():
-            self._graph.add_node(GraphNode(
-                id=node_data["id"],
-                entity_type=node_data["entity_type"],
-                name=node_data["name"],
-                memory_ids=node_data["memory_ids"],
-                metadata=node_data["metadata"],
-            ))
+            self._graph.add_node(
+                GraphNode(
+                    id=node_data["id"],
+                    entity_type=node_data["entity_type"],
+                    name=node_data["name"],
+                    memory_ids=node_data["memory_ids"],
+                    metadata=node_data["metadata"],
+                )
+            )
 
         # Add all pending edges
         for edge_data in self._pending_edges:
-            self._graph.add_edge(GraphEdge(
-                source_id=edge_data["source_id"],
-                target_id=edge_data["target_id"],
-                relationship=edge_data["relationship"],
-                memory_id=edge_data["memory_id"],
-                confidence=edge_data["confidence"],
-            ))
+            self._graph.add_edge(
+                GraphEdge(
+                    source_id=edge_data["source_id"],
+                    target_id=edge_data["target_id"],
+                    relationship=edge_data["relationship"],
+                    memory_id=edge_data["memory_id"],
+                    confidence=edge_data["confidence"],
+                )
+            )
 
         return self._graph

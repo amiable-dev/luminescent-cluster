@@ -51,10 +51,12 @@ class TestGatewayFailClosedSecurity:
     def mock_llm_provider(self):
         """Create a mock LLM provider."""
         provider = MagicMock()
-        provider.chat = AsyncMock(return_value=MagicMock(
-            content="Test response",
-            tokens_used=100,
-        ))
+        provider.chat = AsyncMock(
+            return_value=MagicMock(
+                content="Test response",
+                tokens_used=100,
+            )
+        )
         return provider
 
     @pytest.fixture
@@ -92,9 +94,7 @@ class TestGatewayFailClosedSecurity:
         )
 
     @pytest.mark.asyncio
-    async def test_gateway_fails_closed_on_access_control_exception(
-        self, gateway, test_message
-    ):
+    async def test_gateway_fails_closed_on_access_control_exception(self, gateway, test_message):
         """Gateway denies request when access control raises exception."""
         registry = ExtensionRegistry.get()
         mock_controller = MagicMock()

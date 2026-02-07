@@ -76,10 +76,11 @@ class TestGraphSearchInterface:
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
-        graph.add_node(GraphNode(
-            "auth-service", EntityType.SERVICE, "auth-service",
-            memory_ids=["mem-1", "mem-2"]
-        ))
+        graph.add_node(
+            GraphNode(
+                "auth-service", EntityType.SERVICE, "auth-service", memory_ids=["mem-1", "mem-2"]
+            )
+        )
         search.register_graph("user-123", graph)
 
         results = search.search("user-123", "auth-service", top_k=10)
@@ -101,10 +102,11 @@ class TestGraphSearchInterface:
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
-        graph.add_node(GraphNode(
-            "auth-service", EntityType.SERVICE, "auth-service",
-            memory_ids=["mem-1", "mem-2"]
-        ))
+        graph.add_node(
+            GraphNode(
+                "auth-service", EntityType.SERVICE, "auth-service", memory_ids=["mem-1", "mem-2"]
+            )
+        )
         search.register_graph("user-123", graph)
 
         results = search.search("user-123", "auth-service", top_k=10)
@@ -157,17 +159,15 @@ class TestGraphSearchTraversal:
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
-        graph.add_node(GraphNode(
-            "auth-service", EntityType.SERVICE, "auth-service",
-            memory_ids=["mem-1"]
-        ))
-        graph.add_node(GraphNode(
-            "postgresql", EntityType.DEPENDENCY, "PostgreSQL",
-            memory_ids=["mem-2"]
-        ))
-        graph.add_edge(GraphEdge(
-            "auth-service", "postgresql", RelationshipType.DEPENDS_ON, "mem-1"
-        ))
+        graph.add_node(
+            GraphNode("auth-service", EntityType.SERVICE, "auth-service", memory_ids=["mem-1"])
+        )
+        graph.add_node(
+            GraphNode("postgresql", EntityType.DEPENDENCY, "PostgreSQL", memory_ids=["mem-2"])
+        )
+        graph.add_edge(
+            GraphEdge("auth-service", "postgresql", RelationshipType.DEPENDS_ON, "mem-1")
+        )
         search.register_graph("user-123", graph)
 
         # Search for auth-service should also return postgresql's memory
@@ -187,24 +187,23 @@ class TestGraphSearchTraversal:
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
-        graph.add_node(GraphNode(
-            "auth-service", EntityType.SERVICE, "auth-service",
-            memory_ids=["mem-1"]
-        ))
-        graph.add_node(GraphNode(
-            "payment-service", EntityType.SERVICE, "payment-service",
-            memory_ids=["mem-2"]
-        ))
-        graph.add_node(GraphNode(
-            "postgresql", EntityType.DEPENDENCY, "PostgreSQL",
-            memory_ids=["mem-3"]
-        ))
-        graph.add_edge(GraphEdge(
-            "auth-service", "postgresql", RelationshipType.DEPENDS_ON, "mem-1"
-        ))
-        graph.add_edge(GraphEdge(
-            "payment-service", "postgresql", RelationshipType.DEPENDS_ON, "mem-2"
-        ))
+        graph.add_node(
+            GraphNode("auth-service", EntityType.SERVICE, "auth-service", memory_ids=["mem-1"])
+        )
+        graph.add_node(
+            GraphNode(
+                "payment-service", EntityType.SERVICE, "payment-service", memory_ids=["mem-2"]
+            )
+        )
+        graph.add_node(
+            GraphNode("postgresql", EntityType.DEPENDENCY, "PostgreSQL", memory_ids=["mem-3"])
+        )
+        graph.add_edge(
+            GraphEdge("auth-service", "postgresql", RelationshipType.DEPENDS_ON, "mem-1")
+        )
+        graph.add_edge(
+            GraphEdge("payment-service", "postgresql", RelationshipType.DEPENDS_ON, "mem-2")
+        )
         search.register_graph("user-123", graph)
 
         # Search for postgresql should return services that depend on it
@@ -225,10 +224,11 @@ class TestGraphSearchTraversal:
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
-        graph.add_node(GraphNode(
-            "service", EntityType.SERVICE, "service",
-            memory_ids=["m1", "m2", "m3", "m4", "m5"]
-        ))
+        graph.add_node(
+            GraphNode(
+                "service", EntityType.SERVICE, "service", memory_ids=["m1", "m2", "m3", "m4", "m5"]
+            )
+        )
         search.register_graph("user-123", graph)
 
         results = search.search("user-123", "service", top_k=3)
@@ -249,17 +249,17 @@ class TestGraphSearchScoring:
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
-        graph.add_node(GraphNode(
-            "auth-service", EntityType.SERVICE, "auth-service",
-            memory_ids=["mem-direct"]
-        ))
-        graph.add_node(GraphNode(
-            "postgresql", EntityType.DEPENDENCY, "PostgreSQL",
-            memory_ids=["mem-neighbor"]
-        ))
-        graph.add_edge(GraphEdge(
-            "auth-service", "postgresql", RelationshipType.DEPENDS_ON, "mem-direct"
-        ))
+        graph.add_node(
+            GraphNode("auth-service", EntityType.SERVICE, "auth-service", memory_ids=["mem-direct"])
+        )
+        graph.add_node(
+            GraphNode(
+                "postgresql", EntityType.DEPENDENCY, "PostgreSQL", memory_ids=["mem-neighbor"]
+            )
+        )
+        graph.add_edge(
+            GraphEdge("auth-service", "postgresql", RelationshipType.DEPENDS_ON, "mem-direct")
+        )
         search.register_graph("user-123", graph)
 
         results = search.search("user-123", "auth-service", top_k=10)
@@ -282,10 +282,9 @@ class TestGraphSearchFuzzyMatching:
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
-        graph.add_node(GraphNode(
-            "auth-service", EntityType.SERVICE, "auth-service",
-            memory_ids=["mem-1"]
-        ))
+        graph.add_node(
+            GraphNode("auth-service", EntityType.SERVICE, "auth-service", memory_ids=["mem-1"])
+        )
         search.register_graph("user-123", graph)
 
         results = search.search("user-123", "AUTH-SERVICE", top_k=10)
@@ -302,10 +301,9 @@ class TestGraphSearchFuzzyMatching:
 
         search = GraphSearch()
         graph = KnowledgeGraph(user_id="user-123")
-        graph.add_node(GraphNode(
-            "auth-service", EntityType.SERVICE, "auth-service",
-            memory_ids=["mem-1"]
-        ))
+        graph.add_node(
+            GraphNode("auth-service", EntityType.SERVICE, "auth-service", memory_ids=["mem-1"])
+        )
         search.register_graph("user-123", graph)
 
         results = search.search("user-123", "what uses auth", top_k=10)

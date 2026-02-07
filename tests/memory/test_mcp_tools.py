@@ -454,7 +454,11 @@ class TestUpdateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from luminescent_cluster.memory.mcp.tools import create_memory, get_memory_by_id, update_memory
+        from luminescent_cluster.memory.mcp.tools import (
+            create_memory,
+            get_memory_by_id,
+            update_memory,
+        )
 
         # Create a memory first (bypass validation for CRUD testing)
         create_result = await create_memory(
@@ -483,7 +487,11 @@ class TestUpdateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from luminescent_cluster.memory.mcp.tools import create_memory, get_memory_by_id, update_memory
+        from luminescent_cluster.memory.mcp.tools import (
+            create_memory,
+            get_memory_by_id,
+            update_memory,
+        )
 
         create_result = await create_memory(
             user_id="user-update-test",
@@ -574,7 +582,11 @@ class TestInvalidateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from luminescent_cluster.memory.mcp.tools import create_memory, get_memory_by_id, invalidate_memory
+        from luminescent_cluster.memory.mcp.tools import (
+            create_memory,
+            get_memory_by_id,
+            invalidate_memory,
+        )
 
         create_result = await create_memory(
             user_id="user-invalidate-test",
@@ -651,7 +663,11 @@ class TestInvalidateMemoryTool:
         GitHub Issue: #113
         ADR Reference: ADR-003 Interface Contract
         """
-        from luminescent_cluster.memory.mcp.tools import create_memory, get_memories, invalidate_memory
+        from luminescent_cluster.memory.mcp.tools import (
+            create_memory,
+            get_memories,
+            invalidate_memory,
+        )
 
         # Create and invalidate a memory (bypass validation for CRUD testing)
         create_result = await create_memory(
@@ -678,10 +694,7 @@ class TestInvalidateMemoryTool:
         for memory in results.get("memories", []):
             if memory.get("content") == "Invalidated memory for exclusion test":
                 # If it's returned, it should be marked as invalid
-                assert (
-                    memory.get("is_valid") is False
-                    or memory.get("invalidated") is True
-                )
+                assert memory.get("is_valid") is False or memory.get("invalidated") is True
 
 
 class TestGetMemoryProvenanceTool:
@@ -747,11 +760,7 @@ class TestGetMemoryProvenanceTool:
         result = await get_memory_provenance(memory_id=create_result["memory_id"])
 
         # Should include source information
-        assert (
-            "source" in result
-            or "raw_source" in result
-            or "origin" in result
-        )
+        assert "source" in result or "raw_source" in result or "origin" in result
 
     @pytest.mark.asyncio
     async def test_get_memory_provenance_includes_creation_time(self):
@@ -773,11 +782,7 @@ class TestGetMemoryProvenanceTool:
         result = await get_memory_provenance(memory_id=create_result["memory_id"])
 
         # Should include creation timestamp
-        assert (
-            "created_at" in result
-            or "creation_time" in result
-            or "timestamp" in result
-        )
+        assert "created_at" in result or "creation_time" in result or "timestamp" in result
 
     @pytest.mark.asyncio
     async def test_get_memory_provenance_includes_extraction_version(self):

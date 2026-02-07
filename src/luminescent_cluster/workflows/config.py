@@ -53,16 +53,16 @@ DEFAULT_EXCLUDE_PATTERNS = [
 # Glob patterns for detecting secrets files (fnmatch-based, not regex)
 # Using glob patterns instead of regex to prevent ReDoS attacks from user config
 DEFAULT_SECRETS_PATTERNS = [
-    "*.env",           # .env files
-    "*.env.*",         # .env.local, .env.production, etc.
-    "**/.env",         # .env in any directory
-    "**/.env.*",       # .env.* in any directory
-    "*.key",           # Private key files
-    "*.pem",           # PEM certificate/key files
-    "*secret*",        # Any file with "secret" in name
-    "*password*",      # Any file with "password" in name
-    "*token*",         # Any file with "token" in name
-    "*credential*",    # Any file with "credential" in name
+    "*.env",  # .env files
+    "*.env.*",  # .env.local, .env.production, etc.
+    "**/.env",  # .env in any directory
+    "**/.env.*",  # .env.* in any directory
+    "*.key",  # Private key files
+    "*.pem",  # PEM certificate/key files
+    "*secret*",  # Any file with "secret" in name
+    "*password*",  # Any file with "password" in name
+    "*token*",  # Any file with "token" in name
+    "*credential*",  # Any file with "credential" in name
 ]
 
 
@@ -239,7 +239,7 @@ def _matches_pattern(file_path: str, pattern: str) -> bool:
                 # Complex case: check if the middle sequence appears
                 middle_parts = middle.split("/")
                 for i in range(len(path_parts) - len(middle_parts) + 1):
-                    if path_parts[i:i+len(middle_parts)] == middle_parts:
+                    if path_parts[i : i + len(middle_parts)] == middle_parts:
                         return True
                 return False
 
@@ -277,7 +277,7 @@ def _matches_pattern(file_path: str, pattern: str) -> bool:
 
             # Check if suffix appears anywhere after prefix
             if suffix_parts:
-                return _fnmatch_parts(path_parts[len(prefix_parts):], suffix_parts)
+                return _fnmatch_parts(path_parts[len(prefix_parts) :], suffix_parts)
             return True
 
     # Use fnmatch for simple patterns (no **)

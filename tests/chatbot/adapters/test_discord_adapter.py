@@ -656,8 +656,10 @@ class TestDiscordSlashCommands:
             await adapter.register_commands(commands)
 
             # Should have added commands to tree
-            assert mock_client.tree.add_command.call_count == 2 or \
-                   mock_client.tree.command.call_count == 2
+            assert (
+                mock_client.tree.add_command.call_count == 2
+                or mock_client.tree.command.call_count == 2
+            )
 
     @pytest.mark.asyncio
     async def test_handle_slash_command_interaction(self, adapter):

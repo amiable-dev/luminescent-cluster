@@ -166,9 +166,7 @@ class CitationDetector:
         # Detect commit hashes (excluding those within URLs)
         for match in self.COMMIT_PATTERN.finditer(content):
             # Skip if this match is within a URL
-            in_url = any(
-                start <= match.start() < end for start, end in url_ranges
-            )
+            in_url = any(start <= match.start() < end for start, end in url_ranges)
             if in_url:
                 continue
 

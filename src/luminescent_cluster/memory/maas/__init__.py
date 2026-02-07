@@ -52,7 +52,11 @@ from luminescent_cluster.memory.maas.pool import (
     SharedMemoryPool,
 )
 from luminescent_cluster.memory.maas.provider import MaaSMemoryProvider
-from luminescent_cluster.memory.maas.registry import AgentRegistry, DuplicateAgentError, RegistryCapacityError
+from luminescent_cluster.memory.maas.registry import (
+    AgentRegistry,
+    DuplicateAgentError,
+    RegistryCapacityError,
+)
 from luminescent_cluster.memory.maas.scope import (
     AgentScope,
     PermissionModel,

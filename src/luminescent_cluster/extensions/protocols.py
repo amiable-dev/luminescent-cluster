@@ -101,9 +101,7 @@ class TenantProvider(Protocol):
         """
         ...
 
-    def validate_tenant_access(
-        self, tenant_id: str, user_id: str, resource: str
-    ) -> bool:
+    def validate_tenant_access(self, tenant_id: str, user_id: str, resource: str) -> bool:
         """
         Check if user has access to resource within tenant.
 

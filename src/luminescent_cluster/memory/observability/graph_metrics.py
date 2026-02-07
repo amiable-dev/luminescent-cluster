@@ -341,9 +341,7 @@ class GraphMetricsCollector:
             if user_id in self._user_queries:
                 del self._user_queries[user_id]
             self._queries = [q for q in self._queries if q.user_id != user_id]
-            self._size_snapshots = [
-                s for s in self._size_snapshots if s.user_id != user_id
-            ]
+            self._size_snapshots = [s for s in self._size_snapshots if s.user_id != user_id]
         else:
             self._queries.clear()
             self._user_queries.clear()
@@ -405,11 +403,13 @@ class QueryMeasurementContext:
             latency_ms: Time taken in milliseconds.
             node_count: Number of nodes accessed.
         """
-        self._hop_latencies.append(HopLatency(
-            hop_type=hop_type,
-            latency_ms=latency_ms,
-            node_count=node_count,
-        ))
+        self._hop_latencies.append(
+            HopLatency(
+                hop_type=hop_type,
+                latency_ms=latency_ms,
+                node_count=node_count,
+            )
+        )
 
     def set_matching_nodes(self, count: int) -> None:
         """Set the number of matching nodes.
@@ -443,6 +443,7 @@ def measure_hop(
     Returns:
         Decorator function.
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         def wrapper(*args, **kwargs) -> T:
             start = time.perf_counter()

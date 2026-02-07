@@ -15,7 +15,11 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from luminescent_cluster.memory.ingestion.citation_detector import Citation, CitationDetector, CitationType
+from luminescent_cluster.memory.ingestion.citation_detector import (
+    Citation,
+    CitationDetector,
+    CitationType,
+)
 from luminescent_cluster.memory.ingestion.dedup_checker import DedupChecker, DuplicateCheckResult
 from luminescent_cluster.memory.ingestion.evidence import EvidenceObject
 from luminescent_cluster.memory.ingestion.hedge_detector import HedgeDetector
@@ -301,14 +305,12 @@ class TestDedupChecker:
     @pytest.mark.asyncio
     async def test_detect_exact_duplicate(self):
         """Test detection of exact duplicate."""
-        provider = MockProvider([
-            {"id": "mem-1", "user_id": "user-1", "content": "Uses PostgreSQL database"}
-        ])
+        provider = MockProvider(
+            [{"id": "mem-1", "user_id": "user-1", "content": "Uses PostgreSQL database"}]
+        )
         checker = DedupChecker(provider)
 
-        result = await checker.check_duplicate(
-            "Uses PostgreSQL database", "user-1"
-        )
+        result = await checker.check_duplicate("Uses PostgreSQL database", "user-1")
         assert result.is_duplicate
         assert result.similarity_score >= 0.92
         assert result.existing_memory_id == "mem-1"
@@ -316,29 +318,25 @@ class TestDedupChecker:
     @pytest.mark.asyncio
     async def test_allow_different_content(self):
         """Test that different content is allowed."""
-        provider = MockProvider([
-            {"id": "mem-1", "user_id": "user-1", "content": "Uses PostgreSQL database"}
-        ])
+        provider = MockProvider(
+            [{"id": "mem-1", "user_id": "user-1", "content": "Uses PostgreSQL database"}]
+        )
         checker = DedupChecker(provider)
 
-        result = await checker.check_duplicate(
-            "Prefers tabs for Python files", "user-1"
-        )
+        result = await checker.check_duplicate("Prefers tabs for Python files", "user-1")
         assert not result.is_duplicate
         assert result.similarity_score < 0.92
 
     @pytest.mark.asyncio
     async def test_allow_similar_but_distinct(self):
         """Test that similar but distinct content is allowed."""
-        provider = MockProvider([
-            {"id": "mem-1", "user_id": "user-1", "content": "Uses PostgreSQL for users table"}
-        ])
+        provider = MockProvider(
+            [{"id": "mem-1", "user_id": "user-1", "content": "Uses PostgreSQL for users table"}]
+        )
         checker = DedupChecker(provider)
 
         # Similar but different detail
-        result = await checker.check_duplicate(
-            "Uses PostgreSQL for sessions table", "user-1"
-        )
+        result = await checker.check_duplicate("Uses PostgreSQL for sessions table", "user-1")
         # Should not be exact duplicate
         assert result.similarity_score < 1.0
 
@@ -358,21 +356,15 @@ class TestDedupChecker:
         checker = DedupChecker(provider)
 
         # Exact match
-        sim = checker.calculate_similarity(
-            "Uses PostgreSQL", "Uses PostgreSQL"
-        )
+        sim = checker.calculate_similarity("Uses PostgreSQL", "Uses PostgreSQL")
         assert sim == 1.0
 
         # No overlap
-        sim = checker.calculate_similarity(
-            "Uses PostgreSQL", "Prefers tabs"
-        )
+        sim = checker.calculate_similarity("Uses PostgreSQL", "Prefers tabs")
         assert sim == 0.0
 
         # Partial overlap
-        sim = checker.calculate_similarity(
-            "Uses PostgreSQL database", "Uses MySQL database"
-        )
+        sim = checker.calculate_similarity("Uses PostgreSQL database", "Uses MySQL database")
         assert 0 < sim < 1
 
 
@@ -468,9 +460,9 @@ class TestIngestionValidator:
     @pytest.mark.asyncio
     async def test_tier3_duplicate_blocked(self):
         """Test Tier 3: Duplicates are blocked."""
-        provider = MockProvider([
-            {"id": "mem-1", "user_id": "user-1", "content": "Uses PostgreSQL database"}
-        ])
+        provider = MockProvider(
+            [{"id": "mem-1", "user_id": "user-1", "content": "Uses PostgreSQL database"}]
+        )
         validator = IngestionValidator(provider=provider, enable_dedup=True)
 
         result = await validator.validate(
@@ -611,18 +603,30 @@ class TestReviewQueue:
         queue = ReviewQueue(max_pending_per_user=2)
 
         await queue.enqueue(
-            user_id="user-1", content="Mem 1", memory_type="fact",
-            source="ai", evidence=sample_evidence, validation_result=sample_result
+            user_id="user-1",
+            content="Mem 1",
+            memory_type="fact",
+            source="ai",
+            evidence=sample_evidence,
+            validation_result=sample_result,
         )
         await queue.enqueue(
-            user_id="user-1", content="Mem 2", memory_type="fact",
-            source="ai", evidence=sample_evidence, validation_result=sample_result
+            user_id="user-1",
+            content="Mem 2",
+            memory_type="fact",
+            source="ai",
+            evidence=sample_evidence,
+            validation_result=sample_result,
         )
 
         with pytest.raises(ValueError, match="maximum pending"):
             await queue.enqueue(
-                user_id="user-1", content="Mem 3", memory_type="fact",
-                source="ai", evidence=sample_evidence, validation_result=sample_result
+                user_id="user-1",
+                content="Mem 3",
+                memory_type="fact",
+                source="ai",
+                evidence=sample_evidence,
+                validation_result=sample_result,
             )
 
     @pytest.mark.asyncio
@@ -632,8 +636,12 @@ class TestReviewQueue:
         assert queue.pending_count("user-1") == 0
 
         await queue.enqueue(
-            user_id="user-1", content="Mem 1", memory_type="fact",
-            source="ai", evidence=sample_evidence, validation_result=sample_result
+            user_id="user-1",
+            content="Mem 1",
+            memory_type="fact",
+            source="ai",
+            evidence=sample_evidence,
+            validation_result=sample_result,
         )
 
         assert queue.pending_count() == 1
@@ -685,10 +693,16 @@ class TestExitCriteria:
     @pytest.mark.asyncio
     async def test_no_duplicates_approved(self):
         """Verify duplicates are never approved."""
-        provider = MockProvider([
-            {"id": "mem-1", "user_id": "user-1", "content": "Uses PostgreSQL for the main database"},
-            {"id": "mem-2", "user_id": "user-1", "content": "Team prefers tabs over spaces"},
-        ])
+        provider = MockProvider(
+            [
+                {
+                    "id": "mem-1",
+                    "user_id": "user-1",
+                    "content": "Uses PostgreSQL for the main database",
+                },
+                {"id": "mem-2", "user_id": "user-1", "content": "Team prefers tabs over spaces"},
+            ]
+        )
         validator = IngestionValidator(provider=provider, enable_dedup=True)
 
         # Exact duplicate
@@ -886,9 +900,7 @@ class TestReviewQueueAuthorization:
         )
 
     @pytest.mark.asyncio
-    async def test_owner_can_approve_own_memory(
-        self, queue, evidence, validation_result
-    ):
+    async def test_owner_can_approve_own_memory(self, queue, evidence, validation_result):
         """Memory owner should be able to approve their own pending memory."""
         queue_id = await queue.enqueue(
             user_id="user-1",
@@ -904,9 +916,7 @@ class TestReviewQueueAuthorization:
         assert memory_id is not None
 
     @pytest.mark.asyncio
-    async def test_other_user_cannot_approve_memory(
-        self, queue, evidence, validation_result
-    ):
+    async def test_other_user_cannot_approve_memory(self, queue, evidence, validation_result):
         """Non-owner should not be able to approve another user's memory."""
         queue_id = await queue.enqueue(
             user_id="user-1",
@@ -922,9 +932,7 @@ class TestReviewQueueAuthorization:
             await queue.approve(queue_id, "user-2")
 
     @pytest.mark.asyncio
-    async def test_owner_can_reject_own_memory(
-        self, queue, evidence, validation_result
-    ):
+    async def test_owner_can_reject_own_memory(self, queue, evidence, validation_result):
         """Memory owner should be able to reject their own pending memory."""
         queue_id = await queue.enqueue(
             user_id="user-1",
@@ -943,9 +951,7 @@ class TestReviewQueueAuthorization:
         assert len(pending) == 0
 
     @pytest.mark.asyncio
-    async def test_other_user_cannot_reject_memory(
-        self, queue, evidence, validation_result
-    ):
+    async def test_other_user_cannot_reject_memory(self, queue, evidence, validation_result):
         """Non-owner should not be able to reject another user's memory."""
         queue_id = await queue.enqueue(
             user_id="user-1",
@@ -961,9 +967,7 @@ class TestReviewQueueAuthorization:
             await queue.reject(queue_id, "user-2", "Not my memory")
 
     @pytest.mark.asyncio
-    async def test_bulk_approve_skips_unauthorized(
-        self, queue, evidence, validation_result
-    ):
+    async def test_bulk_approve_skips_unauthorized(self, queue, evidence, validation_result):
         """Bulk approve should skip items the user is not authorized for."""
         # User 1's memory
         queue_id_1 = await queue.enqueue(
@@ -1090,9 +1094,7 @@ class TestReviewQueueMultiTenant:
         )
 
     @pytest.mark.asyncio
-    async def test_get_review_history_filters_by_user(
-        self, evidence, validation_result
-    ):
+    async def test_get_review_history_filters_by_user(self, evidence, validation_result):
         """get_review_history should only return actions for the specified user.
 
         SECURITY: Prevents cross-tenant data leakage.
@@ -1132,9 +1134,7 @@ class TestReviewQueueMultiTenant:
         assert user2_history[0].user_id == "user-2"
 
     @pytest.mark.asyncio
-    async def test_queue_at_capacity_rejects_instead_of_evicting(
-        self, evidence, validation_result
-    ):
+    async def test_queue_at_capacity_rejects_instead_of_evicting(self, evidence, validation_result):
         """When queue is at capacity, new items should be rejected.
 
         SECURITY: Prevents cross-tenant DoS via eviction.

@@ -110,9 +110,7 @@ def generate_markdown_report(report: EvaluationReport) -> str:
 
         for cat, data in report.category_breakdown.items():
             cat_accuracy = data.get("accuracy", 0.0)
-            lines.append(
-                f"| {cat} | {data['passed']} | {data['failed']} | {cat_accuracy:.2%} |"
-            )
+            lines.append(f"| {cat} | {data['passed']} | {data['failed']} | {cat_accuracy:.2%} |")
         lines.append("")
 
     if report.latency_stats:

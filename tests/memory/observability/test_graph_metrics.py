@@ -384,7 +384,9 @@ class TestGraphMetricsStats:
         assert "predecessor" in hop_latencies
 
         # Neighbor should have highest latency (60% of total)
-        assert hop_latencies["neighbor"]["avg_latency_ms"] > hop_latencies["direct"]["avg_latency_ms"]
+        assert (
+            hop_latencies["neighbor"]["avg_latency_ms"] > hop_latencies["direct"]["avg_latency_ms"]
+        )
 
 
 class TestQueryMeasurementContext:
@@ -465,11 +467,13 @@ class TestGraphMetricsIntegration:
 
             # Record size periodically
             if i % 3 == 0:
-                collector.record_size_snapshot(GraphSizeSnapshot(
-                    user_id="user-1",
-                    node_count=100 + i * 10,
-                    edge_count=200 + i * 20,
-                ))
+                collector.record_size_snapshot(
+                    GraphSizeSnapshot(
+                        user_id="user-1",
+                        node_count=100 + i * 10,
+                        edge_count=200 + i * 20,
+                    )
+                )
 
         # Get statistics
         stats = collector.get_stats("user-1")

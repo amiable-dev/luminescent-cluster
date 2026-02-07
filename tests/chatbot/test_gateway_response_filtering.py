@@ -101,10 +101,12 @@ class TestGatewayResponseFiltering:
     def mock_llm_provider(self):
         """Create a mock LLM provider."""
         provider = MagicMock()
-        provider.chat = AsyncMock(return_value=MagicMock(
-            content="LLM response with password=secret123",
-            tokens_used=100,
-        ))
+        provider.chat = AsyncMock(
+            return_value=MagicMock(
+                content="LLM response with password=secret123",
+                tokens_used=100,
+            )
+        )
         return provider
 
     @pytest.fixture
@@ -142,9 +144,7 @@ class TestGatewayResponseFiltering:
         )
 
     @pytest.mark.asyncio
-    async def test_gateway_applies_response_filter(
-        self, gateway, test_message, mock_llm_provider
-    ):
+    async def test_gateway_applies_response_filter(self, gateway, test_message, mock_llm_provider):
         """Gateway filters LLM response through ResponseFilter."""
         registry = ExtensionRegistry.get()
         mock_filter = MagicMock()

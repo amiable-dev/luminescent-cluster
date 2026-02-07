@@ -238,9 +238,7 @@ class TestLatencyExitCriteria:
         hybrid_retriever.index_memories("user-1", memories)
 
         start = time.perf_counter()
-        _, metrics = await hybrid_retriever.retrieve(
-            "topic 5 information", "user-1", top_k=10
-        )
+        _, metrics = await hybrid_retriever.retrieve("topic 5 information", "user-1", top_k=10)
         elapsed = time.perf_counter() - start
 
         # Exit criteria: <1s
@@ -311,14 +309,10 @@ class TestMultiHopExitCriteria:
         query = "PostgreSQL Redis performance cache"
 
         # Hybrid retrieval
-        hybrid_results, _ = await hybrid_retriever.retrieve(
-            query, "user-1", top_k=5
-        )
+        hybrid_results, _ = await hybrid_retriever.retrieve(query, "user-1", top_k=5)
 
         # Vector-only retrieval
-        vector_results = vector_only_retriever.search_with_memories(
-            "user-1", query, top_k=5
-        )
+        vector_results = vector_only_retriever.search_with_memories("user-1", query, top_k=5)
 
         # Hybrid should retrieve at least as many relevant results
         # Due to BM25 keyword matching on technical terms
@@ -371,9 +365,7 @@ class TestFusionEffectiveness:
         # Fusion should combine candidates from both sources
         assert metrics.fused_candidates > 0
         # Fused should be <= sum of inputs (due to deduplication)
-        assert metrics.fused_candidates <= (
-            metrics.bm25_candidates + metrics.vector_candidates
-        )
+        assert metrics.fused_candidates <= (metrics.bm25_candidates + metrics.vector_candidates)
 
     @pytest.mark.asyncio
     async def test_fusion_deduplicates_results(

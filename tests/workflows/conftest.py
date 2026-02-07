@@ -166,6 +166,7 @@ def mock_git_for_ingestion(temp_project_dir):
     Note: git show uses text=False (binary mode) so returns bytes,
     while other commands use text=True so return strings.
     """
+
     def create_mock(file_content="# Test Document\n\nThis is a test document for ingestion."):
         def mock_run(cmd, **kwargs):
             result = MagicMock()
@@ -173,14 +174,18 @@ def mock_git_for_ingestion(temp_project_dir):
 
             if "show" in cmd:
                 # git show returns bytes (text=False)
-                content_bytes = file_content.encode("utf-8") if isinstance(file_content, str) else file_content
+                content_bytes = (
+                    file_content.encode("utf-8") if isinstance(file_content, str) else file_content
+                )
                 result.stdout = content_bytes
             elif "cat-file" in cmd and "-t" in cmd:
                 # git cat-file -t returns object type
                 result.stdout = "blob"
             elif "cat-file" in cmd and "-s" in cmd:
                 # git cat-file -s returns string (text=True)
-                content_bytes = file_content.encode("utf-8") if isinstance(file_content, str) else file_content
+                content_bytes = (
+                    file_content.encode("utf-8") if isinstance(file_content, str) else file_content
+                )
                 result.stdout = str(len(content_bytes))
             elif "branch" in cmd and "--show-current" in cmd:
                 result.stdout = "main"
@@ -188,6 +193,7 @@ def mock_git_for_ingestion(temp_project_dir):
                 result.stdout = ""
 
             return result
+
         return mock_run
 
     return create_mock

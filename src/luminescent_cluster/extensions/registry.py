@@ -184,11 +184,13 @@ class ExtensionRegistry:
             Chatbot can function without extensions (OSS mode),
             but with reduced functionality (no auth, no rate limiting).
         """
-        return any([
-            self.chatbot_auth_provider,
-            self.chatbot_rate_limiter,
-            self.chatbot_access_controller,
-        ])
+        return any(
+            [
+                self.chatbot_auth_provider,
+                self.chatbot_rate_limiter,
+                self.chatbot_access_controller,
+            ]
+        )
 
     def has_memory_provider(self) -> bool:
         """
@@ -230,17 +232,21 @@ class ExtensionRegistry:
                 "mode": "oss"
             }
         """
-        has_core = any([
-            self.tenant_provider,
-            self.usage_tracker,
-            self.audit_logger,
-        ])
+        has_core = any(
+            [
+                self.tenant_provider,
+                self.usage_tracker,
+                self.audit_logger,
+            ]
+        )
 
-        has_chatbot = any([
-            self.chatbot_auth_provider,
-            self.chatbot_rate_limiter,
-            self.chatbot_access_controller,
-        ])
+        has_chatbot = any(
+            [
+                self.chatbot_auth_provider,
+                self.chatbot_rate_limiter,
+                self.chatbot_access_controller,
+            ]
+        )
 
         return {
             "tenant_provider": self.tenant_provider is not None,

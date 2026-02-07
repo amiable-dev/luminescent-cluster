@@ -50,9 +50,7 @@ class TestContextStoreProtocolInProtocols:
         from luminescent_cluster.extensions.protocols import ContextStore
 
         # Can use isinstance() check
-        assert hasattr(ContextStore, "__protocol_attrs__") or isinstance(
-            ContextStore, type
-        )
+        assert hasattr(ContextStore, "__protocol_attrs__") or isinstance(ContextStore, type)
 
 
 class TestContextStoreProtocolMethods:

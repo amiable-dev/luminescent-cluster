@@ -23,7 +23,7 @@ import re
 from .config import WorkflowConfig, load_config, should_ingest_file
 
 # Regex to validate commit SHA (7-40 hex characters)
-COMMIT_SHA_PATTERN = re.compile(r'^[0-9a-fA-F]{7,40}$')
+COMMIT_SHA_PATTERN = re.compile(r"^[0-9a-fA-F]{7,40}$")
 
 
 def get_knowledge_base():
@@ -33,6 +33,7 @@ def get_knowledge_base():
     Separated for easy mocking in tests.
     """
     from pixeltable_setup import setup_knowledge_base
+
     return setup_knowledge_base()
 
 
@@ -324,7 +325,9 @@ def _get_blob_size(relative_path: str, commit_sha: str, project_root: Path) -> O
         return None
 
 
-def _read_committed_content(relative_path: str, commit_sha: str, project_root: Path) -> Optional[str]:
+def _read_committed_content(
+    relative_path: str, commit_sha: str, project_root: Path
+) -> Optional[str]:
     """Read file content from git object database at specific commit.
 
     This ensures we ingest exactly what was committed, not working tree state.

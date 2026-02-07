@@ -112,9 +112,7 @@ def resolve_relative_path(source_file: Path, target: str, docs_root: Path) -> Pa
     return (source_dir / target_without_anchor).resolve()
 
 
-def check_link_target(
-    target_path: Path, original_target: str
-) -> tuple[bool, str]:
+def check_link_target(target_path: Path, original_target: str) -> tuple[bool, str]:
     """Check if a link target exists.
 
     Args:
@@ -173,7 +171,7 @@ def extract_links_from_markdown(content: str) -> list[tuple[int, str, str]]:
             continue
 
         # Remove inline code before checking for links (code in backticks)
-        line_without_code = re.sub(r'`[^`]+`', '', line)
+        line_without_code = re.sub(r"`[^`]+`", "", line)
 
         # Inline links: [text](target)
         for match in MARKDOWN_LINK_PATTERN.finditer(line_without_code):
@@ -193,9 +191,7 @@ def extract_links_from_markdown(content: str) -> list[tuple[int, str, str]]:
     return links
 
 
-def check_links_in_file(
-    file_path: Path, docs_root: Path
-) -> list[BrokenLink]:
+def check_links_in_file(file_path: Path, docs_root: Path) -> list[BrokenLink]:
     """Check all internal links in a markdown file.
 
     Args:
@@ -210,13 +206,15 @@ def check_links_in_file(
     try:
         content = file_path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as e:
-        broken.append(BrokenLink(
-            source_file=str(file_path),
-            line_number=0,
-            link_text="",
-            target="",
-            reason=f"Could not read file: {e}",
-        ))
+        broken.append(
+            BrokenLink(
+                source_file=str(file_path),
+                line_number=0,
+                link_text="",
+                target="",
+                reason=f"Could not read file: {e}",
+            )
+        )
         return broken
 
     links = extract_links_from_markdown(content)
@@ -234,13 +232,15 @@ def check_links_in_file(
         # Check if target exists
         exists, reason = check_link_target(resolved, target)
         if not exists:
-            broken.append(BrokenLink(
-                source_file=str(file_path.relative_to(docs_root.parent)),
-                line_number=line_num,
-                link_text=link_text,
-                target=target,
-                reason=reason,
-            ))
+            broken.append(
+                BrokenLink(
+                    source_file=str(file_path.relative_to(docs_root.parent)),
+                    line_number=line_num,
+                    link_text=link_text,
+                    target=target,
+                    reason=reason,
+                )
+            )
 
     return broken
 
@@ -284,13 +284,15 @@ def check_all_links(docs_root: Path, verbose: bool = False) -> LinkCheckResult:
                 if exists:
                     result.valid_links += 1
                 else:
-                    result.broken_links.append(BrokenLink(
-                        source_file=str(md_file.relative_to(docs_root.parent)),
-                        line_number=line_num,
-                        link_text=link_text,
-                        target=target,
-                        reason=reason,
-                    ))
+                    result.broken_links.append(
+                        BrokenLink(
+                            source_file=str(md_file.relative_to(docs_root.parent)),
+                            line_number=line_num,
+                            link_text=link_text,
+                            target=target,
+                            reason=reason,
+                        )
+                    )
 
         except (OSError, UnicodeDecodeError):
             continue
@@ -373,24 +375,28 @@ def check_adr_ledger_sync(
 
     # Load ledger
     if not ledger_path.exists():
-        result.issues.append(ADRSyncIssue(
-            adr_file="",
-            issue_type="invalid_source",
-            requirement_id="",
-            details=f"Ledger not found: {ledger_path}",
-        ))
+        result.issues.append(
+            ADRSyncIssue(
+                adr_file="",
+                issue_type="invalid_source",
+                requirement_id="",
+                details=f"Ledger not found: {ledger_path}",
+            )
+        )
         return result
 
     try:
         with open(ledger_path) as f:
             ledger = yaml.safe_load(f)
     except yaml.YAMLError as e:
-        result.issues.append(ADRSyncIssue(
-            adr_file="",
-            issue_type="invalid_source",
-            requirement_id="",
-            details=f"Ledger YAML error: {e}",
-        ))
+        result.issues.append(
+            ADRSyncIssue(
+                adr_file="",
+                issue_type="invalid_source",
+                requirement_id="",
+                details=f"Ledger YAML error: {e}",
+            )
+        )
         return result
 
     requirements = ledger.get("requirements", {})
@@ -418,12 +424,14 @@ def check_adr_ledger_sync(
         # Check if each requirement exists in ledger
         for req_id in adr_reqs:
             if req_id not in ledger_req_ids:
-                result.issues.append(ADRSyncIssue(
-                    adr_file=adr_name,
-                    issue_type="missing_in_ledger",
-                    requirement_id=req_id,
-                    details=f"{req_id} referenced in ADR but not in ledger",
-                ))
+                result.issues.append(
+                    ADRSyncIssue(
+                        adr_file=adr_name,
+                        issue_type="missing_in_ledger",
+                        requirement_id=req_id,
+                        details=f"{req_id} referenced in ADR but not in ledger",
+                    )
+                )
 
     # Check ledger sources point to valid ADRs
     for req_id, req_data in requirements.items():
@@ -450,12 +458,14 @@ def check_adr_ledger_sync(
 
             if not found and verbose:
                 # This is informational, not a failure
-                result.issues.append(ADRSyncIssue(
-                    adr_file="",
-                    issue_type="stale_reference",
-                    requirement_id=req_id,
-                    details=f"Source '{source}' may reference non-existent ADR",
-                ))
+                result.issues.append(
+                    ADRSyncIssue(
+                        adr_file="",
+                        issue_type="stale_reference",
+                        requirement_id=req_id,
+                        details=f"Source '{source}' may reference non-existent ADR",
+                    )
+                )
 
     return result
 
@@ -551,9 +561,7 @@ def main() -> int:
         1: Validation failures
         2: Configuration/parsing error
     """
-    parser = argparse.ArgumentParser(
-        description="Documentation freshness validation (ADR-010)"
-    )
+    parser = argparse.ArgumentParser(description="Documentation freshness validation (ADR-010)")
     parser.add_argument(
         "--check-links",
         action="store_true",
@@ -570,7 +578,8 @@ def main() -> int:
         help="Run all checks",
     )
     parser.add_argument(
-        "--verbose", "-v",
+        "--verbose",
+        "-v",
         action="store_true",
         help="Verbose output",
     )

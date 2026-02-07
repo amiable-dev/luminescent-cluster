@@ -280,9 +280,7 @@ class ScaleMilestoneTracker:
             "current_count": self._counts.get(user_id, 0),
             "current_milestone": current.name if current else None,
             "next_milestone": next_milestone.name if next_milestone else None,
-            "next_milestone_count": (
-                next_milestone.item_count if next_milestone else None
-            ),
+            "next_milestone_count": (next_milestone.item_count if next_milestone else None),
             "crossed_milestones": list(self._crossed.get(user_id, set())),
             "recent_checks": [r.to_dict() for r in check_history],
         }

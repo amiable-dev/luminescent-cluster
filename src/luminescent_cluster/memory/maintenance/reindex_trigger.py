@@ -16,7 +16,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Awaitable, Callable
 
-from luminescent_cluster.memory.evaluation.recall_health import RecallHealthMonitor, RecallHealthResult
+from luminescent_cluster.memory.evaluation.recall_health import (
+    RecallHealthMonitor,
+    RecallHealthResult,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -140,17 +143,14 @@ class ReindexTrigger:
         # Check cooldown unless forced
         if not force and self._is_in_cooldown():
             logger.info(
-                "Skipping reindex check - in cooldown period "
-                f"(last reindex: {self._last_reindex})"
+                f"Skipping reindex check - in cooldown period (last reindex: {self._last_reindex})"
             )
             return False
 
         # Run health check in thread pool to avoid blocking event loop
         # (brute-force search is CPU-intensive)
         loop = asyncio.get_running_loop()
-        result = await loop.run_in_executor(
-            None, lambda: self._monitor.check_health(queries, k)
-        )
+        result = await loop.run_in_executor(None, lambda: self._monitor.check_health(queries, k))
 
         # Log result
         logger.info(
@@ -341,14 +341,11 @@ class ReindexTrigger:
             Dictionary with trigger status information.
         """
         return {
-            "last_reindex": (
-                self._last_reindex.isoformat() if self._last_reindex else None
-            ),
+            "last_reindex": (self._last_reindex.isoformat() if self._last_reindex else None),
             "in_cooldown": self._is_in_cooldown(),
             "cooldown_hours": self._cooldown_hours,
             "history_count": len(self._history),
             "scheduled_check_active": (
-                self._scheduled_task is not None
-                and not self._scheduled_task.done()
+                self._scheduled_task is not None and not self._scheduled_task.done()
             ),
         }

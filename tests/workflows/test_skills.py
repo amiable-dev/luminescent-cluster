@@ -52,7 +52,9 @@ class TestSkillDirectoryStructure:
 
         ADR Reference: ADR-002 Phase 3 (Skills)
         """
-        skill_md = Path(__file__).parent.parent.parent / ".claude" / "skills" / "session-init" / "SKILL.md"
+        skill_md = (
+            Path(__file__).parent.parent.parent / ".claude" / "skills" / "session-init" / "SKILL.md"
+        )
         assert skill_md.exists(), f"SKILL.md not found at {skill_md}"
 
     def test_session_save_skill_md_exists(self):
@@ -60,7 +62,9 @@ class TestSkillDirectoryStructure:
 
         ADR Reference: ADR-002 Phase 3 (Skills)
         """
-        skill_md = Path(__file__).parent.parent.parent / ".claude" / "skills" / "session-save" / "SKILL.md"
+        skill_md = (
+            Path(__file__).parent.parent.parent / ".claude" / "skills" / "session-save" / "SKILL.md"
+        )
         assert skill_md.exists(), f"SKILL.md not found at {skill_md}"
 
 
@@ -70,14 +74,16 @@ class TestSessionInitSkill:
     @pytest.fixture
     def skill_content(self):
         """Load session-init SKILL.md content."""
-        skill_md = Path(__file__).parent.parent.parent / ".claude" / "skills" / "session-init" / "SKILL.md"
+        skill_md = (
+            Path(__file__).parent.parent.parent / ".claude" / "skills" / "session-init" / "SKILL.md"
+        )
         return skill_md.read_text()
 
     @pytest.fixture
     def skill_frontmatter(self, skill_content):
         """Parse YAML frontmatter from skill."""
         # Extract content between --- markers
-        match = re.match(r'^---\n(.*?)\n---', skill_content, re.DOTALL)
+        match = re.match(r"^---\n(.*?)\n---", skill_content, re.DOTALL)
         if match:
             return yaml.safe_load(match.group(1))
         return {}
@@ -176,13 +182,15 @@ class TestSessionSaveSkill:
     @pytest.fixture
     def skill_content(self):
         """Load session-save SKILL.md content."""
-        skill_md = Path(__file__).parent.parent.parent / ".claude" / "skills" / "session-save" / "SKILL.md"
+        skill_md = (
+            Path(__file__).parent.parent.parent / ".claude" / "skills" / "session-save" / "SKILL.md"
+        )
         return skill_md.read_text()
 
     @pytest.fixture
     def skill_frontmatter(self, skill_content):
         """Parse YAML frontmatter from skill."""
-        match = re.match(r'^---\n(.*?)\n---', skill_content, re.DOTALL)
+        match = re.match(r"^---\n(.*?)\n---", skill_content, re.DOTALL)
         if match:
             return yaml.safe_load(match.group(1))
         return {}

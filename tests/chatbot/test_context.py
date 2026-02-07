@@ -349,8 +349,7 @@ class TestContextFormatting:
         manager.add_message("thread-123", "user", "Hello")
 
         messages = manager.format_for_llm(
-            "thread-123",
-            system_message="You are a helpful assistant."
+            "thread-123", system_message="You are a helpful assistant."
         )
 
         assert len(messages) == 2

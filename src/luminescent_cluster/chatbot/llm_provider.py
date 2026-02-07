@@ -125,9 +125,7 @@ class CircuitBreaker:
         elif self.state == CircuitState.CLOSED:
             if self.failure_count >= self.failure_threshold:
                 self.state = CircuitState.OPEN
-                logger.warning(
-                    f"Circuit breaker opened after {self.failure_count} failures"
-                )
+                logger.warning(f"Circuit breaker opened after {self.failure_count} failures")
 
 
 # =============================================================================

@@ -349,15 +349,12 @@ class EvaluationHarness:
         """
         if not hasattr(self, "_recall_monitor") or self._recall_monitor is None:
             raise RuntimeError(
-                "Recall monitoring not configured. "
-                "Call configure_recall_monitoring() first."
+                "Recall monitoring not configured. Call configure_recall_monitoring() first."
             )
 
         if use_golden_queries:
             if not self.questions:
-                raise ValueError(
-                    "No golden queries loaded. Call load_dataset() first."
-                )
+                raise ValueError("No golden queries loaded. Call load_dataset() first.")
             query_list = [q.question for q in self.questions]
         else:
             if not queries:
@@ -387,15 +384,12 @@ class EvaluationHarness:
         """
         if not hasattr(self, "_recall_monitor") or self._recall_monitor is None:
             raise RuntimeError(
-                "Recall monitoring not configured. "
-                "Call configure_recall_monitoring() first."
+                "Recall monitoring not configured. Call configure_recall_monitoring() first."
             )
 
         if use_golden_queries:
             if not self.questions:
-                raise ValueError(
-                    "No golden queries loaded. Call load_dataset() first."
-                )
+                raise ValueError("No golden queries loaded. Call load_dataset() first.")
             query_list = [q.question for q in self.questions]
         else:
             if not queries:

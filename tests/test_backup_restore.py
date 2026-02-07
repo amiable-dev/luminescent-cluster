@@ -306,7 +306,9 @@ class TestBackupRestoreCLI:
                 "row_count": 10,
             }
 
-            with patch("sys.argv", ["backup_restore.py", "--backup", "--export-dir", str(tmp_path)]):
+            with patch(
+                "sys.argv", ["backup_restore.py", "--backup", "--export-dir", str(tmp_path)]
+            ):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 

@@ -484,10 +484,13 @@ async def update_memory(
         }
 
     # Update the memory
-    updated = await provider.update(memory_id, {
-        "content": content,
-        "source": source,
-    })
+    updated = await provider.update(
+        memory_id,
+        {
+            "content": content,
+            "source": source,
+        },
+    )
 
     if updated is None:
         _log_audit_event(
@@ -564,7 +567,7 @@ async def invalidate_memory(
         }
 
     # Set invalidation metadata directly on provider's internal storage
-    if hasattr(provider, '_memories') and memory_id in provider._memories:
+    if hasattr(provider, "_memories") and memory_id in provider._memories:
         memory = provider._memories[memory_id]
         new_metadata = {
             **memory.metadata,
@@ -617,20 +620,16 @@ async def get_memory_provenance(memory_id: str) -> dict[str, Any]:
         "source": memory.source,
         "raw_source": memory.raw_source,
         "extraction_version": memory.extraction_version,
-
         # Timestamps
         "created_at": memory.created_at.isoformat(),
         "last_accessed_at": memory.last_accessed_at.isoformat(),
-
         # Update history from metadata
         "update_history": memory.metadata.get("update_history", []),
         "last_modified_at": memory.metadata.get("last_modified_at"),
-
         # Invalidation info
         "is_valid": memory.metadata.get("is_valid", True),
         "invalidation_reason": memory.metadata.get("invalidation_reason"),
         "invalidated_at": memory.metadata.get("invalidated_at"),
-
         # Current state
         "current_content": memory.content,
         "memory_type": memory.memory_type.value,
@@ -725,9 +724,7 @@ async def assemble_context(
         "total_tokens": efficiency["total_tokens"],
         "efficiency": efficiency,
         "provenance": [
-            block.provenance.to_dict()
-            for block in blocks
-            if block.provenance is not None
+            block.provenance.to_dict() for block in blocks if block.provenance is not None
         ],
     }
 

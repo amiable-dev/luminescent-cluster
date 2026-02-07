@@ -216,9 +216,7 @@ class ChatMetrics:
             Dict with count, avg_ms, p50, p95 statistics
         """
         with self._lock:
-            latencies = [
-                m.latency_ms for m in self._metrics if m.platform == platform
-            ]
+            latencies = [m.latency_ms for m in self._metrics if m.platform == platform]
 
         if not latencies:
             return {"count": 0, "avg_ms": 0, "p50": 0, "p95": 0}
@@ -323,9 +321,7 @@ class ChatMetrics:
                 "total_errors": len(self._errors),
                 "total_tokens": self.get_total_tokens(),
                 "platforms": platform_stats,
-                "latency": {
-                    p: self.get_latency_stats(p) for p in platforms
-                },
+                "latency": {p: self.get_latency_stats(p) for p in platforms},
                 "error_rate": self.get_error_rate(),
                 "is_degraded": self.is_degraded(),
             }

@@ -112,7 +112,9 @@ class TestHaikuEntityExtractorPrompts:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from luminescent_cluster.memory.extraction.entities.prompts import ENTITY_EXTRACTION_SYSTEM_PROMPT
+        from luminescent_cluster.memory.extraction.entities.prompts import (
+            ENTITY_EXTRACTION_SYSTEM_PROMPT,
+        )
 
         assert ENTITY_EXTRACTION_SYSTEM_PROMPT is not None
         assert len(ENTITY_EXTRACTION_SYSTEM_PROMPT) > 0
@@ -123,7 +125,9 @@ class TestHaikuEntityExtractorPrompts:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from luminescent_cluster.memory.extraction.entities.prompts import ENTITY_EXTRACTION_USER_TEMPLATE
+        from luminescent_cluster.memory.extraction.entities.prompts import (
+            ENTITY_EXTRACTION_USER_TEMPLATE,
+        )
 
         assert ENTITY_EXTRACTION_USER_TEMPLATE is not None
         assert "{content}" in ENTITY_EXTRACTION_USER_TEMPLATE
@@ -134,7 +138,9 @@ class TestHaikuEntityExtractorPrompts:
         GitHub Issue: #120
         ADR Reference: ADR-003 Phase 3 (Entity Extraction)
         """
-        from luminescent_cluster.memory.extraction.entities.prompts import ENTITY_EXTRACTION_SYSTEM_PROMPT
+        from luminescent_cluster.memory.extraction.entities.prompts import (
+            ENTITY_EXTRACTION_SYSTEM_PROMPT,
+        )
 
         assert "SERVICE" in ENTITY_EXTRACTION_SYSTEM_PROMPT
         assert "DEPENDENCY" in ENTITY_EXTRACTION_SYSTEM_PROMPT

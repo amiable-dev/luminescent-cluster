@@ -34,22 +34,23 @@ import json
 import sys
 import shlex
 
+
 def run_docker_tool(container, script, tool_name, args_dict):
     """Run a tool inside the docker container"""
-    
+
     # Construct the python code to run inside the container
     # We import the server class, instantiate it, and call the method
-    
+
     if container == "session-memory-mcp":
         server_class = "SessionMemoryServer"
         import_line = "from session_memory_server import SessionMemoryServer"
     else:
         server_class = "PixeltableMemoryServer"
         import_line = "from pixeltable_mcp_server import PixeltableMemoryServer"
-        
+
     # Convert args_dict to python kwargs string
     kwargs = ", ".join([f"{k}={repr(v)}" for k, v in args_dict.items()])
-    
+
     python_code = f"""
 import asyncio
 import json
@@ -78,36 +79,41 @@ async def run():
 
 asyncio.run(run())
 """
-    
+
     cmd = [
-        "docker-compose", "exec", "-T", 
-        container.replace("-mcp", ""), # docker-compose service name
-        "python", "-c", python_code
+        "docker-compose",
+        "exec",
+        "-T",
+        container.replace("-mcp", ""),  # docker-compose service name
+        "python",
+        "-c",
+        python_code,
     ]
-    
+
     try:
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
             print(f"Error executing command: {result.stderr}", file=sys.stderr)
             sys.exit(result.returncode)
-        
+
         print(result.stdout)
-        
+
     except Exception as e:
         print(f"Failed to run docker command: {e}", file=sys.stderr)
         sys.exit(1)
 
+
 def main():
     parser = argparse.ArgumentParser(description="Context-Aware AI Tools Wrapper")
     subparsers = parser.add_subparsers(dest="command_group", required=True)
-    
+
     # Session Memory
     session_parser = subparsers.add_parser("session", help="Session Memory Tools")
     session_parser.add_argument("tool", help="Tool name (e.g., get_recent_commits)")
     session_parser.add_argument("--limit", type=int, help="Limit results")
     session_parser.add_argument("--query", type=str, help="Search query")
     session_parser.add_argument("--path", type=str, help="File path")
-    
+
     # Pixeltable Memory
     pixel_parser = subparsers.add_parser("pixeltable", help="Pixeltable Memory Tools")
     pixel_parser.add_argument("tool", help="Tool name (e.g., search_knowledge)")
@@ -117,27 +123,28 @@ def main():
     pixel_parser.add_argument("--service", type=str, help="Service name")
     pixel_parser.add_argument("--path", type=str, help="Document path")
     pixel_parser.add_argument("--topic", type=str, help="ADR topic")
-    
+
     args = parser.parse_args()
-    
+
     # Build arguments dictionary for the tool
     tool_args = {}
-    if hasattr(args, 'limit') and args.limit is not None:
-        tool_args['limit'] = args.limit
-    if hasattr(args, 'query') and args.query is not None:
-        tool_args['query'] = args.query
-    if hasattr(args, 'path') and args.path is not None:
-        tool_args['path'] = args.path
-    if hasattr(args, 'type_filter') and args.type_filter is not None:
-        tool_args['type_filter'] = args.type_filter
-    if hasattr(args, 'service') and args.service is not None:
-        tool_args['service'] = args.service
-    if hasattr(args, 'topic') and args.topic is not None:
-        tool_args['topic'] = args.topic
-        
+    if hasattr(args, "limit") and args.limit is not None:
+        tool_args["limit"] = args.limit
+    if hasattr(args, "query") and args.query is not None:
+        tool_args["query"] = args.query
+    if hasattr(args, "path") and args.path is not None:
+        tool_args["path"] = args.path
+    if hasattr(args, "type_filter") and args.type_filter is not None:
+        tool_args["type_filter"] = args.type_filter
+    if hasattr(args, "service") and args.service is not None:
+        tool_args["service"] = args.service
+    if hasattr(args, "topic") and args.topic is not None:
+        tool_args["topic"] = args.topic
+
     container = "session-memory-mcp" if args.command_group == "session" else "pixeltable-memory-mcp"
-    
+
     run_docker_tool(container, None, args.tool, tool_args)
+
 
 if __name__ == "__main__":
     main()

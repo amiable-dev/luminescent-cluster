@@ -126,10 +126,7 @@ class BaselineStore:
         """
         # Check for symlink attack
         if path.exists() and path.is_symlink():
-            raise ValueError(
-                f"Refusing to write to symlink: {path}. "
-                "This may be a symlink attack."
-            )
+            raise ValueError(f"Refusing to write to symlink: {path}. This may be a symlink attack.")
 
         # Verify path is within storage directory
         if not path.resolve().is_relative_to(self.storage_path.resolve()):
@@ -298,10 +295,7 @@ class BaselineStore:
 
         # Check for symlink attack
         if path.is_symlink():
-            raise ValueError(
-                f"Refusing to read symlink: {path}. "
-                "This may be a symlink attack."
-            )
+            raise ValueError(f"Refusing to read symlink: {path}. This may be a symlink attack.")
 
         # Verify path is within storage directory
         if not path.resolve().is_relative_to(self.storage_path.resolve()):

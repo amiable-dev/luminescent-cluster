@@ -202,7 +202,9 @@ class TestVersionGuard:
         pixeltable_dir = tmp_path / ".pixeltable"
         pixeltable_dir.mkdir()
 
-        assert not has_existing_database(pixeltable_dir), "Empty dir should not be detected as database"
+        assert not has_existing_database(pixeltable_dir), (
+            "Empty dir should not be detected as database"
+        )
 
     def test_nonexistent_directory_is_not_database(self, tmp_path):
         """Non-existent directory should not be detected as database."""
@@ -269,7 +271,9 @@ class TestVersionGuard:
 
         # Second line: full version string
         assert len(lines) >= 2, "Should have at least 2 lines"
-        assert sys.version_info.major.__str__() in lines[1], "Second line should contain version info"
+        assert sys.version_info.major.__str__() in lines[1], (
+            "Second line should contain version info"
+        )
 
     # ========================================
     # Test: Patch Version Safety
@@ -285,7 +289,9 @@ class TestVersionGuard:
         version_marker = pixeltable_dir / ".python_version"
         current_version = f"{sys.version_info.major}.{sys.version_info.minor}"
         # Marker has same major.minor, different full version
-        version_marker.write_text(f"{current_version}\n3.{sys.version_info.minor}.0 (different patch)")
+        version_marker.write_text(
+            f"{current_version}\n3.{sys.version_info.minor}.0 (different patch)"
+        )
 
         with patch.dict(os.environ, {"PIXELTABLE_HOME": str(pixeltable_dir)}):
             # Should not raise - patch versions are safe

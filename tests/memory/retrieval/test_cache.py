@@ -81,10 +81,7 @@ class TestCacheKeyGeneration:
 
         cache = RetrievalCache()
 
-        keys = [
-            cache.generate_key(user_id="user-123", query="test query")
-            for _ in range(10)
-        ]
+        keys = [cache.generate_key(user_id="user-123", query="test query") for _ in range(10)]
 
         assert len(set(keys)) == 1  # All keys should be identical
 

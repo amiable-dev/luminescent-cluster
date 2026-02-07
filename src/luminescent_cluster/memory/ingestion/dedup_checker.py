@@ -119,9 +119,7 @@ class DedupChecker:
         except Exception as e:
             # SECURITY: Fail-closed - raise error instead of allowing through
             # Callers should catch DedupCheckError and flag for review
-            raise DedupCheckError(
-                f"Cannot verify uniqueness due to provider error: {e}"
-            ) from e
+            raise DedupCheckError(f"Cannot verify uniqueness due to provider error: {e}") from e
 
         if not existing_memories:
             return DuplicateCheckResult(

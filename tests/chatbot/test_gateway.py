@@ -322,11 +322,13 @@ class TestMessageRouting:
     def mock_llm_provider(self):
         """Create mock LLM provider."""
         provider = AsyncMock()
-        provider.chat = AsyncMock(return_value=MagicMock(
-            content="Hello there!",
-            tokens_used=20,
-            model="gpt-4o-mini",
-        ))
+        provider.chat = AsyncMock(
+            return_value=MagicMock(
+                content="Hello there!",
+                tokens_used=20,
+                model="gpt-4o-mini",
+            )
+        )
         return provider
 
     @pytest.fixture
@@ -418,11 +420,13 @@ class TestContextIntegration:
     def mock_llm_provider(self):
         """Create mock LLM provider."""
         provider = AsyncMock()
-        provider.chat = AsyncMock(return_value=MagicMock(
-            content="I'm doing well!",
-            tokens_used=15,
-            model="gpt-4o-mini",
-        ))
+        provider.chat = AsyncMock(
+            return_value=MagicMock(
+                content="I'm doing well!",
+                tokens_used=15,
+                model="gpt-4o-mini",
+            )
+        )
         return provider
 
     @pytest.fixture
@@ -510,11 +514,13 @@ class TestRateLimitingIntegration:
     def mock_llm_provider(self):
         """Create mock LLM provider."""
         provider = AsyncMock()
-        provider.chat = AsyncMock(return_value=MagicMock(
-            content="Response",
-            tokens_used=10,
-            model="gpt-4o-mini",
-        ))
+        provider.chat = AsyncMock(
+            return_value=MagicMock(
+                content="Response",
+                tokens_used=10,
+                model="gpt-4o-mini",
+            )
+        )
         return provider
 
     @pytest.fixture
@@ -523,9 +529,7 @@ class TestRateLimitingIntegration:
         config = GatewayConfig(enable_rate_limiting=True)
         gateway = ChatbotGateway(config)
         gateway.llm_provider = mock_llm_provider
-        gateway.rate_limiter = TokenBucketRateLimiter(
-            RateLimitConfig(requests_per_minute=3)
-        )
+        gateway.rate_limiter = TokenBucketRateLimiter(RateLimitConfig(requests_per_minute=3))
         return gateway
 
     @pytest.mark.asyncio
@@ -581,20 +585,20 @@ class TestMCPIntegration:
     def mock_llm_provider(self):
         """Create mock LLM provider."""
         provider = AsyncMock()
-        provider.chat = AsyncMock(return_value=MagicMock(
-            content="Based on the MCP data...",
-            tokens_used=50,
-            model="gpt-4o-mini",
-        ))
+        provider.chat = AsyncMock(
+            return_value=MagicMock(
+                content="Based on the MCP data...",
+                tokens_used=50,
+                model="gpt-4o-mini",
+            )
+        )
         return provider
 
     @pytest.fixture
     def mock_mcp_client(self):
         """Create mock MCP client."""
         client = AsyncMock()
-        client.query = AsyncMock(return_value={
-            "results": [{"content": "MCP result data"}]
-        })
+        client.query = AsyncMock(return_value={"results": [{"content": "MCP result data"}]})
         return client
 
     @pytest.fixture
@@ -692,6 +696,7 @@ class TestErrorHandling:
     async def test_gateway_logs_errors(self, gateway, caplog):
         """Gateway should log errors for debugging."""
         import logging
+
         caplog.set_level(logging.ERROR)
 
         request = GatewayRequest(
@@ -719,19 +724,19 @@ class TestSystemPrompt:
     def mock_llm_provider(self):
         """Create mock LLM provider."""
         provider = AsyncMock()
-        provider.chat = AsyncMock(return_value=MagicMock(
-            content="Response",
-            tokens_used=10,
-            model="gpt-4o-mini",
-        ))
+        provider.chat = AsyncMock(
+            return_value=MagicMock(
+                content="Response",
+                tokens_used=10,
+                model="gpt-4o-mini",
+            )
+        )
         return provider
 
     @pytest.mark.asyncio
     async def test_gateway_uses_system_prompt(self, mock_llm_provider):
         """Gateway should include system prompt in LLM call."""
-        config = GatewayConfig(
-            system_prompt="You are a helpful coding assistant."
-        )
+        config = GatewayConfig(system_prompt="You are a helpful coding assistant.")
         gateway = ChatbotGateway(config)
         gateway.llm_provider = mock_llm_provider
 

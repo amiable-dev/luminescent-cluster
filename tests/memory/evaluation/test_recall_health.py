@@ -28,7 +28,10 @@ from luminescent_cluster.memory.evaluation.embedding_version import (
     EmbeddingVersion,
     EmbeddingVersionTracker,
 )
-from luminescent_cluster.memory.evaluation.recall_health import RecallHealthMonitor, RecallHealthResult
+from luminescent_cluster.memory.evaluation.recall_health import (
+    RecallHealthMonitor,
+    RecallHealthResult,
+)
 from luminescent_cluster.memory.maintenance.reindex_trigger import ReindexTrigger
 
 
@@ -101,7 +104,9 @@ def temp_dir():
 class TestBruteForceSearcher:
     """Tests for BruteForceSearcher."""
 
-    def test_index_corpus(self, mock_model: MockEmbeddingModel, sample_documents: list[Document]) -> None:
+    def test_index_corpus(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document]
+    ) -> None:
         """Test indexing a corpus of documents."""
         searcher = BruteForceSearcher(mock_model)
         searcher.index_corpus(sample_documents)
@@ -123,7 +128,9 @@ class TestBruteForceSearcher:
         with pytest.raises(RuntimeError, match="Corpus not indexed"):
             searcher.search("test query", k=5)
 
-    def test_search_returns_results(self, mock_model: MockEmbeddingModel, sample_documents: list[Document]) -> None:
+    def test_search_returns_results(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document]
+    ) -> None:
         """Test that search returns correct number of results."""
         searcher = BruteForceSearcher(mock_model)
         searcher.index_corpus(sample_documents)
@@ -135,7 +142,9 @@ class TestBruteForceSearcher:
         # Cosine similarity can be negative with random embeddings
         assert all(-1.0 <= r.score <= 1.0 for r in results)
 
-    def test_search_results_sorted_by_score(self, mock_model: MockEmbeddingModel, sample_documents: list[Document]) -> None:
+    def test_search_results_sorted_by_score(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document]
+    ) -> None:
         """Test that results are sorted by descending score."""
         searcher = BruteForceSearcher(mock_model)
         searcher.index_corpus(sample_documents)
@@ -145,7 +154,9 @@ class TestBruteForceSearcher:
         scores = [r.score for r in results]
         assert scores == sorted(scores, reverse=True)
 
-    def test_search_with_filter(self, mock_model: MockEmbeddingModel, sample_documents: list[Document]) -> None:
+    def test_search_with_filter(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document]
+    ) -> None:
         """Test filtered search."""
         searcher = BruteForceSearcher(mock_model)
         sample_documents[0].metadata = {"tenant": "A"}
@@ -166,7 +177,9 @@ class TestBruteForceSearcher:
         for r in results:
             assert r.document_id in ["1", "3", "5"]
 
-    def test_search_k_larger_than_corpus(self, mock_model: MockEmbeddingModel, sample_documents: list[Document]) -> None:
+    def test_search_k_larger_than_corpus(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document]
+    ) -> None:
         """Test search with k larger than corpus size."""
         searcher = BruteForceSearcher(mock_model)
         searcher.index_corpus(sample_documents)
@@ -175,7 +188,9 @@ class TestBruteForceSearcher:
 
         assert len(results) == 5  # Limited to corpus size
 
-    def test_search_invalid_k_raises(self, mock_model: MockEmbeddingModel, sample_documents: list[Document]) -> None:
+    def test_search_invalid_k_raises(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document]
+    ) -> None:
         """Test that k < 1 raises ValueError."""
         searcher = BruteForceSearcher(mock_model)
         searcher.index_corpus(sample_documents)
@@ -390,7 +405,9 @@ class TestBaselineStore:
 class TestRecallHealthMonitor:
     """Tests for RecallHealthMonitor."""
 
-    def test_measure_recall_at_k_perfect(self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path) -> None:
+    def test_measure_recall_at_k_perfect(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path
+    ) -> None:
         """Test recall measurement when HNSW returns exact same results."""
         brute_force = BruteForceSearcher(mock_model)
         brute_force.index_corpus(sample_documents)
@@ -412,7 +429,9 @@ class TestRecallHealthMonitor:
         assert result.recall_at_k == 1.0
         assert result.passed_absolute is True
 
-    def test_measure_recall_at_k_partial(self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path) -> None:
+    def test_measure_recall_at_k_partial(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path
+    ) -> None:
         """Test recall measurement when HNSW misses some results."""
         brute_force = BruteForceSearcher(mock_model)
         brute_force.index_corpus(sample_documents)
@@ -437,7 +456,9 @@ class TestRecallHealthMonitor:
         assert result.recall_at_k < 1.0
         assert result.k == 4
 
-    def test_absolute_threshold_pass(self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path) -> None:
+    def test_absolute_threshold_pass(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path
+    ) -> None:
         """Test that high recall passes absolute threshold."""
         brute_force = BruteForceSearcher(mock_model)
         brute_force.index_corpus(sample_documents)
@@ -458,7 +479,9 @@ class TestRecallHealthMonitor:
         assert result.passed_absolute is True
         assert result.recall_at_k >= RecallHealthMonitor.ABSOLUTE_THRESHOLD
 
-    def test_absolute_threshold_fail(self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path) -> None:
+    def test_absolute_threshold_fail(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path
+    ) -> None:
         """Test that low recall fails absolute threshold."""
         brute_force = BruteForceSearcher(mock_model)
         brute_force.index_corpus(sample_documents)
@@ -479,7 +502,9 @@ class TestRecallHealthMonitor:
         assert result.passed_absolute is False
         assert result.recall_at_k < RecallHealthMonitor.ABSOLUTE_THRESHOLD
 
-    def test_drift_detection(self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path) -> None:
+    def test_drift_detection(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path
+    ) -> None:
         """Test that drift from baseline is detected."""
         brute_force = BruteForceSearcher(mock_model)
         brute_force.index_corpus(sample_documents)
@@ -515,7 +540,9 @@ class TestRecallHealthMonitor:
         assert result.drift_pct is not None
         assert result.drift_pct > 0  # Positive drift = degradation
 
-    def test_should_reindex_true(self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path) -> None:
+    def test_should_reindex_true(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path
+    ) -> None:
         """Test should_reindex returns True when thresholds breached."""
         brute_force = BruteForceSearcher(mock_model)
         brute_force.index_corpus(sample_documents)
@@ -534,7 +561,9 @@ class TestRecallHealthMonitor:
 
         assert monitor.should_reindex(result) is True
 
-    def test_empty_queries_raises(self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path) -> None:
+    def test_empty_queries_raises(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path
+    ) -> None:
         """Test that empty query list raises ValueError."""
         brute_force = BruteForceSearcher(mock_model)
         brute_force.index_corpus(sample_documents)
@@ -658,7 +687,9 @@ class TestReindexTrigger:
     """Tests for ReindexTrigger."""
 
     @pytest.mark.asyncio
-    async def test_check_and_trigger_no_reindex_needed(self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path) -> None:
+    async def test_check_and_trigger_no_reindex_needed(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path
+    ) -> None:
         """Test that no reindex happens when recall is good."""
         brute_force = BruteForceSearcher(mock_model)
         brute_force.index_corpus(sample_documents)
@@ -691,7 +722,9 @@ class TestReindexTrigger:
         assert reindex_called is False
 
     @pytest.mark.asyncio
-    async def test_check_and_trigger_reindex_needed(self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path) -> None:
+    async def test_check_and_trigger_reindex_needed(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path
+    ) -> None:
         """Test that reindex happens when recall degrades."""
         brute_force = BruteForceSearcher(mock_model)
         brute_force.index_corpus(sample_documents)
@@ -724,7 +757,9 @@ class TestReindexTrigger:
         assert len(trigger.history) == 1
 
     @pytest.mark.asyncio
-    async def test_cooldown_period(self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path) -> None:
+    async def test_cooldown_period(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path
+    ) -> None:
         """Test that cooldown prevents rapid reindexing."""
         brute_force = BruteForceSearcher(mock_model)
         brute_force.index_corpus(sample_documents)
@@ -759,7 +794,9 @@ class TestReindexTrigger:
         assert reindex_count == 1
 
     @pytest.mark.asyncio
-    async def test_force_bypasses_cooldown(self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path) -> None:
+    async def test_force_bypasses_cooldown(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path
+    ) -> None:
         """Test that force=True bypasses cooldown."""
         brute_force = BruteForceSearcher(mock_model)
         brute_force.index_corpus(sample_documents)
@@ -792,7 +829,9 @@ class TestReindexTrigger:
         assert reindex_count == 2
 
     @pytest.mark.asyncio
-    async def test_alert_callback_called(self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path) -> None:
+    async def test_alert_callback_called(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path
+    ) -> None:
         """Test that alert callback is called on reindex."""
         brute_force = BruteForceSearcher(mock_model)
         brute_force.index_corpus(sample_documents)
@@ -833,7 +872,9 @@ class TestReindexTrigger:
 class TestHarnessIntegration:
     """Integration tests for evaluation harness with recall monitoring."""
 
-    def test_configure_and_run_recall_check(self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path) -> None:
+    def test_configure_and_run_recall_check(
+        self, mock_model: MockEmbeddingModel, sample_documents: list[Document], temp_dir: Path
+    ) -> None:
         """Test configuring harness and running recall check."""
         from luminescent_cluster.memory.evaluation.harness import EvaluationHarness
 

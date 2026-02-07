@@ -680,15 +680,9 @@ class TestNestedMetadataValidation:
         """Valid nested structures within bounds should be accepted."""
         # Create a valid nested structure within all limits
         metadata = {
-            "level1": {
-                "level2": {
-                    "level3": {
-                        "values": [1, 2, 3, "test"]
-                    }
-                }
-            },
+            "level1": {"level2": {"level3": {"values": [1, 2, 3, "test"]}}},
             "simple": "value",
-            "list": [{"nested": "dict"}, "string", 42]
+            "list": [{"nested": "dict"}, "string", 42],
         }
 
         result = await service.create_provenance(
@@ -919,6 +913,7 @@ class TestStrictTypeSafety:
         """Unsupported types in metadata should be rejected."""
         # datetime is not JSON serializable
         from datetime import datetime
+
         metadata = {"timestamp": datetime.now()}
 
         with pytest.raises(ValueError, match="Metadata contains unsupported type"):
@@ -932,6 +927,7 @@ class TestStrictTypeSafety:
     @pytest.mark.asyncio
     async def test_custom_objects_rejected(self, service):
         """Custom objects in metadata should be rejected."""
+
         class CustomClass:
             def __str__(self):
                 # Expensive __str__ - this is the DoS vector
@@ -951,6 +947,7 @@ class TestStrictTypeSafety:
     async def test_nested_unsupported_types_rejected(self, service):
         """Unsupported types nested in structures should be rejected."""
         from datetime import datetime
+
         metadata = {"outer": {"inner": [datetime.now()]}}
 
         with pytest.raises(ValueError, match="Metadata contains unsupported type"):

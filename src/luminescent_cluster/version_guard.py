@@ -45,7 +45,7 @@ from pathlib import Path
 from typing import Callable
 
 # Exit codes (following sysexits.h convention)
-EX_CONFIG = 78   # Configuration error - version mismatch
+EX_CONFIG = 78  # Configuration error - version mismatch
 EX_DATAERR = 65  # Legacy database without version marker
 
 # Set up logging for monitoring (Layer 7)
@@ -234,4 +234,6 @@ def enforce_python_version() -> None:
 # Convenience function for direct invocation
 if __name__ == "__main__":
     enforce_python_version()
-    print(f"Version guard passed. Python {sys.version_info.major}.{sys.version_info.minor} is compatible.")
+    print(
+        f"Version guard passed. Python {sys.version_info.major}.{sys.version_info.minor} is compatible."
+    )

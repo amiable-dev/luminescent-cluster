@@ -230,8 +230,12 @@ class PixeltableContextStore:
             import pixeltable as pxt
 
             # Convert ISO strings to datetime for Pixeltable
-            created_at = datetime.fromisoformat(context_data.get("created_at", datetime.now().isoformat()))
-            last_activity = datetime.fromisoformat(context_data.get("last_activity", datetime.now().isoformat()))
+            created_at = datetime.fromisoformat(
+                context_data.get("created_at", datetime.now().isoformat())
+            )
+            last_activity = datetime.fromisoformat(
+                context_data.get("last_activity", datetime.now().isoformat())
+            )
 
             row = {
                 "thread_id": thread_id,
@@ -266,8 +270,12 @@ class PixeltableContextStore:
             return {
                 "thread_id": row["thread_id"],
                 "channel_id": row["channel_id"],
-                "created_at": row["created_at"].isoformat() if hasattr(row["created_at"], "isoformat") else str(row["created_at"]),
-                "last_activity": row["last_activity"].isoformat() if hasattr(row["last_activity"], "isoformat") else str(row["last_activity"]),
+                "created_at": row["created_at"].isoformat()
+                if hasattr(row["created_at"], "isoformat")
+                else str(row["created_at"]),
+                "last_activity": row["last_activity"].isoformat()
+                if hasattr(row["last_activity"], "isoformat")
+                else str(row["last_activity"]),
                 "messages": row["messages"],
                 "metadata": row.get("metadata", {}),
             }
@@ -474,10 +482,7 @@ class ThreadContextManager:
             Number of contexts removed
         """
         with self._lock:
-            expired = [
-                tid for tid in self._contexts.keys()
-                if self.is_expired(tid)
-            ]
+            expired = [tid for tid in self._contexts.keys() if self.is_expired(tid)]
             for tid in expired:
                 del self._contexts[tid]
             return len(expired)
@@ -605,9 +610,7 @@ class ThreadContextManager:
             if data:
                 await self.context_store.save(thread_id, data)
 
-    async def get_or_create_async(
-        self, thread_id: str, channel_id: str
-    ) -> ThreadContext:
+    async def get_or_create_async(self, thread_id: str, channel_id: str) -> ThreadContext:
         """
         Async version of get_or_create that loads from persistent storage.
 

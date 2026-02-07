@@ -92,12 +92,8 @@ class MEXTRAValidator:
 
     def __init__(self):
         """Initialize the validator."""
-        self._injection_patterns = [
-            re.compile(p, re.IGNORECASE) for p in _INJECTION_PATTERNS
-        ]
-        self._prompt_patterns = [
-            re.compile(p, re.IGNORECASE) for p in _PROMPT_INJECTION_PATTERNS
-        ]
+        self._injection_patterns = [re.compile(p, re.IGNORECASE) for p in _INJECTION_PATTERNS]
+        self._prompt_patterns = [re.compile(p, re.IGNORECASE) for p in _PROMPT_INJECTION_PATTERNS]
 
     def is_suspicious(self, text: str) -> bool:
         """Check if text contains suspicious patterns.
@@ -184,8 +180,7 @@ class MemoryPoisoningDefense:
         """
         self.max_results = max_results
         self._sensitive_patterns = [
-            (re.compile(p, re.IGNORECASE), replacement)
-            for p, replacement in _SENSITIVE_PATTERNS
+            (re.compile(p, re.IGNORECASE), replacement) for p, replacement in _SENSITIVE_PATTERNS
         ]
 
     def filter_output(self, memories: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -284,9 +279,7 @@ class AgentRateLimiter:
 
             # Clean old requests
             cutoff = now - self.window_seconds
-            self._requests[agent_id] = [
-                t for t in self._requests[agent_id] if t > cutoff
-            ]
+            self._requests[agent_id] = [t for t in self._requests[agent_id] if t > cutoff]
 
             # Check limit
             if len(self._requests[agent_id]) >= self.max_requests:

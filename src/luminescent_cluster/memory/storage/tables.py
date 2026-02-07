@@ -96,9 +96,7 @@ def setup_user_memory_table(check_health: bool = True) -> Any:
         # Add embedding index for semantic search
         from pixeltable.functions.huggingface import sentence_transformer
 
-        embed_model = sentence_transformer.using(
-            model_id="sentence-transformers/all-MiniLM-L6-v2"
-        )
+        embed_model = sentence_transformer.using(model_id="sentence-transformers/all-MiniLM-L6-v2")
 
         table.add_embedding_index("content", string_embed=embed_model)
         print(f"Added embedding index to {USER_MEMORY_TABLE}")
@@ -156,9 +154,7 @@ def setup_conversation_memory_table(check_health: bool = True) -> Any:
         # Add embedding index for semantic search
         from pixeltable.functions.huggingface import sentence_transformer
 
-        embed_model = sentence_transformer.using(
-            model_id="sentence-transformers/all-MiniLM-L6-v2"
-        )
+        embed_model = sentence_transformer.using(model_id="sentence-transformers/all-MiniLM-L6-v2")
 
         table.add_embedding_index("content", string_embed=embed_model)
         print(f"Added embedding index to {CONVERSATION_MEMORY_TABLE}")

@@ -50,9 +50,7 @@ class TestContextStoreProtocol:
 
     def test_context_store_is_runtime_checkable(self):
         """ContextStore protocol should be runtime checkable."""
-        assert hasattr(ContextStore, "__runtime_checkable__") or isinstance(
-            ContextStore, type
-        )
+        assert hasattr(ContextStore, "__runtime_checkable__") or isinstance(ContextStore, type)
 
     def test_context_store_has_save_method(self):
         """ContextStore should have async save method."""
@@ -133,19 +131,22 @@ class TestThreadContextManagerWithStore:
         """Getting context should load from store if not in memory."""
         store = MockContextStore()
         # Pre-populate store
-        await store.save("thread-456", {
-            "thread_id": "thread-456",
-            "channel_id": "channel-1",
-            "created_at": datetime.now().isoformat(),
-            "last_activity": datetime.now().isoformat(),
-            "messages": [
-                {
-                    "role": "user",
-                    "content": "Previous message",
-                    "timestamp": datetime.now().isoformat(),
-                }
-            ],
-        })
+        await store.save(
+            "thread-456",
+            {
+                "thread_id": "thread-456",
+                "channel_id": "channel-1",
+                "created_at": datetime.now().isoformat(),
+                "last_activity": datetime.now().isoformat(),
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "Previous message",
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                ],
+            },
+        )
 
         manager = ThreadContextManager(context_store=store)
         ctx = await manager.get_or_create_async("thread-456", "channel-1")
@@ -177,13 +178,16 @@ class TestThreadContextManagerWithStore:
     async def test_hot_cache_prevents_redundant_loads(self):
         """Loaded context should be cached in memory."""
         store = MockContextStore()
-        await store.save("thread-111", {
-            "thread_id": "thread-111",
-            "channel_id": "ch-1",
-            "created_at": datetime.now().isoformat(),
-            "last_activity": datetime.now().isoformat(),
-            "messages": [],
-        })
+        await store.save(
+            "thread-111",
+            {
+                "thread_id": "thread-111",
+                "channel_id": "ch-1",
+                "created_at": datetime.now().isoformat(),
+                "last_activity": datetime.now().isoformat(),
+                "messages": [],
+            },
+        )
 
         manager = ThreadContextManager(context_store=store)
 
@@ -225,6 +229,7 @@ class TestPixeltableContextStore:
     async def test_pixeltable_store_save_and_load(self):
         """PixeltableContextStore should save and load context."""
         import sys
+
         mock_pxt = MagicMock()
         mock_table = MagicMock()
         mock_pxt.get_table.return_value = mock_table
@@ -260,7 +265,14 @@ class TestPixeltableContextStore:
             store._init_attempted = False
 
             # Should not raise, should degrade gracefully
-            await store.save("thread-444", {"thread_id": "thread-444", "created_at": datetime.now().isoformat(), "last_activity": datetime.now().isoformat()})
+            await store.save(
+                "thread-444",
+                {
+                    "thread_id": "thread-444",
+                    "created_at": datetime.now().isoformat(),
+                    "last_activity": datetime.now().isoformat(),
+                },
+            )
             result = await store.load("thread-444")
 
             # Returns None when unavailable (graceful degradation)
@@ -270,6 +282,7 @@ class TestPixeltableContextStore:
     async def test_pixeltable_store_cleanup_expired(self):
         """Store should clean up contexts older than TTL."""
         import sys
+
         mock_pxt = MagicMock()
         mock_table = MagicMock()
         mock_pxt.get_table.return_value = mock_table

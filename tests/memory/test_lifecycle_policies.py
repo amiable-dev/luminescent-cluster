@@ -410,15 +410,11 @@ class TestCombinedRelevanceScore:
         similarity = 0.8
 
         # With decay_weight=0 (ignore decay), should be just similarity
-        score_no_decay = calculate_relevance_score(
-            similarity, last_accessed, decay_weight=0.0
-        )
+        score_no_decay = calculate_relevance_score(similarity, last_accessed, decay_weight=0.0)
         assert 0.78 <= score_no_decay <= 0.82
 
         # With decay_weight=1 (full decay), should be lower
-        score_full_decay = calculate_relevance_score(
-            similarity, last_accessed, decay_weight=1.0
-        )
+        score_full_decay = calculate_relevance_score(similarity, last_accessed, decay_weight=1.0)
         assert score_full_decay < score_no_decay
 
 

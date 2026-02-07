@@ -226,9 +226,7 @@ class MemoryRanker:
                     # Update existing provenance with retrieval score
                     from dataclasses import replace
 
-                    updated_provenance = replace(
-                        memory.provenance, retrieval_score=score
-                    )
+                    updated_provenance = replace(memory.provenance, retrieval_score=score)
                     memory_with_provenance = memory.model_copy(
                         update={"provenance": updated_provenance}
                     )
@@ -241,9 +239,7 @@ class MemoryRanker:
                         created_at=memory.created_at,
                         retrieval_score=score,
                     )
-                    memory_with_provenance = memory.model_copy(
-                        update={"provenance": provenance}
-                    )
+                    memory_with_provenance = memory.model_copy(update={"provenance": provenance})
                 scored.append((memory_with_provenance, score))
             else:
                 scored.append((memory, score))

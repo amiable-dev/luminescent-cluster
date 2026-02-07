@@ -27,6 +27,7 @@ class TestMemoryRanker:
     def ranker(self):
         """Create ranker for testing."""
         from luminescent_cluster.memory.retrieval.ranker import MemoryRanker
+
         return MemoryRanker()
 
     @pytest.fixture
@@ -81,6 +82,7 @@ class TestMemoryRanker:
     def test_custom_weights(self):
         """Ranker should accept custom weights."""
         from luminescent_cluster.memory.retrieval.ranker import MemoryRanker
+
         ranker = MemoryRanker(
             similarity_weight=0.5,
             recency_weight=0.3,
@@ -195,11 +197,12 @@ class TestQueryRewriter:
     def rewriter(self):
         """Create query rewriter for testing."""
         from luminescent_cluster.memory.retrieval.query_rewriter import QueryRewriter
+
         return QueryRewriter()
 
     def test_rewriter_initialization(self, rewriter):
         """Rewriter should initialize with synonym mappings."""
-        assert hasattr(rewriter, 'synonyms')
+        assert hasattr(rewriter, "synonyms")
         assert isinstance(rewriter.synonyms, dict)
 
     def test_expand_single_term(self, rewriter):
@@ -258,6 +261,7 @@ class TestScopedRetriever:
         """Create scoped retriever for testing."""
         from luminescent_cluster.memory.retrieval.scoped import ScopedRetriever
         from luminescent_cluster.memory.providers.local import LocalMemoryProvider
+
         provider = LocalMemoryProvider()
         return ScopedRetriever(provider)
 
@@ -321,6 +325,7 @@ class TestScopedRetriever:
     def test_scope_hierarchy(self, retriever):
         """Should define scope hierarchy: user > project > global."""
         from luminescent_cluster.memory.retrieval.scoped import MemoryScope
+
         assert MemoryScope.USER.value < MemoryScope.PROJECT.value
         assert MemoryScope.PROJECT.value < MemoryScope.GLOBAL.value
 
@@ -405,6 +410,7 @@ class TestMemoryDecayIntegration:
     def ranker(self):
         """Create ranker with decay enabled."""
         from luminescent_cluster.memory.retrieval.ranker import MemoryRanker
+
         return MemoryRanker(decay_enabled=True)
 
     def test_decay_affects_ranking(self, ranker):

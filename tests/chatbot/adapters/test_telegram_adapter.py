@@ -139,7 +139,10 @@ class TestTelegramAdapterConnection:
     @pytest.mark.asyncio
     async def test_adapter_connects_with_webhook(self):
         """TelegramAdapter should connect using webhook mode."""
-        from luminescent_cluster.chatbot.adapters.telegram_adapter import TelegramConfig, TelegramAdapter
+        from luminescent_cluster.chatbot.adapters.telegram_adapter import (
+            TelegramConfig,
+            TelegramAdapter,
+        )
 
         config = TelegramConfig(
             bot_token="123456:ABC-DEF",
@@ -171,9 +174,7 @@ class TestTelegramAdapterConnection:
 
         adapter = TelegramAdapter(config)
 
-        with patch.object(
-            adapter, "_connect_polling", side_effect=Exception("Connection failed")
-        ):
+        with patch.object(adapter, "_connect_polling", side_effect=Exception("Connection failed")):
             with pytest.raises(Exception):
                 await adapter.connect()
 
@@ -205,7 +206,10 @@ class TestTelegramMessageParsing:
     @pytest.fixture
     def adapter(self):
         """Create test Telegram adapter."""
-        from luminescent_cluster.chatbot.adapters.telegram_adapter import TelegramConfig, TelegramAdapter
+        from luminescent_cluster.chatbot.adapters.telegram_adapter import (
+            TelegramConfig,
+            TelegramAdapter,
+        )
 
         config = TelegramConfig(bot_token="123456:ABC-DEF")
         return TelegramAdapter(config)
@@ -452,7 +456,10 @@ class TestTelegramMessageSending:
     @pytest.fixture
     def adapter(self):
         """Create connected test adapter."""
-        from luminescent_cluster.chatbot.adapters.telegram_adapter import TelegramConfig, TelegramAdapter
+        from luminescent_cluster.chatbot.adapters.telegram_adapter import (
+            TelegramConfig,
+            TelegramAdapter,
+        )
 
         config = TelegramConfig(bot_token="123456:ABC-DEF")
         adapter = TelegramAdapter(config)
@@ -506,7 +513,10 @@ class TestTelegramMessageSending:
     @pytest.mark.asyncio
     async def test_send_message_requires_connection(self):
         """Should require connection to send message."""
-        from luminescent_cluster.chatbot.adapters.telegram_adapter import TelegramConfig, TelegramAdapter
+        from luminescent_cluster.chatbot.adapters.telegram_adapter import (
+            TelegramConfig,
+            TelegramAdapter,
+        )
 
         config = TelegramConfig(bot_token="123456:ABC-DEF")
         adapter = TelegramAdapter(config)
@@ -548,7 +558,10 @@ class TestTelegramBotCommands:
     @pytest.fixture
     def adapter(self):
         """Create test adapter with command handlers."""
-        from luminescent_cluster.chatbot.adapters.telegram_adapter import TelegramConfig, TelegramAdapter
+        from luminescent_cluster.chatbot.adapters.telegram_adapter import (
+            TelegramConfig,
+            TelegramAdapter,
+        )
 
         config = TelegramConfig(bot_token="123456:ABC-DEF")
         adapter = TelegramAdapter(config)
@@ -622,7 +635,10 @@ class TestTelegramInlineMode:
     @pytest.fixture
     def adapter(self):
         """Create test adapter."""
-        from luminescent_cluster.chatbot.adapters.telegram_adapter import TelegramConfig, TelegramAdapter
+        from luminescent_cluster.chatbot.adapters.telegram_adapter import (
+            TelegramConfig,
+            TelegramAdapter,
+        )
 
         config = TelegramConfig(bot_token="123456:ABC-DEF")
         adapter = TelegramAdapter(config)
@@ -782,7 +798,10 @@ class TestTelegramEventHandling:
     @pytest.fixture
     def adapter(self):
         """Create test adapter."""
-        from luminescent_cluster.chatbot.adapters.telegram_adapter import TelegramConfig, TelegramAdapter
+        from luminescent_cluster.chatbot.adapters.telegram_adapter import (
+            TelegramConfig,
+            TelegramAdapter,
+        )
 
         config = TelegramConfig(bot_token="123456:ABC-DEF")
         adapter = TelegramAdapter(config)
@@ -902,7 +921,10 @@ class TestTelegramGatewayIntegration:
     @pytest.fixture
     def adapter(self):
         """Create test adapter."""
-        from luminescent_cluster.chatbot.adapters.telegram_adapter import TelegramConfig, TelegramAdapter
+        from luminescent_cluster.chatbot.adapters.telegram_adapter import (
+            TelegramConfig,
+            TelegramAdapter,
+        )
 
         config = TelegramConfig(bot_token="123456:ABC-DEF")
         adapter = TelegramAdapter(config)
@@ -978,7 +1000,10 @@ class TestTelegramKeyboards:
     @pytest.fixture
     def adapter(self):
         """Create connected test adapter."""
-        from luminescent_cluster.chatbot.adapters.telegram_adapter import TelegramConfig, TelegramAdapter
+        from luminescent_cluster.chatbot.adapters.telegram_adapter import (
+            TelegramConfig,
+            TelegramAdapter,
+        )
 
         config = TelegramConfig(bot_token="123456:ABC-DEF")
         adapter = TelegramAdapter(config)
@@ -989,7 +1014,10 @@ class TestTelegramKeyboards:
 
     def test_create_inline_keyboard(self, adapter):
         """Should create inline keyboard markup."""
-        from luminescent_cluster.chatbot.adapters.telegram_adapter import InlineKeyboard, InlineButton
+        from luminescent_cluster.chatbot.adapters.telegram_adapter import (
+            InlineKeyboard,
+            InlineButton,
+        )
 
         keyboard = InlineKeyboard(
             buttons=[
@@ -1010,7 +1038,10 @@ class TestTelegramKeyboards:
     @pytest.mark.asyncio
     async def test_send_message_with_keyboard(self, adapter):
         """Should send message with inline keyboard."""
-        from luminescent_cluster.chatbot.adapters.telegram_adapter import InlineKeyboard, InlineButton
+        from luminescent_cluster.chatbot.adapters.telegram_adapter import (
+            InlineKeyboard,
+            InlineButton,
+        )
 
         adapter._api_client.send_message = AsyncMock(
             return_value={
@@ -1021,9 +1052,7 @@ class TestTelegramKeyboards:
             }
         )
 
-        keyboard = InlineKeyboard(
-            buttons=[[InlineButton(text="Yes", callback_data="yes")]]
-        )
+        keyboard = InlineKeyboard(buttons=[[InlineButton(text="Yes", callback_data="yes")]])
 
         await adapter.send_message(
             channel_id="222",

@@ -307,13 +307,15 @@ class SlackAdapter:
         # Extract attachments
         attachments = []
         for file_info in slack_event.get("files", []):
-            attachments.append({
-                "id": file_info.get("id"),
-                "filename": file_info.get("name"),
-                "url": file_info.get("url_private"),
-                "content_type": file_info.get("mimetype"),
-                "size": file_info.get("size"),
-            })
+            attachments.append(
+                {
+                    "id": file_info.get("id"),
+                    "filename": file_info.get("name"),
+                    "url": file_info.get("url_private"),
+                    "content_type": file_info.get("mimetype"),
+                    "size": file_info.get("size"),
+                }
+            )
 
         # Determine if DM
         channel_type = slack_event.get("channel_type", "")

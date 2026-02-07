@@ -210,9 +210,7 @@ class TestHybridRetrieverRetrieve:
         """Test basic retrieval."""
         hybrid_retriever.index_memories("user-1", sample_memories)
 
-        results, metrics = await hybrid_retriever.retrieve(
-            "database storage", "user-1", top_k=5
-        )
+        results, metrics = await hybrid_retriever.retrieve("database storage", "user-1", top_k=5)
 
         assert len(results) > 0
         assert isinstance(metrics, RetrievalMetrics)
@@ -230,9 +228,7 @@ class TestHybridRetrieverRetrieve:
         """Test top_k limit is respected."""
         hybrid_retriever.index_memories("user-1", sample_memories)
 
-        results, _ = await hybrid_retriever.retrieve(
-            "database", "user-1", top_k=2
-        )
+        results, _ = await hybrid_retriever.retrieve("database", "user-1", top_k=2)
 
         assert len(results) <= 2
 
@@ -245,21 +241,15 @@ class TestHybridRetrieverRetrieve:
         """Test results are sorted by score descending."""
         hybrid_retriever.index_memories("user-1", sample_memories)
 
-        results, _ = await hybrid_retriever.retrieve(
-            "database", "user-1", top_k=5
-        )
+        results, _ = await hybrid_retriever.retrieve("database", "user-1", top_k=5)
 
         scores = [r.score for r in results]
         assert scores == sorted(scores, reverse=True)
 
     @pytest.mark.asyncio
-    async def test_retrieve_empty_index(
-        self, hybrid_retriever: HybridRetriever
-    ) -> None:
+    async def test_retrieve_empty_index(self, hybrid_retriever: HybridRetriever) -> None:
         """Test retrieval from empty index."""
-        results, metrics = await hybrid_retriever.retrieve(
-            "database", "user-1", top_k=5
-        )
+        results, metrics = await hybrid_retriever.retrieve("database", "user-1", top_k=5)
 
         assert len(results) == 0
         assert metrics.final_results == 0
@@ -273,9 +263,7 @@ class TestHybridRetrieverRetrieve:
         """Test retrieval for nonexistent user."""
         hybrid_retriever.index_memories("user-1", sample_memories)
 
-        results, _ = await hybrid_retriever.retrieve(
-            "database", "nonexistent", top_k=5
-        )
+        results, _ = await hybrid_retriever.retrieve("database", "nonexistent", top_k=5)
 
         assert len(results) == 0
 
@@ -288,9 +276,7 @@ class TestHybridRetrieverRetrieve:
         """Test simplified retrieval."""
         hybrid_retriever.index_memories("user-1", sample_memories)
 
-        results = await hybrid_retriever.retrieve_simple(
-            "database", "user-1", top_k=5
-        )
+        results = await hybrid_retriever.retrieve_simple("database", "user-1", top_k=5)
 
         assert len(results) > 0
         for memory, score in results:
@@ -310,9 +296,7 @@ class TestHybridRetrieverMetrics:
         """Test metrics structure."""
         hybrid_retriever.index_memories("user-1", sample_memories)
 
-        _, metrics = await hybrid_retriever.retrieve(
-            "database", "user-1", top_k=5
-        )
+        _, metrics = await hybrid_retriever.retrieve("database", "user-1", top_k=5)
 
         assert metrics.total_time_ms > 0
         assert metrics.stage1_time_ms >= 0
@@ -329,9 +313,7 @@ class TestHybridRetrieverMetrics:
         """Test retrieval latency is under 1 second."""
         hybrid_retriever.index_memories("user-1", sample_memories)
 
-        _, metrics = await hybrid_retriever.retrieve(
-            "database", "user-1", top_k=10
-        )
+        _, metrics = await hybrid_retriever.retrieve("database", "user-1", top_k=10)
 
         # Exit criteria: latency < 1s
         assert metrics.total_time_ms < 1000
@@ -345,9 +327,7 @@ class TestHybridRetrieverMetrics:
         """Test candidate count metrics."""
         hybrid_retriever.index_memories("user-1", sample_memories)
 
-        _, metrics = await hybrid_retriever.retrieve(
-            "database", "user-1", top_k=5
-        )
+        _, metrics = await hybrid_retriever.retrieve("database", "user-1", top_k=5)
 
         # Should have candidates from both BM25 and vector
         assert metrics.bm25_candidates >= 0
@@ -367,9 +347,7 @@ class TestHybridRetrieverSourceTracking:
         """Test source scores are tracked in results."""
         hybrid_retriever.index_memories("user-1", sample_memories)
 
-        results, _ = await hybrid_retriever.retrieve(
-            "database", "user-1", top_k=5
-        )
+        results, _ = await hybrid_retriever.retrieve("database", "user-1", top_k=5)
 
         for result in results:
             assert "reranker" in result.source_scores
@@ -384,9 +362,7 @@ class TestHybridRetrieverSourceTracking:
         """Test source ranks are tracked in results."""
         hybrid_retriever.index_memories("user-1", sample_memories)
 
-        results, _ = await hybrid_retriever.retrieve(
-            "database", "user-1", top_k=5
-        )
+        results, _ = await hybrid_retriever.retrieve("database", "user-1", top_k=5)
 
         for result in results:
             assert isinstance(result.source_ranks, dict)
@@ -407,9 +383,7 @@ class TestHybridRetrieverConfiguration:
         assert retriever.bm25_weight == 2.0
         assert retriever.vector_weight == 1.0
 
-    def test_without_query_rewriter(
-        self, mock_vector_search: VectorSearch
-    ) -> None:
+    def test_without_query_rewriter(self, mock_vector_search: VectorSearch) -> None:
         """Test without query rewriter."""
         retriever = HybridRetriever(
             vector=mock_vector_search,
@@ -486,6 +460,7 @@ class TestCreateHybridRetriever:
 
         # Should have cross-encoder reranker
         from luminescent_cluster.memory.retrieval.reranker import CrossEncoderReranker
+
         assert isinstance(retriever.reranker, CrossEncoderReranker)
 
     def test_create_without_cross_encoder(self) -> None:
@@ -508,9 +483,7 @@ class TestCreateHybridRetriever:
 
     def test_create_custom_weights(self) -> None:
         """Test creating with custom weights."""
-        retriever = create_hybrid_retriever(
-            bm25_weight=2.0, vector_weight=0.5
-        )
+        retriever = create_hybrid_retriever(bm25_weight=2.0, vector_weight=0.5)
 
         assert retriever.bm25_weight == 2.0
         assert retriever.vector_weight == 0.5

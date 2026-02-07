@@ -48,9 +48,9 @@ REQUIRED_FIELDS = {"title", "source", "status", "priority"}
 
 PRIORITY_THRESHOLDS: dict[str, float] = {
     "critical": 100.0,  # 100% coverage required
-    "high": 95.0,       # 95% coverage required
-    "medium": 85.0,     # 85% coverage required
-    "low": 75.0,        # 75% coverage required
+    "high": 95.0,  # 95% coverage required
+    "medium": 85.0,  # 85% coverage required
+    "low": 75.0,  # 75% coverage required
 }
 
 # =============================================================================
@@ -63,8 +63,8 @@ PRIORITY_THRESHOLDS: dict[str, float] = {
 # - @pytest.mark.xfail: Info - known failures being tracked
 SKIP_SEVERITY = {
     "unconditional": "warning",  # @pytest.skip without condition
-    "conditional": "info",       # @pytest.skipif
-    "xfail": "info",             # @pytest.mark.xfail
+    "conditional": "info",  # @pytest.skipif
+    "xfail": "info",  # @pytest.mark.xfail
 }
 
 
@@ -171,8 +171,7 @@ def validate_requirement_schema(req_id: str, req_data: dict[str, Any]) -> Schema
     # Validate requirement ID format
     if not re.match(r"(REQ|NEG)-[A-Z]+-\d+", req_id):
         result.warnings.append(
-            f"{req_id}: Non-standard requirement ID format. "
-            "Expected (REQ|NEG)-DOMAIN-NNN"
+            f"{req_id}: Non-standard requirement ID format. Expected (REQ|NEG)-DOMAIN-NNN"
         )
 
     return result
@@ -258,7 +257,9 @@ def introspect_test_file(file_path: Path) -> TestIntrospectionResult:
 
     for node in ast.walk(tree):
         # Handle both sync and async test functions
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_"):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith(
+            "test_"
+        ):
             # Top-level test function
             result.functions.add(node.name)
             # Check for parametrize decorator
@@ -271,7 +272,9 @@ def introspect_test_file(file_path: Path) -> TestIntrospectionResult:
             methods = set()
             for item in node.body:
                 # Handle both sync and async test methods
-                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and item.name.startswith("test_"):
+                if isinstance(
+                    item, (ast.FunctionDef, ast.AsyncFunctionDef)
+                ) and item.name.startswith("test_"):
                     methods.add(item.name)
                     # Check for parametrize decorator
                     for decorator in item.decorator_list:
@@ -599,9 +602,7 @@ def save_baseline(baseline: BaselineSchema, path: Path) -> None:
         json.dump(data, f, indent=2)
 
 
-def check_ratchet(
-    baseline: dict[str, Any], current: dict[str, Any]
-) -> list[str]:
+def check_ratchet(baseline: dict[str, Any], current: dict[str, Any]) -> list[str]:
     """Check if current coverage meets baseline (ratchet).
 
     The baseline ratchet prevents coverage regression. Current coverage
@@ -891,9 +892,7 @@ def reconcile(
                     print(f"  {req_id}: Missing test file {file_path}")
             elif introspect_functions and "::" in test_path:
                 # AST introspection for function/method existence (ADR-010)
-                exists, error = verify_test_reference(
-                    test_path, project_root, introspection_cache
-                )
+                exists, error = verify_test_reference(test_path, project_root, introspection_cache)
                 if not exists:
                     result.missing_test_functions.append(f"{req_id}: {test_path}")
                     if verbose:
@@ -905,18 +904,14 @@ def reconcile(
     # Calculate coverage by priority
     for priority, counts in priority_counts.items():
         if counts["total"] > 0:
-            result.coverage_by_priority[priority] = (
-                counts["covered"] / counts["total"]
-            ) * 100
+            result.coverage_by_priority[priority] = (counts["covered"] / counts["total"]) * 100
         else:
             result.coverage_by_priority[priority] = 100.0  # No requirements = 100%
 
     # Calculate coverage by domain
     for domain, counts in domain_counts.items():
         if counts["total"] > 0:
-            result.coverage_by_domain[domain] = (
-                counts["covered"] / counts["total"]
-            ) * 100
+            result.coverage_by_domain[domain] = (counts["covered"] / counts["total"]) * 100
         else:
             result.coverage_by_domain[domain] = 100.0
 
@@ -941,9 +936,7 @@ def reconcile(
         if verbose:
             print("Running orphan marker detection...")
         ledger_req_ids = set(requirements.keys())
-        result.orphan_markers = find_orphan_requirement_markers(
-            project_root, ledger_req_ids
-        )
+        result.orphan_markers = find_orphan_requirement_markers(project_root, ledger_req_ids)
         if verbose:
             print(f"  Found {len(result.orphan_markers)} orphan markers")
 
@@ -985,7 +978,9 @@ def print_report(result: ReconciliationResult, verbose: bool = False) -> None:
                 coverage = result.coverage_by_priority[priority]
                 threshold = PRIORITY_THRESHOLDS.get(priority, 0)
                 status = "OK" if coverage >= threshold else "FAIL"
-                print(f"  {priority.capitalize():10} {coverage:5.1f}% (threshold: {threshold:.0f}%) [{status}]")
+                print(
+                    f"  {priority.capitalize():10} {coverage:5.1f}% (threshold: {threshold:.0f}%) [{status}]"
+                )
 
     # Show coverage by domain in verbose mode
     if verbose and result.coverage_by_domain:
@@ -1126,9 +1121,7 @@ def main() -> int:
         action="store_true",
         help="Strict mode: treat warnings as failures (exit 2)",
     )
-    parser.add_argument(
-        "--verbose", "-v", action="store_true", help="Verbose output"
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     parser.add_argument(
         "--ledger",
         type=Path,

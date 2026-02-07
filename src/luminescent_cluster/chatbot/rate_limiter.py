@@ -205,7 +205,10 @@ class TokenBucketRateLimiter:
                 self._user_request_buckets,
                 user_id,
                 capacity=self.config.user_requests_per_minute or self.config.requests_per_minute,
-                refill_rate=(self.config.user_requests_per_minute or self.config.requests_per_minute) / 60.0,
+                refill_rate=(
+                    self.config.user_requests_per_minute or self.config.requests_per_minute
+                )
+                / 60.0,
             )
 
             if not user_req_bucket.consume(1.0):

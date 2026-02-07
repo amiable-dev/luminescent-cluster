@@ -23,9 +23,7 @@ from luminescent_cluster.memory.hindsight.types import NetworkType, TemporalEven
 class MemoryProvider(Protocol):
     """Protocol for memory provider integration."""
 
-    def retrieve(
-        self, user_id: str, query: str, limit: int = 10
-    ) -> list[Any]: ...
+    def retrieve(self, user_id: str, query: str, limit: int = 10) -> list[Any]: ...
 
 
 @dataclass
@@ -76,14 +74,10 @@ class TemporalSearch:
     LAST_WEEK_PATTERN = re.compile(r"\blast\s+week\b", re.IGNORECASE)
     LAST_N_DAYS_PATTERN = re.compile(r"\blast\s+(\d+)\s+days?\b", re.IGNORECASE)
     QUARTER_PATTERN = re.compile(r"\bQ([1-4])\s+(\d{4})\b", re.IGNORECASE)
-    BEFORE_EVENT_PATTERN = re.compile(
-        r"\bbefore\s+(\w+-\d+|\w+#\d+)\b", re.IGNORECASE
-    )
+    BEFORE_EVENT_PATTERN = re.compile(r"\bbefore\s+(\w+-\d+|\w+#\d+)\b", re.IGNORECASE)
 
     # Entity patterns (service names, common patterns)
-    ENTITY_PATTERN = re.compile(
-        r"\b(\w+-(?:service|api|db|cache|queue|gateway))\b", re.IGNORECASE
-    )
+    ENTITY_PATTERN = re.compile(r"\b(\w+-(?:service|api|db|cache|queue|gateway))\b", re.IGNORECASE)
 
     # Memory type patterns
     MEMORY_TYPE_PATTERNS = {
@@ -170,10 +164,35 @@ class TemporalSearch:
         # Extract keywords (non-stopwords, non-temporal)
         words = query.lower().split()
         stopwords = {
-            "what", "when", "where", "how", "the", "a", "an", "in", "on",
-            "at", "to", "for", "of", "was", "were", "is", "are", "last",
-            "month", "week", "days", "before", "after", "show", "me",
-            "made", "changed", "happened", "status",
+            "what",
+            "when",
+            "where",
+            "how",
+            "the",
+            "a",
+            "an",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "was",
+            "were",
+            "is",
+            "are",
+            "last",
+            "month",
+            "week",
+            "days",
+            "before",
+            "after",
+            "show",
+            "me",
+            "made",
+            "changed",
+            "happened",
+            "status",
         }
         parsed.keywords = [w for w in words if w not in stopwords and len(w) > 2]
 
@@ -192,9 +211,7 @@ class TemporalSearch:
         parsed = self.parse_temporal_query(query)
         return self._execute_search(parsed, limit)
 
-    def search_with_context(
-        self, query: str, limit: int = 10
-    ) -> list[TemporalSearchResult]:
+    def search_with_context(self, query: str, limit: int = 10) -> list[TemporalSearchResult]:
         """Search with full temporal context.
 
         Args:
@@ -223,9 +240,7 @@ class TemporalSearch:
         results.sort(key=lambda r: r.score, reverse=True)
         return results[:limit]
 
-    def _execute_search(
-        self, parsed: ParsedTemporalQuery, limit: int
-    ) -> list[TemporalEvent]:
+    def _execute_search(self, parsed: ParsedTemporalQuery, limit: int) -> list[TemporalEvent]:
         """Execute the parsed query against the timeline.
 
         Args:
@@ -244,32 +259,22 @@ class TemporalSearch:
 
         # Filter by memory type if specified
         if parsed.memory_type:
-            results = [
-                e
-                for e in results
-                if e.metadata.get("memory_type") == parsed.memory_type
-            ]
+            results = [e for e in results if e.metadata.get("memory_type") == parsed.memory_type]
 
         # Filter by keywords if no other filters matched
         if parsed.keywords and not results:
             all_events = list(self.timeline._events.values())
             results = [
-                e
-                for e in all_events
-                if any(kw in e.content.lower() for kw in parsed.keywords)
+                e for e in all_events if any(kw in e.content.lower() for kw in parsed.keywords)
             ]
 
             # Apply time range if specified
             if parsed.time_range:
-                results = [
-                    e for e in results if parsed.time_range.contains(e.timestamp)
-                ]
+                results = [e for e in results if parsed.time_range.contains(e.timestamp)]
 
         return results[:limit]
 
-    def _calculate_relevance(
-        self, event: TemporalEvent, parsed: ParsedTemporalQuery
-    ) -> float:
+    def _calculate_relevance(self, event: TemporalEvent, parsed: ParsedTemporalQuery) -> float:
         """Calculate relevance score for an event.
 
         Args:
@@ -286,10 +291,7 @@ class TemporalSearch:
             score += 0.2
 
         # Boost for memory type match
-        if (
-            parsed.memory_type
-            and event.metadata.get("memory_type") == parsed.memory_type
-        ):
+        if parsed.memory_type and event.metadata.get("memory_type") == parsed.memory_type:
             score += 0.2
 
         # Boost for keyword matches
@@ -300,13 +302,9 @@ class TemporalSearch:
 
         # Boost for recency (newer events slightly preferred)
         if parsed.time_range:
-            range_duration = (
-                parsed.time_range.end - parsed.time_range.start
-            ).total_seconds()
+            range_duration = (parsed.time_range.end - parsed.time_range.start).total_seconds()
             if range_duration > 0:
-                event_offset = (
-                    event.timestamp - parsed.time_range.start
-                ).total_seconds()
+                event_offset = (event.timestamp - parsed.time_range.start).total_seconds()
                 recency = event_offset / range_duration
                 score += 0.1 * recency
 
@@ -349,8 +347,6 @@ class TemporalSearch:
             ref_event = self.timeline.get_event(parsed.reference_event_id)
             if ref_event:
                 context["reference_event"] = ref_event.content
-                context["time_before_reference"] = str(
-                    ref_event.timestamp - event.timestamp
-                )
+                context["time_before_reference"] = str(ref_event.timestamp - event.timestamp)
 
         return context

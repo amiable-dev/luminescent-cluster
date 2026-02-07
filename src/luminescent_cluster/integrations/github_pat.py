@@ -50,6 +50,7 @@ import json
 @dataclass
 class GitHubFile:
     """Represents a file from GitHub."""
+
     path: str
     name: str
     sha: str
@@ -62,6 +63,7 @@ class GitHubFile:
 @dataclass
 class GitHubCommit:
     """Represents a commit from GitHub."""
+
     sha: str
     message: str
     author: str
@@ -72,6 +74,7 @@ class GitHubCommit:
 @dataclass
 class GitHubPullRequest:
     """Represents a pull request from GitHub."""
+
     number: int
     title: str
     state: str
@@ -85,21 +88,25 @@ class GitHubPullRequest:
 
 class GitHubPATError(Exception):
     """Base exception for GitHub PAT errors."""
+
     pass
 
 
 class GitHubAuthError(GitHubPATError):
     """Authentication failed (invalid or expired PAT)."""
+
     pass
 
 
 class GitHubRateLimitError(GitHubPATError):
     """Rate limit exceeded."""
+
     pass
 
 
 class GitHubNotFoundError(GitHubPATError):
     """Resource not found."""
+
     pass
 
 
@@ -206,10 +213,7 @@ class GitHubPATClient:
         return self._request(f"/repos/{repo}")
 
     def list_contents(
-        self,
-        repo: str,
-        path: str = "",
-        ref: Optional[str] = None
+        self, repo: str, path: str = "", ref: Optional[str] = None
     ) -> List[GitHubFile]:
         """
         List contents of a directory in a repository.
@@ -243,12 +247,7 @@ class GitHubPATClient:
             for item in data
         ]
 
-    def get_file_content(
-        self,
-        repo: str,
-        path: str,
-        ref: Optional[str] = None
-    ) -> str:
+    def get_file_content(self, repo: str, path: str, ref: Optional[str] = None) -> str:
         """
         Get content of a specific file.
 
@@ -280,11 +279,7 @@ class GitHubPATClient:
             return content
 
     def get_commits(
-        self,
-        repo: str,
-        path: Optional[str] = None,
-        ref: Optional[str] = None,
-        limit: int = 10
+        self, repo: str, path: Optional[str] = None, ref: Optional[str] = None, limit: int = 10
     ) -> List[GitHubCommit]:
         """
         Get commit history.
@@ -317,10 +312,7 @@ class GitHubPATClient:
         ]
 
     def get_pull_requests(
-        self,
-        repo: str,
-        state: str = "open",
-        limit: int = 10
+        self, repo: str, state: str = "open", limit: int = 10
     ) -> List[GitHubPullRequest]:
         """
         Get pull requests for a repository.
@@ -377,10 +369,7 @@ class GitHubPATClient:
             return False
 
     def get_tree_recursive(
-        self,
-        repo: str,
-        ref: str = "HEAD",
-        extensions: Optional[set] = None
+        self, repo: str, ref: str = "HEAD", extensions: Optional[set] = None
     ) -> List[GitHubFile]:
         """
         Get all files in repository recursively.
