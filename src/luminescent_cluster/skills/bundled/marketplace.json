@@ -1,0 +1,36 @@
+{
+  "$schema": "https://agentskills.io/schemas/marketplace.json",
+  "name": "luminescent-cluster-skills",
+  "version": "1.0.0",
+  "description": "Session management skills for context-aware AI development with luminescent-cluster",
+  "author": "amiable-dev",
+  "repository": "https://github.com/amiable-dev/luminescent-cluster",
+  "license": "Apache-2.0",
+  "skills": [
+    {
+      "name": "session-init",
+      "path": "./session-init/SKILL.md",
+      "description": "Initialize coding session with git activity, task context, and architectural decisions",
+      "category": "session-management",
+      "tags": ["session", "init", "bootstrap", "context"]
+    },
+    {
+      "name": "session-save",
+      "path": "./session-save/SKILL.md",
+      "description": "Persist session state, summarize accomplishments, and prepare for commit",
+      "category": "session-management",
+      "tags": ["session", "save", "persist", "commit"]
+    }
+  ],
+  "compatibility": {
+    "luminescent-cluster": ">=0.4.0",
+    "mcp": ">=0.1.0"
+  },
+  "platforms": [
+    "claude-code"
+  ],
+  "links": {
+    "documentation": "https://github.com/amiable-dev/luminescent-cluster",
+    "issues": "https://github.com/amiable-dev/luminescent-cluster/issues"
+  }
+}

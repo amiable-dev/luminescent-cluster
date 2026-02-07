@@ -37,6 +37,7 @@ dependencies = [
     "mcp>=0.1.0",
     "networkx>=3.0",
     "pathspec>=0.11.0",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -87,6 +88,7 @@ version-file = "src/luminescent_cluster/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/luminescent_cluster"]
+artifacts = ["src/luminescent_cluster/skills/bundled/**"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
