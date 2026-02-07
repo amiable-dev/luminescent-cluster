@@ -99,11 +99,30 @@ luminescent-cluster pixeltable
 # Run spec validation
 luminescent-cluster validate --verbose
 
+# Install bundled skills to .claude/skills
+luminescent-cluster install-skills
+
+# Install skills to custom directory
+luminescent-cluster install-skills --target path/to/skills
+
+# List available bundled skills
+luminescent-cluster install-skills --list
+
+# Overwrite existing skills
+luminescent-cluster install-skills --force
+
 # Show version
 luminescent-cluster --version
 ```
 
 ## Session Management
+
+Skills are bundled in the wheel and can be installed to any project:
+
+```bash
+# Install skills to .claude/skills (default target for Claude Code)
+luminescent-cluster install-skills
+```
 
 Run these skills to maintain context across coding sessions:
 
@@ -155,8 +174,9 @@ def test_feature():
 | `src/luminescent_cluster/extensions/` | Extension protocols and registry |
 | `src/luminescent_cluster/chatbot/` | Chatbot gateway and adapters |
 | `src/luminescent_cluster/integrations/` | PAT integrations (GitHub, GitLab) |
+| `src/luminescent_cluster/skills/` | Bundled skills and progressive disclosure loader |
 | `src/luminescent_cluster/servers/` | MCP server implementations |
-| `tests/` | Test suite (pytest, 121 tests) |
+| `tests/` | Test suite (pytest) |
 | `spec/` | Requirements ledger and validation |
 | `spec/ledger.yml` | Requirement-to-test mappings (89 requirements) |
 | `docs/adrs/` | Architecture Decision Records |
@@ -168,7 +188,8 @@ def test_feature():
 |------|---------|
 | `src/luminescent_cluster/servers/session_memory.py` | Session memory MCP server |
 | `src/luminescent_cluster/servers/pixeltable.py` | Pixeltable knowledge base MCP server |
-| `src/luminescent_cluster/cli.py` | CLI entry point |
+| `src/luminescent_cluster/cli.py` | CLI entry point (includes `install-skills`) |
+| `src/luminescent_cluster/skills/loader.py` | SkillLoader with progressive disclosure (Level 1/2/3) |
 | `src/luminescent_cluster/version_guard.py` | Python version safety guard (ADR-001) |
 | `spec/validation/reconcile.py` | Requirement traceability validation |
 | `.spec-baseline.json` | Coverage baseline for ratchet mechanism |
@@ -227,6 +248,13 @@ Key architectural decisions are documented in `docs/adrs/`:
 3. Register in gateway router
 4. Add rate limiting configuration
 5. Create integration tests
+
+### Adding a New Bundled Skill
+
+1. Create `src/luminescent_cluster/skills/bundled/<skill-name>/SKILL.md` with YAML frontmatter
+2. Add entry to `src/luminescent_cluster/skills/bundled/marketplace.json`
+3. Add tests to `tests/test_skills.py` (TestBundledSkillFormat class)
+4. Verify with `luminescent-cluster install-skills --list`
 
 ### Adding a New Memory Provider
 
