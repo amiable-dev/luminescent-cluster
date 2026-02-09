@@ -76,7 +76,7 @@ See `src/luminescent_cluster/memory/maas/` for implementation.
 # Global install (session memory only - lightweight, recommended for multi-project use)
 uv tool install luminescent-cluster
 
-# Global install with Pixeltable long-term memory (~2GB: torch, sentence-transformers)
+# Global install with Pixeltable long-term memory (~500MB macOS, larger on Linux/CUDA)
 uv tool install "luminescent-cluster[pixeltable]"
 
 # Or via pip/pipx
@@ -221,7 +221,7 @@ To connect Claude Code to the MCP servers, create a `.mcp.json` in your project 
 }
 ```
 
-**Session + Pixeltable** (requires `luminescent-cluster[pixeltable]` extra — adds ~2GB of dependencies):
+**Session + Pixeltable** (requires `luminescent-cluster[pixeltable]` extra — adds ~500MB on macOS, more on Linux/CUDA):
 
 ```json
 {
@@ -252,6 +252,8 @@ To connect Claude Code to the MCP servers, create a `.mcp.json` in your project 
 ```
 
 **Note:** `.mcp.json` must NOT be committed with absolute paths. It is already in `.gitignore`. The `pixeltable-memory` server requires the `[pixeltable]` extra — if you installed with `uv tool install luminescent-cluster` (no extras), only configure `session-memory`.
+
+For local development with Pixeltable, install with: `pip install -e ".[dev,pixeltable]"`
 
 ### Chatbot Gateway (ADR-006)
 

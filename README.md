@@ -179,7 +179,7 @@ Luminescent Cluster provides two MCP servers that connect to Claude Code (or any
 | Server | Install | Dependencies |
 |--------|---------|--------------|
 | **session-memory** | Base install | Lightweight (~36 packages) |
-| **pixeltable-memory** | `[pixeltable]` extra | Heavy (~2GB: torch, sentence-transformers) |
+| **pixeltable-memory** | `[pixeltable]` extra | Heavy (~500MB macOS, ~2GB Linux/CUDA: torch, sentence-transformers, embedded PostgreSQL) |
 
 Most users only need **session-memory**. The Pixeltable server is for long-term organizational knowledge (ADRs, code embeddings, incident history).
 
@@ -189,7 +189,7 @@ Most users only need **session-memory**. The Pixeltable server is for long-term 
 # Recommended: global install via uv (session memory only)
 uv tool install luminescent-cluster
 
-# With Pixeltable long-term memory (adds ~2GB)
+# With Pixeltable long-term memory (adds ~500MB on macOS, more on Linux/CUDA)
 uv tool install "luminescent-cluster[pixeltable]"
 
 # Alternative: via pip or pipx

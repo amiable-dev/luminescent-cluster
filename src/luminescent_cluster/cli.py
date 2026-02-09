@@ -107,7 +107,8 @@ def serve_pixeltable():
     """Start the Pixeltable MCP server.
 
     Requires the [pixeltable] extra which includes pixeltable, torch, and
-    sentence-transformers (~2GB). Not included in the base install.
+    sentence-transformers (~500MB on macOS, larger on Linux/CUDA).
+    Not included in the base install.
     """
     try:
         import pixeltable  # noqa: F401
