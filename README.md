@@ -174,23 +174,47 @@ ingest_codebase(
 
 ## MCP Server Configuration
 
-Luminescent Cluster provides two MCP servers that connect to Claude Code (or any MCP-compatible client).
+Luminescent Cluster provides two MCP servers that connect to Claude Code (or any MCP-compatible client):
+
+| Server | Install | Dependencies |
+|--------|---------|--------------|
+| **session-memory** | Base install | Lightweight (~36 packages) |
+| **pixeltable-memory** | `[pixeltable]` extra | Heavy (~2GB: torch, sentence-transformers) |
+
+Most users only need **session-memory**. The Pixeltable server is for long-term organizational knowledge (ADRs, code embeddings, incident history).
 
 ### Install the Package
 
 ```bash
-# Core (session memory only)
-pip install luminescent-cluster
+# Recommended: global install via uv (session memory only)
+uv tool install luminescent-cluster
 
-# With Pixeltable long-term memory
-pip install "luminescent-cluster[pixeltable]"
+# With Pixeltable long-term memory (adds ~2GB)
+uv tool install "luminescent-cluster[pixeltable]"
+
+# Alternative: via pip or pipx
+pip install luminescent-cluster
+pipx install luminescent-cluster
 ```
 
 ### Configure Claude Code
 
-Create a `.mcp.json` in your project root. **Do not commit this file** — it contains environment-specific paths and is already in `.gitignore`.
+Create a `.mcp.json` in your project root. **Do not commit this file** — it is already in `.gitignore`.
 
-**Standard install** (package is on PATH via pip/pipx/uv):
+**Session memory only** (works with base install):
+
+```json
+{
+  "mcpServers": {
+    "session-memory": {
+      "command": "luminescent-cluster",
+      "args": ["session"]
+    }
+  }
+}
+```
+
+**Session + Pixeltable** (requires `[pixeltable]` extra):
 
 ```json
 {
@@ -215,10 +239,6 @@ Create a `.mcp.json` in your project root. **Do not commit this file** — it co
     "session-memory": {
       "command": "/absolute/path/to/.venv/bin/luminescent-cluster",
       "args": ["session"]
-    },
-    "pixeltable-memory": {
-      "command": "/absolute/path/to/.venv/bin/luminescent-cluster",
-      "args": ["pixeltable"]
     }
   }
 }
@@ -238,7 +258,7 @@ This copies `/session-init` and `/session-save` skills to `.claude/skills/` wher
 
 ### Verify
 
-Restart Claude Code, then run `/mcp` to confirm both servers are connected.
+Restart Claude Code, then run `/mcp` to confirm the server(s) are connected.
 
 ## Example Queries
 

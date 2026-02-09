@@ -73,16 +73,17 @@ See `src/luminescent_cluster/memory/maas/` for implementation.
 ## Installation
 
 ```bash
-# Core (session memory only - lightweight)
-pip install luminescent-cluster
+# Global install (session memory only - lightweight, recommended for multi-project use)
+uv tool install luminescent-cluster
 
-# With Pixeltable long-term memory
+# Global install with Pixeltable long-term memory (~2GB: torch, sentence-transformers)
+uv tool install "luminescent-cluster[pixeltable]"
+
+# Or via pip/pipx
+pip install luminescent-cluster
 pip install "luminescent-cluster[pixeltable]"
 
-# Everything
-pip install "luminescent-cluster[all]"
-
-# Development
+# Development (editable install in this repo)
 pip install -e ".[dev]"
 ```
 
@@ -205,9 +206,22 @@ This project provides MCP servers via the CLI:
 
 ### MCP Configuration
 
-To connect Claude Code to the MCP servers, create a `.mcp.json` in your project root (this file is gitignored — each developer configures their own):
+To connect Claude Code to the MCP servers, create a `.mcp.json` in your project root (this file is gitignored — each developer configures their own).
 
-**If `luminescent-cluster` is on your PATH** (installed via `pip install`, `pipx install`, or `uv tool install`):
+**Session memory only** (recommended default — works with base install):
+
+```json
+{
+  "mcpServers": {
+    "session-memory": {
+      "command": "luminescent-cluster",
+      "args": ["session"]
+    }
+  }
+}
+```
+
+**Session + Pixeltable** (requires `luminescent-cluster[pixeltable]` extra — adds ~2GB of dependencies):
 
 ```json
 {
@@ -232,16 +246,12 @@ To connect Claude Code to the MCP servers, create a `.mcp.json` in your project 
     "session-memory": {
       "command": "/path/to/your/.venv/bin/luminescent-cluster",
       "args": ["session"]
-    },
-    "pixeltable-memory": {
-      "command": "/path/to/your/.venv/bin/luminescent-cluster",
-      "args": ["pixeltable"]
     }
   }
 }
 ```
 
-**Note:** `.mcp.json` must NOT be committed with absolute paths. It is already in `.gitignore`.
+**Note:** `.mcp.json` must NOT be committed with absolute paths. It is already in `.gitignore`. The `pixeltable-memory` server requires the `[pixeltable]` extra — if you installed with `uv tool install luminescent-cluster` (no extras), only configure `session-memory`.
 
 ### Chatbot Gateway (ADR-006)
 
