@@ -114,13 +114,27 @@ def serve_pixeltable():
         import pixeltable  # noqa: F401
     except ImportError:
         print("Error: Pixeltable dependencies not installed.", file=sys.stderr)
-        print("\nThe Pixeltable server requires heavy dependencies (torch, sentence-transformers).", file=sys.stderr)
+        print(
+            "\nThe Pixeltable server requires heavy dependencies (torch, sentence-transformers).",
+            file=sys.stderr,
+        )
         print("These are NOT included in the base install.", file=sys.stderr)
         print("\nInstall method depends on how you installed luminescent-cluster:", file=sys.stderr)
-        print('    uv tool install "luminescent-cluster[pixeltable]"   # if installed via uv tool', file=sys.stderr)
-        print('    pipx install "luminescent-cluster[pixeltable]"      # if installed via pipx', file=sys.stderr)
-        print('    pip install "luminescent-cluster[pixeltable]"       # if installed via pip', file=sys.stderr)
-        print("\nNote: The session memory server works without these dependencies:", file=sys.stderr)
+        print(
+            '    uv tool install "luminescent-cluster[pixeltable]"   # if installed via uv tool',
+            file=sys.stderr,
+        )
+        print(
+            '    pipx install "luminescent-cluster[pixeltable]"      # if installed via pipx',
+            file=sys.stderr,
+        )
+        print(
+            '    pip install "luminescent-cluster[pixeltable]"       # if installed via pip',
+            file=sys.stderr,
+        )
+        print(
+            "\nNote: The session memory server works without these dependencies:", file=sys.stderr
+        )
         print("    luminescent-cluster session", file=sys.stderr)
         sys.exit(1)
 

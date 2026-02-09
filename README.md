@@ -324,16 +324,23 @@ Allows Claude to write Python orchestration code that:
 
 ```
 luminescent-cluster/
-├── context-aware-ai-system.md    # Architecture article
-├── README.md                      # This file
-├── .mcp.json                      # Claude Code MCP server configuration
-├── session_memory_server.py       # Tier 1: Session memory MCP server
-├── pixeltable_setup.py            # Tier 2: Knowledge base setup
-├── pixeltable_mcp_server.py       # Tier 2: Long-term memory MCP server
-├── examples/
-│   ├── example_usage.py           # Usage examples
-│   └── sample_adr.md              # Sample ADR template
-└── requirements.txt               # Python dependencies
+├── pyproject.toml                 # Package config, dependencies, extras
+├── src/luminescent_cluster/       # Core package
+│   ├── cli.py                     # CLI entry point
+│   ├── servers/
+│   │   ├── session_memory.py      # Tier 1: Session memory MCP server
+│   │   └── pixeltable.py          # Tier 2: Long-term memory MCP server
+│   ├── skills/                    # Bundled skills and loader
+│   │   ├── loader.py              # SkillLoader with progressive disclosure
+│   │   └── bundled/               # Skills shipped in the wheel
+│   ├── memory/                    # Memory system (extraction, MaaS)
+│   ├── extensions/                # Protocol-based extension system
+│   └── chatbot/                   # Multi-platform chatbot gateway
+├── tests/                         # Test suite (pytest)
+├── docs/adrs/                     # Architecture Decision Records
+├── install.sh                     # Global install script (uv tool)
+├── quickstart.sh                  # Developer setup script
+└── uninstall.sh                   # Uninstall script
 ```
 
 ## Performance Characteristics
@@ -644,58 +651,36 @@ pxt.drop_table('conversation_context')
 
 ```
 luminescent-cluster/
-├── session_memory_server.py       # Tier 1: Session memory MCP server
-├── pixeltable_mcp_server.py       # Tier 2: Long-term memory MCP server
-├── pixeltable_setup.py            # Knowledge base setup
-├── src/
+├── pyproject.toml                 # Package config, deps, extras ([pixeltable], [dev], [all])
+├── src/luminescent_cluster/
+│   ├── cli.py                     # CLI entry point (session, pixeltable, install-skills)
 │   ├── version_guard.py           # Python version safety (ADR-001)
+│   ├── servers/
+│   │   ├── session_memory.py      # Tier 1: Session memory MCP server
+│   │   └── pixeltable.py          # Tier 2: Long-term memory MCP server
+│   ├── skills/                    # Bundled skills and progressive disclosure loader
+│   │   ├── loader.py              # SkillLoader (Level 1/2/3)
+│   │   └── bundled/               # Skills shipped in the wheel
+│   ├── memory/                    # Memory system (extraction, evaluation, MaaS)
 │   ├── extensions/                # Extension system (ADR-005)
 │   │   ├── protocols.py           # TenantProvider, UsageTracker, AuditLogger
 │   │   └── registry.py            # ExtensionRegistry singleton
-│   └── chatbot/                   # Chatbot platform integrations (ADR-006)
-│       ├── gateway.py             # Central Chat Gateway
-│       ├── context.py             # Thread context management
-│       ├── metrics.py             # ChatMetrics telemetry
-│       ├── access_control.py      # Access control policies
-│       └── adapters/              # Platform-specific adapters
-│           ├── discord.py         # Discord adapter
-│           ├── slack.py           # Slack adapter
-│           ├── telegram.py        # Telegram adapter
-│           └── whatsapp.py        # WhatsApp adapter
-├── scripts/
-│   ├── db_repair.py               # Database health check utility
-│   ├── backup_restore.py          # Backup and restore utility
-│   └── check-status.sh            # Status verification script
-├── integrations/                  # FREE tier integrations (ADR-005)
-│   ├── github_pat.py              # Read-only GitHub via Personal Access Token
-│   └── gitlab_pat.py              # Read-only GitLab via Personal Access Token
+│   ├── chatbot/                   # Chatbot platform integrations (ADR-006)
+│   │   ├── gateway.py             # Central Chat Gateway
+│   │   ├── context.py             # Thread context management
+│   │   ├── metrics.py             # ChatMetrics telemetry
+│   │   ├── access_control.py      # Access control policies
+│   │   └── adapters/              # Platform-specific adapters
+│   └── integrations/              # PAT integrations (GitHub, GitLab)
 ├── tests/
 │   ├── test_version_guard.py      # Version guard tests (19 tests)
 │   ├── test_extensions.py         # Extension system tests (30 tests)
-│   ├── test_mcp_extension_integration.py  # MCP integration tests (21 tests)
-│   ├── test_github_pat.py         # GitHub PAT tests (24 tests)
-│   ├── test_gitlab_pat.py         # GitLab PAT tests (27 tests)
-│   ├── test_db_repair.py          # Database health check tests (21 tests)
-│   ├── test_backup_restore.py     # Backup/restore tests (15 tests)
-│   └── chatbot/                   # Chatbot tests (414 tests)
-│       ├── test_gateway*.py       # Gateway tests
-│       ├── test_context*.py       # Context tests
-│       ├── test_metrics.py        # Metrics tests
-│       ├── test_access_control.py # Access control tests
-│       └── adapters/              # Adapter tests
-├── docs/
-│   ├── KNOWN_ISSUES.md            # Known issues and troubleshooting
-│   └── adrs/                      # Architectural Decision Records
-│       ├── ADR-001-*.md           # Python version requirement
-│       ├── ADR-003-*.md           # Project intent & memory architecture
-│       ├── ADR-004-*.md           # Monetization strategy
-│       ├── ADR-005-*.md           # Repository organization (OSS vs Paid)
-│       └── ADR-006-*.md           # Chatbot platform integrations
-├── .github/workflows/             # CI/CD configuration
-│   ├── ci.yml                     # Tests, linting, license checks
-│   └── publish.yml                # PyPI publishing workflow
-└── examples/
-    └── *.py                       # Usage examples
+│   ├── test_skills.py             # Skills loader tests (45 tests)
+│   └── chatbot/                   # Chatbot tests
+├── docs/adrs/                     # Architectural Decision Records
+├── install.sh                     # Global install script (uv tool)
+├── quickstart.sh                  # Developer setup script
+└── uninstall.sh                   # Uninstall script
 ```
 
 ## Contributing
@@ -707,16 +692,16 @@ This is an open-source project under Apache 2.0 license. Contributions welcome!
 ### Development Setup
 
 ```bash
-# Clone and install
+# Clone and quick start
 git clone https://github.com/amiable-dev/luminescent-cluster.git
 cd luminescent-cluster
-pip install -e ".[dev]"
+./quickstart.sh                    # or: ./quickstart.sh --with-pixeltable
+
+# Or manually
+uv venv && uv pip install -e ".[dev]"
 
 # Run tests
-pytest tests/ -v
-
-# Run specific test file
-pytest tests/test_extensions.py -v
+pytest tests/ -v --ignore=tests/test_pixeltable_mcp_server.py
 ```
 
 ### Contribution Areas
@@ -728,19 +713,15 @@ pytest tests/test_extensions.py -v
 
 ### Test Suite
 
-The project maintains a comprehensive test suite (166 tests):
-
 ```bash
 # Run all tests
 pytest tests/ -v --ignore=tests/test_pixeltable_mcp_server.py
 
 # Run specific test categories
+pytest tests/test_skills.py -v              # Skills loader (45 tests)
 pytest tests/test_extensions.py -v          # Extension system (30 tests)
-pytest tests/test_github_pat.py -v          # GitHub integration (24 tests)
-pytest tests/test_gitlab_pat.py -v          # GitLab integration (27 tests)
 pytest tests/test_version_guard.py -v       # Version safety (19 tests)
-pytest tests/test_db_repair.py -v           # Health check (21 tests)
-pytest tests/test_backup_restore.py -v      # Backup/restore (15 tests)
+pytest tests/test_session_memory_mcp_server.py -v  # Session MCP server
 ```
 
 ### ADR Process
