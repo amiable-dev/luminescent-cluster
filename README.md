@@ -199,7 +199,9 @@ pipx install luminescent-cluster
 
 ### Configure Claude Code
 
-Create a `.mcp.json` in your project root. **Do not commit this file** — it is already in `.gitignore`.
+Create a `.mcp.json` in your project root (or add to an existing one). **Do not commit this file** — it is already in `.gitignore`.
+
+If the project already has a `.mcp.json` with other MCP servers, merge the `session-memory` entry into the existing `mcpServers` object rather than replacing the file.
 
 **Session memory only** (works with base install):
 

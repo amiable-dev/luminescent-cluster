@@ -206,7 +206,7 @@ This project provides MCP servers via the CLI:
 
 ### MCP Configuration
 
-To connect Claude Code to the MCP servers, create a `.mcp.json` in your project root (this file is gitignored — each developer configures their own).
+To connect Claude Code to the MCP servers, create a `.mcp.json` in your project root (or add to an existing one). This file is gitignored — each developer configures their own. If the project already has a `.mcp.json` with other MCP servers, merge the `session-memory` entry into the existing `mcpServers` object.
 
 **Session memory only** (recommended default — works with base install):
 

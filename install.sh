@@ -77,7 +77,7 @@ echo -e "${GREEN}======================================${NC}"
 echo -e "${GREEN}Installation complete!${NC}"
 echo -e "${GREEN}======================================${NC}"
 echo ""
-echo "To use in a project, create .mcp.json in the project root:"
+echo "To use in a project, add session-memory to .mcp.json in the project root:"
 echo ""
 echo '  {'
 echo '    "mcpServers": {'
@@ -87,6 +87,9 @@ echo '        "args": ["session"]'
 echo '      }'
 echo '    }'
 echo '  }'
+echo ""
+echo "If the project already has a .mcp.json, merge the session-memory"
+echo "entry into the existing mcpServers object."
 echo ""
 echo "Then install skills:"
 echo "  cd your-project && luminescent-cluster install-skills"
