@@ -87,8 +87,8 @@ For troubleshooting, enable detailed logging by editing your MCP configuration:
 {
   "mcpServers": {
     "pixeltable-memory": {
-      "command": "python3",
-      "args": ["/path/to/pixeltable_mcp_server.py"],
+      "command": "luminescent-cluster",
+      "args": ["pixeltable"],
       "env": {
         "PIXELTABLE_MCP_DEBUG": "1"
       }
@@ -171,6 +171,74 @@ ingest_codebase(
 > "Create a snapshot called 'pre-release'"
 > "List all services"
 
+
+## MCP Server Configuration
+
+Luminescent Cluster provides two MCP servers that connect to Claude Code (or any MCP-compatible client).
+
+### Install the Package
+
+```bash
+# Core (session memory only)
+pip install luminescent-cluster
+
+# With Pixeltable long-term memory
+pip install "luminescent-cluster[pixeltable]"
+```
+
+### Configure Claude Code
+
+Create a `.mcp.json` in your project root. **Do not commit this file** — it contains environment-specific paths and is already in `.gitignore`.
+
+**Standard install** (package is on PATH via pip/pipx/uv):
+
+```json
+{
+  "mcpServers": {
+    "session-memory": {
+      "command": "luminescent-cluster",
+      "args": ["session"]
+    },
+    "pixeltable-memory": {
+      "command": "luminescent-cluster",
+      "args": ["pixeltable"]
+    }
+  }
+}
+```
+
+**Development install** (editable install in a local venv):
+
+```json
+{
+  "mcpServers": {
+    "session-memory": {
+      "command": "/absolute/path/to/.venv/bin/luminescent-cluster",
+      "args": ["session"]
+    },
+    "pixeltable-memory": {
+      "command": "/absolute/path/to/.venv/bin/luminescent-cluster",
+      "args": ["pixeltable"]
+    }
+  }
+}
+```
+
+Use the absolute path to the venv binary because Claude Code does not activate virtual environments when spawning MCP server processes.
+
+### Install Skills
+
+After configuring the servers, install the bundled session management skills:
+
+```bash
+luminescent-cluster install-skills
+```
+
+This copies `/session-init` and `/session-save` skills to `.claude/skills/` where Claude Code discovers them as slash commands.
+
+### Verify
+
+Restart Claude Code, then run `/mcp` to confirm both servers are connected.
 
 ## Example Queries
 

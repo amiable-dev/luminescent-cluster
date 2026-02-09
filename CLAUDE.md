@@ -203,6 +203,46 @@ This project provides MCP servers via the CLI:
 | `luminescent-cluster session` | Task context, git integration, user memories | `set_task_context`, `get_recent_commits`, `create_user_memory` |
 | `luminescent-cluster pixeltable` | Long-term organizational knowledge | `search_organizational_memory`, `get_architectural_decisions`, `ingest_codebase` |
 
+### MCP Configuration
+
+To connect Claude Code to the MCP servers, create a `.mcp.json` in your project root (this file is gitignored — each developer configures their own):
+
+**If `luminescent-cluster` is on your PATH** (installed via `pip install`, `pipx install`, or `uv tool install`):
+
+```json
+{
+  "mcpServers": {
+    "session-memory": {
+      "command": "luminescent-cluster",
+      "args": ["session"]
+    },
+    "pixeltable-memory": {
+      "command": "luminescent-cluster",
+      "args": ["pixeltable"]
+    }
+  }
+}
+```
+
+**For local development** (editable install in a venv without PATH):
+
+```json
+{
+  "mcpServers": {
+    "session-memory": {
+      "command": "/path/to/your/.venv/bin/luminescent-cluster",
+      "args": ["session"]
+    },
+    "pixeltable-memory": {
+      "command": "/path/to/your/.venv/bin/luminescent-cluster",
+      "args": ["pixeltable"]
+    }
+  }
+}
+```
+
+**Note:** `.mcp.json` must NOT be committed with absolute paths. It is already in `.gitignore`.
+
 ### Chatbot Gateway (ADR-006)
 
 The chatbot system uses a **gateway pattern** with platform-specific adapters:
