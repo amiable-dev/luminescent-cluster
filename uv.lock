@@ -1034,6 +1034,10 @@ all = [
     { name = "torch" },
 ]
 dev = [
+    { name = "aiohttp" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "pandas" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
@@ -1054,13 +1058,16 @@ summarization = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiohttp", marker = "extra == 'dev'", specifier = ">=3.9.0" },
     { name = "gitpython", specifier = ">=3.1.0" },
     { name = "mcp", specifier = ">=0.1.0" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.5.0" },
     { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.5.0" },
     { name = "networkx", specifier = ">=3.0" },
+    { name = "numpy", marker = "extra == 'dev'", specifier = ">=1.24.0" },
     { name = "openai", marker = "extra == 'all'", specifier = ">=1.0.0" },
     { name = "openai", marker = "extra == 'summarization'", specifier = ">=1.0.0" },
+    { name = "pandas", marker = "extra == 'dev'", specifier = ">=2.0.0" },
     { name = "pathspec", specifier = ">=0.11.0" },
     { name = "pixeltable", marker = "extra == 'all'", specifier = ">=0.1.0" },
     { name = "pixeltable", marker = "extra == 'pixeltable'", specifier = ">=0.1.0" },
