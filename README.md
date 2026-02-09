@@ -186,15 +186,15 @@ Most users only need **session-memory**. The Pixeltable server is for long-term 
 ### Install the Package
 
 ```bash
-# Recommended: global install via uv (session memory only)
-uv tool install luminescent-cluster
-
-# With Pixeltable long-term memory (adds ~500MB on macOS, more on Linux/CUDA)
+# Recommended: full install with Pixeltable long-term memory (~500MB)
 uv tool install "luminescent-cluster[pixeltable]"
 
-# Alternative: via pip or pipx
-pip install luminescent-cluster
-pipx install luminescent-cluster
+# Or use the install script (includes Pixeltable by default)
+./install.sh
+
+# Lightweight alternative (session memory only, no ML deps)
+uv tool install luminescent-cluster
+./install.sh --session-only
 ```
 
 ### Configure Claude Code
@@ -203,20 +203,7 @@ Create a `.mcp.json` in your project root (or add to an existing one). **Do not 
 
 If the project already has a `.mcp.json` with other MCP servers, merge the `session-memory` entry into the existing `mcpServers` object rather than replacing the file.
 
-**Session memory only** (works with base install):
-
-```json
-{
-  "mcpServers": {
-    "session-memory": {
-      "command": "luminescent-cluster",
-      "args": ["session"]
-    }
-  }
-}
-```
-
-**Session + Pixeltable** (requires `[pixeltable]` extra):
+**Full install** (session + Pixeltable — the default):
 
 ```json
 {
@@ -247,6 +234,19 @@ If the project already has a `.mcp.json` with other MCP servers, merge the `sess
 ```
 
 Use the absolute path to the venv binary because Claude Code does not activate virtual environments when spawning MCP server processes.
+
+**Session memory only** (if installed with `--session-only` or without `[pixeltable]`):
+
+```json
+{
+  "mcpServers": {
+    "session-memory": {
+      "command": "luminescent-cluster",
+      "args": ["session"]
+    }
+  }
+}
+```
 
 ### Install Skills
 

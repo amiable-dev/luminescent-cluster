@@ -73,18 +73,19 @@ See `src/luminescent_cluster/memory/maas/` for implementation.
 ## Installation
 
 ```bash
-# Global install (session memory only - lightweight, recommended for multi-project use)
-uv tool install luminescent-cluster
-
-# Global install with Pixeltable long-term memory (~500MB macOS, larger on Linux/CUDA)
+# Global install (recommended — includes Pixeltable long-term memory, ~500MB)
 uv tool install "luminescent-cluster[pixeltable]"
 
-# Or via pip/pipx
-pip install luminescent-cluster
-pip install "luminescent-cluster[pixeltable]"
+# Global install (session memory only — lightweight, no ML deps)
+uv tool install luminescent-cluster
+
+# Or use the install script
+./install.sh                  # Full install (default)
+./install.sh --session-only   # Session memory only
 
 # Development (editable install in this repo)
-pip install -e ".[dev]"
+pip install -e ".[dev]"                # Without Pixeltable
+pip install -e ".[dev,pixeltable]"     # With Pixeltable
 ```
 
 ## CLI Usage
